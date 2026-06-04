@@ -30,7 +30,7 @@ export function AnalyticsPage() {
       <div className={styles.grid}>
         <div className={styles.card}>
           <h2 className={styles.cardTitle}>Deal Funnel</h2>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={funnelData} layout="vertical" margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--gray-200)" />
               <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
@@ -46,7 +46,7 @@ export function AnalyticsPage() {
           {data.pass_reasons.length === 0 ? (
             <p className={styles.empty}>No pass reasons recorded yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={data.pass_reasons}
                 layout="vertical"
@@ -73,20 +73,23 @@ export function AnalyticsPage() {
           {data.deal_sources.length === 0 ? (
             <p className={styles.empty}>No source data recorded yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data.deal_sources} margin={{ left: 8, right: 8, top: 8, bottom: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-200)" />
-                <XAxis
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={data.deal_sources}
+                layout="vertical"
+                margin={{ left: 8, right: 24, top: 8, bottom: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--gray-200)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
+                <YAxis
+                  type="category"
                   dataKey="source"
+                  width={160}
                   tick={{ fontSize: 11, fill: 'var(--navy)' }}
-                  tickFormatter={(v) => truncate(v, 14)}
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
+                  tickFormatter={(v) => truncate(v, 22)}
                 />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
                 <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Bar dataKey="count" fill="var(--blue-fg)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="var(--blue-fg)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -97,7 +100,7 @@ export function AnalyticsPage() {
           {data.deals_by_quarter.length === 0 ? (
             <p className={styles.empty}>No quarterly data recorded yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.deals_by_quarter} margin={{ left: 8, right: 8, top: 8, bottom: 32 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-200)" />
                 <XAxis

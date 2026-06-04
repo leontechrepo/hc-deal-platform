@@ -294,7 +294,7 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
         text(
             "SELECT source, COUNT(*) AS cnt FROM deals "
             "WHERE source IS NOT NULL AND source != '' "
-            "GROUP BY source ORDER BY cnt DESC"
+            "GROUP BY source ORDER BY cnt DESC LIMIT 12"
         )
     )
     deal_sources = [{"source": row[0], "count": int(row[1])} for row in source_rows]
@@ -303,7 +303,7 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
         text(
             "SELECT timing_qtr, COUNT(*) AS cnt FROM deals "
             "WHERE timing_qtr IS NOT NULL AND timing_qtr != '' "
-            "GROUP BY timing_qtr ORDER BY timing_qtr"
+            "GROUP BY timing_qtr ORDER BY SUBSTRING(timing_qtr FROM 4), LEFT(timing_qtr, 1)"
         )
     )
     deals_by_quarter = [{"quarter": row[0], "count": int(row[1])} for row in quarter_rows]
