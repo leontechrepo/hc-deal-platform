@@ -272,6 +272,50 @@ async def reject_suggestion(
     return {"ok": True, "suggestion_id": suggestion_id}
 
 
+@router.get("/analytics")
+async def get_analytics(db: AsyncSession = Depends(get_db)):
+    all_deals = (await db.execute(select(Deal))).scalars().all()
+    funnel = {
+        "total_reviewed": len(all_deals),
+        "nda_signed": sum(1 for d in all_deals if d.nda == "P"),
+        "closed": sum(1 for d in all_deals if d.bucket == "Closed"),
+    }
+
+    pass_rows = await db.execute(
+        text(
+            "SELECT reasons_for_passing, COUNT(*) AS cnt FROM deals "
+            "WHERE bucket='Dead-Hold' AND reasons_for_passing IS NOT NULL AND reasons_for_passing != '' "
+            "GROUP BY reasons_for_passing ORDER BY cnt DESC"
+        )
+    )
+    pass_reasons = [{"reason": row[0], "count": int(row[1])} for row in pass_rows]
+
+    source_rows = await db.execute(
+        text(
+            "SELECT source, COUNT(*) AS cnt FROM deals "
+            "WHERE source IS NOT NULL AND source != '' "
+            "GROUP BY source ORDER BY cnt DESC"
+        )
+    )
+    deal_sources = [{"source": row[0], "count": int(row[1])} for row in source_rows]
+
+    quarter_rows = await db.execute(
+        text(
+            "SELECT timing_qtr, COUNT(*) AS cnt FROM deals "
+            "WHERE timing_qtr IS NOT NULL AND timing_qtr != '' "
+            "GROUP BY timing_qtr ORDER BY timing_qtr"
+        )
+    )
+    deals_by_quarter = [{"quarter": row[0], "count": int(row[1])} for row in quarter_rows]
+
+    return {
+        "funnel": funnel,
+        "pass_reasons": pass_reasons,
+        "deal_sources": deal_sources,
+        "deals_by_quarter": deals_by_quarter,
+    }
+
+
 @router.post("/admin/scan")
 async def trigger_scan(db: AsyncSession = Depends(get_db)):
     from app.automation.scanner import run_scan

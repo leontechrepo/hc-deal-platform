@@ -52,6 +52,16 @@ function IconChevronRight() {
   )
 }
 
+function IconAnalytics() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="9" width="3" height="5" rx="0.5" fill="currentColor" opacity="0.8"/>
+      <rect x="6.5" y="5" width="3" height="9" rx="0.5" fill="currentColor" opacity="0.8"/>
+      <rect x="11" y="2" width="3" height="12" rx="0.5" fill="currentColor" opacity="0.8"/>
+    </svg>
+  )
+}
+
 function IconSignOut() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -122,6 +132,16 @@ export function NavBar() {
         >
           <span className={styles.navIcon}><IconLogs /></span>
           <span className={styles.navLabel}>Logs</span>
+        </NavLink>
+
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}><IconAnalytics /></span>
+          <span className={styles.navLabel}>Analytics</span>
         </NavLink>
 
         <div className={styles.divider} />

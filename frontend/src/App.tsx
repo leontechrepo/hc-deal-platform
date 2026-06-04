@@ -5,6 +5,7 @@ import { NavProvider, useNav } from './NavContext'
 import { NavBar } from './components/NavBar/NavBar'
 import { DashboardPage } from './pages/DashboardPage/DashboardPage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
+import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
 import { registerTokenGetter } from './api/client'
 
@@ -34,6 +35,7 @@ function Layout() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/logs" element={<LogsPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
         </Routes>
       </main>
     </div>
