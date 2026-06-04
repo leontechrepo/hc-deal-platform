@@ -1,0 +1,157 @@
+.page {
+  padding: 24px;
+}
+
+.pageTitle {
+  font-family: 'EB Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.pageSub {
+  font-size: 11px;
+  color: var(--gray-400);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.section {
+  margin-bottom: 36px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-700);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 10px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background: var(--gray-100);
+}
+
+.source {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.source.manual_edit {
+  background: var(--blue-bg);
+  color: var(--blue-fg);
+}
+
+.source.email_scan {
+  background: var(--purple-bg);
+  color: var(--purple-fg);
+}
+
+.source.excel_import {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.valueChange {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.oldVal {
+  color: var(--red-fg);
+  background: var(--red-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.newVal {
+  color: var(--green);
+  background: var(--green-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arrow {
+  color: var(--gray-400);
+  font-size: 11px;
+}
+
+.ts {
+  color: var(--gray-400);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.summary {
+  font-size: 11px;
+  color: var(--gray-700);
+  line-height: 1.4;
+  max-width: 400px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 24px;
+}
+
+.loading {
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 24px;
+  text-align: center;
+}

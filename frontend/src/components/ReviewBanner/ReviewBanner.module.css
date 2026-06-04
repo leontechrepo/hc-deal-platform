@@ -1,0 +1,152 @@
+.banner {
+  background: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.badge {
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.title {
+  font-family: 'EB Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-top: 1px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.company {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.emailSubject {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.proposedLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.proposedText {
+  font-size: 12px;
+  color: var(--navy);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--gray-100);
+  line-height: 1.5;
+  min-height: 2em;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.proposedText:hover {
+  border-color: var(--gray-200);
+}
+
+.editTextarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: var(--white);
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+  min-height: 60px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.approveBtn {
+  padding: 5px 14px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.approveBtn:hover:not(:disabled) {
+  background: var(--navy-light);
+}
+
+.rejectBtn {
+  padding: 5px 14px;
+  background: transparent;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  border-color: var(--red-fg);
+  color: var(--red-fg);
+}
+
+.approveBtn:disabled, .rejectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

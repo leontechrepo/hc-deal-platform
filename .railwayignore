@@ -1,0 +1,13 @@
+.env
+.env.*
+data/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.DS_Store
+*.log
+pgdata/
+frontend/node_modules/

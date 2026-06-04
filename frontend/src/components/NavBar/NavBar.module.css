@@ -1,0 +1,182 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: width 0.22s ease;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nav.expanded {
+  width: 220px;
+}
+
+.nav.collapsed {
+  width: 56px;
+}
+
+.logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.logoTitle {
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold);
+  display: block;
+  line-height: 1.2;
+}
+
+.logoSub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 2px;
+}
+
+.logoIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
+
+.navItems {
+  flex: 1;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+  border-radius: 0;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+
+.navItem:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--white);
+}
+
+.navItem.active {
+  background: rgba(201,168,76,0.15);
+  color: var(--gold);
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLabel {
+  overflow: hidden;
+  transition: opacity 0.15s;
+}
+
+.nav.collapsed .navLabel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 8px 0;
+}
+
+.scanBtn {
+  margin: 0 12px 4px;
+  padding: 8px 12px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 5px;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.scanBtn:hover:not(:disabled) {
+  background: rgba(201,168,76,0.22);
+}
+
+.scanBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav.collapsed .scanBtn {
+  margin: 0 8px 4px;
+  padding: 8px;
+  justify-content: center;
+}
+
+.nav.collapsed .scanBtnLabel {
+  display: none;
+}
+
+.signOutItem:hover {
+  background: rgba(220, 80, 80, 0.1);
+  color: rgba(255, 110, 110, 0.9);
+}
+
+.collapseBtn {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.nav.collapsed .collapseBtn {
+  justify-content: center;
+}
+
+.collapseBtn:hover {
+  color: rgba(255,255,255,0.7);
+}

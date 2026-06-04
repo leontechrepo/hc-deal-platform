@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LHP Private Credit Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1B2A4A; --gold:#C9A84C; --gold-light:#F5ECD7;
+  --white:#FFFFFF; --off-white:#F8F7F4; --gray-100:#F2F1EE;
+  --gray-200:#E0DFDB; --gray-400:#9B9A96; --gray-700:#4A4845;
+  --green:#1A5C1A; --green-bg:#EAF4EA;
+  --blue-bg:#E8F0FB; --blue-fg:#154A7A;
+  --yellow-bg:#FFFBEA; --yellow-fg:#7A6200;
+  --purple-bg:#F0EBF8; --purple-fg:#4A1A7A;
+  --red-bg:#FDECEA; --red-fg:#C62828;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--gray-700);font-size:13px;}
+
+/* MASTHEAD */
+.masthead{background:var(--navy);color:var(--white);padding:24px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px solid var(--gold);}
+.masthead-left h1{font-family:'EB Garamond',serif;font-size:26px;font-weight:500;letter-spacing:.02em;line-height:1.1;}
+.masthead-left .subtitle{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px;letter-spacing:.08em;text-transform:uppercase;}
+.masthead-right{text-align:right;}
+.masthead-right .run-date{font-family:'EB Garamond',serif;font-size:18px;color:var(--gold);}
+.masthead-right .run-meta{font-size:10px;color:rgba(255,255,255,.45);margin-top:3px;letter-spacing:.06em;text-transform:uppercase;}
+
+/* KPI */
+.kpi-strip{background:var(--white);border-bottom:1px solid var(--gray-200);display:flex;padding:14px 40px;gap:36px;align-items:center;flex-wrap:wrap;}
+.kpi{display:flex;flex-direction:column;gap:2px;}
+.kpi-value{font-family:'EB Garamond',serif;font-size:26px;font-weight:500;color:var(--navy);line-height:1;}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);}
+.kpi-divider{width:1px;background:var(--gray-200);align-self:stretch;min-height:36px;}
+
+/* REVIEW QUEUE */
+.review-banner{background:#FFFBEA;border-bottom:2px solid #C9A84C;padding:16px 40px;}
+.review-banner-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.review-badge{background:#C9A84C;color:#1B2A4A;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:3px;}
+.review-banner-title{font-family:'EB Garamond',serif;font-size:16px;font-weight:500;color:#1B2A4A;}
+.review-banner-sub{font-size:11px;color:var(--gray-400);margin-left:auto;}
+.review-card{background:var(--white);border:1px solid var(--gray-200);border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:16px;}
+.review-card:last-child{margin-bottom:0;}
+.review-card-body{flex:1;min-width:0;}
+.review-deal{font-weight:600;color:var(--navy);font-size:12px;}
+.review-stage{font-size:10px;color:var(--gray-400);margin-left:6px;}
+.review-email{font-size:11px;color:var(--gray-400);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.review-proposed{font-size:12px;color:var(--gray-700);margin-top:6px;padding:6px 10px;background:var(--gold-light);border-radius:4px;border-left:3px solid var(--gold);white-space:pre-wrap;cursor:text;position:relative;}
+.review-proposed:after{content:'✎';position:absolute;top:5px;right:8px;font-size:11px;color:var(--gold);opacity:.6;}
+.review-proposed-edit{font-size:12px;color:var(--gray-700);margin-top:6px;padding:6px 10px;background:var(--gold-light);border-radius:4px;border:1px solid var(--gold);width:100%;min-height:56px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none;display:none;}
+.review-actions{display:flex;gap:8px;flex-shrink:0;padding-top:2px;}
+.btn-approve{background:#1A5C1A;color:var(--white);border:none;border-radius:4px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.04em;}
+.btn-approve:hover{background:#145014;}
+.btn-reject{background:var(--white);color:#C62828;border:1px solid #C62828;border-radius:4px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.04em;}
+.btn-reject:hover{background:#FDECEA;}
+/* TABS */
+.tab-nav{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 40px;display:flex;align-items:flex-end;}
+.tab-btn{background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--gray-400);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--navy);}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--gold);}
+
+/* PANELS */
+.tab-panel{display:none;padding:24px 40px;}
+.tab-panel.active{display:block;}
+.tab-summary{font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--gray-200);}
+.tab-summary strong{color:var(--navy);}
+
+/* STAGE SECTIONS */
+.stage-section{margin-bottom:26px;}
+.stage-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.stage-count{font-size:11px;color:var(--gray-400);}
+.stage-pill{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:3px;}
+.stage-Closed{background:var(--green-bg);color:var(--green);}
+.stage-Pre-LOI-Diligence{background:var(--blue-bg);color:var(--blue-fg);}
+.stage-Initial-Conversations{background:var(--purple-bg);color:var(--purple-fg);}
+.stage-On-Hold{background:var(--yellow-bg);color:var(--yellow-fg);}
+.stage-Passed{background:var(--red-bg);color:var(--red-fg);}
+.stage-Unknown{background:var(--gray-100);color:var(--gray-400);}
+
+/* TABLE */
+.deals-table{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--white);border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:2px;}
+.deals-table thead tr{background:var(--navy);}
+.deals-table thead th{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.75);padding:9px 11px;text-align:left;overflow:hidden;}
+.deals-table tbody tr{border-bottom:1px solid var(--gray-100);}
+.deals-table tbody tr:last-child{border-bottom:none;}
+.deals-table tbody tr:hover{background:var(--gray-100);}
+.deals-table td{padding:10px 11px;vertical-align:top;font-size:12px;line-height:1.45;overflow:hidden;word-wrap:break-word;}
+
+.col-company{width:170px;}
+.col-size{width:70px;text-align:right;}
+.col-stage{width:130px;}
+.col-security{width:80px;}
+.col-sector{width:130px;}
+.col-process{width:140px;}
+.col-commentary{width:calc(100% - 720px);}
+
+.company-name{font-weight:600;color:var(--navy);font-size:12px;}
+.company-meta{font-size:10px;color:var(--gray-400);margin-top:2px;}
+.size-val{font-family:'EB Garamond',serif;font-size:14px;font-weight:500;color:var(--navy);}
+.size-unit{font-size:10px;color:var(--gray-400);}
+.process-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.dot{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;font-size:8px;font-weight:700;letter-spacing:.04em;}
+.dot-done{background:var(--green-bg);color:var(--green);}
+.dot-pending{background:var(--gray-100);color:var(--gray-400);}
+
+/* INLINE EDIT */
+.editable{cursor:pointer;border-radius:3px;padding:2px 4px;margin:-2px -4px;}
+.editable:hover{background:var(--gold-light);outline:1px dashed var(--gold);}
+.edit-active{display:none;}
+.editable-wrap.editing .edit-view{display:none;}
+.editable-wrap.editing .edit-active{display:block;}
+.edit-textarea{width:100%;min-height:60px;font-family:'DM Sans',sans-serif;font-size:12px;padding:6px;border:1px solid var(--gold);border-radius:4px;resize:vertical;outline:none;}
+.edit-select{font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 6px;border:1px solid var(--gold);border-radius:4px;outline:none;}
+.save-hint{font-size:10px;color:var(--gray-400);margin-top:3px;}
+
+/* FOOTER */
+.footer{background:var(--navy);color:rgba(255,255,255,.35);text-align:center;padding:14px 40px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-top:20px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:var(--white);padding:10px 18px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-left">
+    <h1>LHP Private Credit</h1>
+    <div class="subtitle">Deal Pipeline &middot; Confidential</div>
+  </div>
+  <div class="masthead-right">
+    <div class="run-date">{{ run_date }}</div>
+    <div class="run-meta">Live &middot; PostgreSQL</div>
+  </div>
+</div>
+
+<div class="kpi-strip">
+  <div class="kpi">
+    <div class="kpi-value">{{ kpis.total_reviewed }}</div>
+    <div class="kpi-label">Total Reviewed</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi">
+    <div class="kpi-value">{{ kpis.closed }}</div>
+    <div class="kpi-label">Closed Deals</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi">
+    <div class="kpi-value">${{ "%.0f"|format(kpis.deployed_m) }}M</div>
+    <div class="kpi-label">Capital Deployed</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi">
+    <div class="kpi-value">{{ kpis.active_diligence }}</div>
+    <div class="kpi-label">Active Diligence</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi">
+    <div class="kpi-value">{{ kpis.active_discussions }}</div>
+    <div class="kpi-label">Active Discussions</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi">
+    <div class="kpi-value">{{ kpis.passed }}</div>
+    <div class="kpi-label">Passed / Hold</div>
+  </div>
+</div>
+
+{% if pending_suggestions %}
+<div class="review-banner" id="review-banner">
+  <div class="review-banner-header">
+    <span class="review-badge">{{ pending_suggestions|length }} Pending</span>
+    <span class="review-banner-title">AI Suggestions Awaiting Review</span>
+    <span class="review-banner-sub">Approve or reject before changes apply to the pipeline</span>
+  </div>
+  {% for s in pending_suggestions %}
+  <div class="review-card" id="suggestion-{{ s.id }}">
+    <div class="review-card-body">
+      <div>
+        <span class="review-deal">{{ s.company_name }}</span>
+        <span class="review-stage">{{ s.stage or '' }}</span>
+      </div>
+      {% if s.email_subject %}
+      <div class="review-email">From email: "{{ s.email_subject }}"</div>
+      {% endif %}
+      <div class="review-proposed" onclick="startEditSuggestion({{ s.id }})">{{ s.suggested_value or s.claude_summary }}</div>
+      <textarea class="review-proposed-edit" id="edit-{{ s.id }}" onblur="stopEditSuggestion({{ s.id }})">{{ s.suggested_value or s.claude_summary }}</textarea>
+    </div>
+    <div class="review-actions">
+      <button class="btn-approve" onclick="reviewSuggestion({{ s.id }}, 'approve')">✓ Approve</button>
+      <button class="btn-reject" onclick="reviewSuggestion({{ s.id }}, 'reject')">✗ Reject</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="tab-nav">
+  {% for bucket in bucket_order %}
+  <button class="tab-btn {% if loop.first %}active{% endif %}"
+          onclick="switchTab('{{ bucket }}')"
+          id="btn-{{ bucket }}">{{ bucket_labels[bucket] }}</button>
+  {% endfor %}
+  <button class="tab-btn" onclick="switchTab('All')" id="btn-All">All Active</button>
+</div>
+
+{% for bucket in bucket_order %}
+<div class="tab-panel {% if loop.first %}active{% endif %}" id="panel-{{ bucket }}">
+  {% set bucket_deals = namespace(total=0) %}
+  {% for stage, deals in (buckets.get(bucket, {})).items() %}
+    {% set bucket_deals.total = bucket_deals.total + deals|length %}
+  {% endfor %}
+  <div class="tab-summary">
+    <strong>{{ bucket_deals.total }}</strong> deal{{ 's' if bucket_deals.total != 1 else '' }} &middot; {{ bucket_labels[bucket] }}
+  </div>
+
+  {% set stages_in_bucket = buckets.get(bucket, {}) %}
+  {% for stage in stage_order %}
+    {% if stages_in_bucket.get(stage) %}
+    {% set deals = stages_in_bucket[stage] %}
+    <div class="stage-section">
+      <div class="stage-header">
+        <span class="stage-pill stage-{{ stage | replace(' ', '-') }}">{{ stage }}</span>
+        <span class="stage-count">{{ deals|length }} record{{ 's' if deals|length != 1 else '' }}</span>
+      </div>
+      <table class="deals-table">
+        <colgroup>
+          <col class="col-company">
+          <col class="col-size">
+          <col class="col-sector">
+          <col class="col-security">
+          <col class="col-process">
+          <col class="col-commentary">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-company">Company / Location</th>
+            <th class="col-size">Size ($M)</th>
+            <th class="col-sector">Sector</th>
+            <th class="col-security">Security</th>
+            <th class="col-process">Process</th>
+            <th class="col-commentary">Commentary / Next Steps</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for deal in deals %}
+          <tr>
+            <td class="col-company">
+              <div class="company-name">{{ deal.company_name }}</div>
+              <div class="company-meta">{{ deal.sector_primary or '' }}{% if deal.location %} &middot; {{ deal.location }}{% endif %}</div>
+              {% if deal.last_updated %}
+              <div class="company-meta">Updated {{ deal.last_updated.strftime('%-m/%-d/%Y') }}</div>
+              {% endif %}
+            </td>
+            <td class="col-size">
+              {% if deal.deal_size_m %}
+              <div class="size-val">{{ "%.0f"|format(deal.deal_size_m) }}</div>
+              <div class="size-unit">$M</div>
+              {% else %}
+              <span style="color:var(--gray-400)">TBD</span>
+              {% endif %}
+            </td>
+            <td class="col-sector">
+              <div class="editable-wrap" data-deal="{{ deal.id }}" data-field="sector_primary">
+                <div class="edit-view">
+                  <span class="editable" onclick="startEdit(this)">{{ deal.sector_primary or '—' }}</span>
+                </div>
+                <div class="edit-active">
+                  <input class="edit-select" type="text" value="{{ deal.sector_primary or '' }}" onblur="saveField(this)" style="width:100%">
+                </div>
+              </div>
+              {% if deal.subsector %}
+              <div class="company-meta">{{ deal.subsector }}</div>
+              {% endif %}
+            </td>
+            <td class="col-security">{{ deal.security or '—' }}</td>
+            <td class="col-process">
+              <div class="process-dots">
+                <span class="dot {{ 'dot-done' if deal.nda == 'P' else 'dot-pending' }}" title="NDA">NDA</span>
+                <span class="dot {{ 'dot-done' if deal.dataroom == 'P' else 'dot-pending' }}" title="Dataroom">DR</span>
+                <span class="dot {{ 'dot-done' if deal.mgmt_meeting == 'P' else 'dot-pending' }}" title="Mgmt Meeting">MM</span>
+                <span class="dot {{ 'dot-done' if deal.ioi_offered == 'P' else 'dot-pending' }}" title="IOI Offered">IOI</span>
+                <span class="dot {{ 'dot-done' if deal.ioi_signed == 'P' else 'dot-pending' }}" title="IOI Signed">SGN</span>
+              </div>
+              {% if deal.target_close %}
+              <div class="company-meta" style="margin-top:4px">Close: {{ deal.target_close.strftime('%-m/%-d/%Y') }}</div>
+              {% endif %}
+            </td>
+            <td class="col-commentary">
+              <div class="editable-wrap" data-deal="{{ deal.id }}" data-field="commentary">
+                <div class="edit-view">
+                  <span class="editable" onclick="startEdit(this)" style="white-space:pre-wrap">{{ deal.commentary or '—' }}</span>
+                </div>
+                <div class="edit-active">
+                  <textarea class="edit-textarea" onblur="saveField(this)">{{ deal.commentary or '' }}</textarea>
+                  <div class="save-hint">Click outside to save</div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {# Catch any stages not in the ordered list #}
+  {% for stage, deals in stages_in_bucket.items() %}
+    {% if stage not in stage_order %}
+    <div class="stage-section">
+      <div class="stage-header">
+        <span class="stage-pill stage-Unknown">{{ stage }}</span>
+        <span class="stage-count">{{ deals|length }} record{{ 's' if deals|length != 1 else '' }}</span>
+      </div>
+      <table class="deals-table">
+        <colgroup>
+          <col class="col-company">
+          <col class="col-size">
+          <col class="col-sector">
+          <col class="col-security">
+          <col class="col-process">
+          <col class="col-commentary">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-company">Company / Location</th>
+            <th class="col-size">Size ($M)</th>
+            <th class="col-sector">Sector</th>
+            <th class="col-security">Security</th>
+            <th class="col-process">Process</th>
+            <th class="col-commentary">Commentary / Next Steps</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for deal in deals %}
+          <tr>
+            <td class="col-company">
+              <div class="company-name">{{ deal.company_name }}</div>
+              <div class="company-meta">{{ deal.sector_primary or '' }}{% if deal.location %} &middot; {{ deal.location }}{% endif %}</div>
+            </td>
+            <td class="col-size">
+              {% if deal.deal_size_m %}
+              <div class="size-val">{{ "%.0f"|format(deal.deal_size_m) }}</div>
+              <div class="size-unit">$M</div>
+              {% else %}<span style="color:var(--gray-400)">TBD</span>{% endif %}
+            </td>
+            <td class="col-sector">{{ deal.sector_primary or '—' }}</td>
+            <td class="col-security">{{ deal.security or '—' }}</td>
+            <td class="col-process">
+              <div class="process-dots">
+                <span class="dot {{ 'dot-done' if deal.nda == 'P' else 'dot-pending' }}" title="NDA">NDA</span>
+                <span class="dot {{ 'dot-done' if deal.dataroom == 'P' else 'dot-pending' }}" title="Dataroom">DR</span>
+                <span class="dot {{ 'dot-done' if deal.mgmt_meeting == 'P' else 'dot-pending' }}" title="Mgmt Meeting">MM</span>
+                <span class="dot {{ 'dot-done' if deal.ioi_offered == 'P' else 'dot-pending' }}" title="IOI Offered">IOI</span>
+                <span class="dot {{ 'dot-done' if deal.ioi_signed == 'P' else 'dot-pending' }}" title="IOI Signed">SGN</span>
+              </div>
+            </td>
+            <td class="col-commentary" style="white-space:pre-wrap">{{ deal.commentary or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endfor %}
+
+<!-- All Active panel -->
+<div class="tab-panel" id="panel-All">
+  {% set all_active = [] %}
+  {% for bucket in ['Active-Diligence', 'Active-Discussions'] %}
+    {% for stage, deals in (buckets.get(bucket, {})).items() %}
+      {% for d in deals %}{% set _ = all_active.append(d) %}{% endfor %}
+    {% endfor %}
+  {% endfor %}
+  <div class="tab-summary"><strong>{{ all_active|length }}</strong> active deals across all stages</div>
+  <table class="deals-table">
+    <colgroup>
+      <col class="col-company">
+      <col style="width:110px">
+      <col class="col-size">
+      <col class="col-sector">
+      <col class="col-security">
+      <col class="col-process">
+      <col class="col-commentary">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="col-company">Company / Location</th>
+        <th>Stage</th>
+        <th class="col-size">Size ($M)</th>
+        <th class="col-sector">Sector</th>
+        <th class="col-security">Security</th>
+        <th class="col-process">Process</th>
+        <th class="col-commentary">Commentary / Next Steps</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for deal in all_active | sort(attribute='company_name') %}
+      <tr>
+        <td class="col-company">
+          <div class="company-name">{{ deal.company_name }}</div>
+          <div class="company-meta">{{ deal.sector_primary or '' }}{% if deal.location %} &middot; {{ deal.location }}{% endif %}</div>
+          {% if deal.last_updated %}<div class="company-meta">Updated {{ deal.last_updated.strftime('%-m/%-d/%Y') }}</div>{% endif %}
+        </td>
+        <td><span class="stage-pill stage-{{ (deal.stage or 'Unknown') | replace(' ', '-') }}">{{ deal.stage or 'Unknown' }}</span></td>
+        <td class="col-size">
+          {% if deal.deal_size_m %}<div class="size-val">{{ "%.0f"|format(deal.deal_size_m) }}</div><div class="size-unit">$M</div>
+          {% else %}<span style="color:var(--gray-400)">TBD</span>{% endif %}
+        </td>
+        <td class="col-sector">{{ deal.sector_primary or '—' }}</td>
+        <td class="col-security">{{ deal.security or '—' }}</td>
+        <td class="col-process">
+          <div class="process-dots">
+            <span class="dot {{ 'dot-done' if deal.nda == 'P' else 'dot-pending' }}" title="NDA">NDA</span>
+            <span class="dot {{ 'dot-done' if deal.dataroom == 'P' else 'dot-pending' }}" title="Dataroom">DR</span>
+            <span class="dot {{ 'dot-done' if deal.mgmt_meeting == 'P' else 'dot-pending' }}" title="Mgmt Meeting">MM</span>
+            <span class="dot {{ 'dot-done' if deal.ioi_offered == 'P' else 'dot-pending' }}" title="IOI Offered">IOI</span>
+            <span class="dot {{ 'dot-done' if deal.ioi_signed == 'P' else 'dot-pending' }}" title="IOI Signed">SGN</span>
+          </div>
+        </td>
+        <td class="col-commentary">
+          <div class="editable-wrap" data-deal="{{ deal.id }}" data-field="commentary">
+            <div class="edit-view">
+              <span class="editable" onclick="startEdit(this)" style="white-space:pre-wrap">{{ deal.commentary or '—' }}</span>
+            </div>
+            <div class="edit-active">
+              <textarea class="edit-textarea" onblur="saveField(this)">{{ deal.commentary or '' }}</textarea>
+              <div class="save-hint">Click outside to save</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">LHP Private Credit &middot; Pipeline Dashboard &middot; {{ run_date }} &middot; Confidential</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  const btn = document.getElementById('btn-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function startEdit(el) {
+  const wrap = el.closest('.editable-wrap');
+  wrap.classList.add('editing');
+  const input = wrap.querySelector('textarea, input');
+  if (input) { input.focus(); input.selectionStart = input.value.length; }
+}
+
+async function saveField(el) {
+  const wrap = el.closest('.editable-wrap');
+  const dealId = wrap.dataset.deal;
+  const field = wrap.dataset.field;
+  const value = el.value;
+
+  wrap.classList.remove('editing');
+  const viewEl = wrap.querySelector('.edit-view .editable');
+  if (viewEl) viewEl.textContent = value || '—';
+
+  try {
+    const resp = await fetch(`/api/deals/${dealId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ field, value }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    showToast('Saved');
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+function startEditSuggestion(id) {
+  const view = document.querySelector(`#suggestion-${id} .review-proposed`);
+  const textarea = document.getElementById('edit-' + id);
+  if (!view || !textarea) return;
+  view.style.display = 'none';
+  textarea.style.display = 'block';
+  textarea.focus();
+  textarea.selectionStart = textarea.value.length;
+}
+
+function stopEditSuggestion(id) {
+  const view = document.querySelector(`#suggestion-${id} .review-proposed`);
+  const textarea = document.getElementById('edit-' + id);
+  if (!view || !textarea) return;
+  view.textContent = textarea.value;
+  view.style.display = '';
+  textarea.style.display = 'none';
+}
+
+async function reviewSuggestion(id, action) {
+  try {
+    const textarea = document.getElementById('edit-' + id);
+    const editedValue = textarea ? textarea.value : null;
+    const body = action === 'approve' ? { reviewer: 'user', value: editedValue } : {};
+    const resp = await fetch(`/api/review-queue/${id}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const card = document.getElementById('suggestion-' + id);
+    if (card) card.remove();
+    // Hide banner if no cards remain
+    const banner = document.getElementById('review-banner');
+    if (banner && !banner.querySelector('.review-card')) banner.remove();
+    if (action === 'approve') {
+      showToast('Update approved and applied to pipeline');
+      // Reload after short delay so dashboard reflects the change
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast('Suggestion rejected');
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#C62828' : '#1B2A4A';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
