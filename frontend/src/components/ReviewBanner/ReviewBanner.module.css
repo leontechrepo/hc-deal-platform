@@ -150,3 +150,161 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Deal grouping */
+.dealGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dealGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 2px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 2px;
+}
+
+.groupCompany {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--navy);
+}
+
+.groupCount {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-left: auto;
+}
+
+.cardSubHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+/* Confidence badge */
+.confidenceBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.confHigh {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.confMed {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.confLow {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Field update card */
+.fieldUpdateBody {
+  padding: 6px 0;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  color: var(--gray-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.fieldName {
+  font-family: monospace;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.fieldValues {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  background: var(--gray-100);
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.currentVal {
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+
+.arrow {
+  color: var(--gray-400);
+  font-size: 10px;
+}
+
+.proposedVal {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.reasoning {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* New deal card */
+.newDealCard {
+  border-color: var(--gold);
+  background: var(--gold-light);
+}
+
+.newDealBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--gold);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.newDealBody {
+  padding: 6px 0;
+}
+
+.newDealName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.newDealSector {
+  font-size: 11px;
+  color: var(--gray-700);
+  margin-bottom: 4px;
+}
+
+.newDealSummary {
+  font-size: 12px;
+  color: var(--navy);
+  line-height: 1.5;
+  background: var(--white);
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+}

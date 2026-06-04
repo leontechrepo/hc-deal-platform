@@ -21,7 +21,7 @@ async def fetch_messages_since(
     since_str = since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     params = {
         "$filter": f"receivedDateTime ge {since_str}",
-        "$select": "id,subject,bodyPreview,from,receivedDateTime,body",
+        "$select": "id,subject,bodyPreview,from,receivedDateTime,body,conversationId",
         "$orderby": "receivedDateTime desc",
         "$top": "50",
     }

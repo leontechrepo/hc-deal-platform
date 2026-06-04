@@ -36,14 +36,15 @@ export interface KPIs {
 
 export interface PendingSuggestion {
   id: number
-  deal_id: number
+  deal_id: number | null
   company_name: string
   stage: string | null
   suggested_field: string
   suggested_value: string | null
   claude_summary: string | null
   email_subject: string | null
-  current_commentary: string | null
+  current_value: string | null
+  confidence: number | null
   created_at: string
 }
 

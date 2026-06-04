@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -173,26 +174,37 @@ async def get_email_scan_logs(
 async def get_review_queue(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(PendingSuggestion, Deal)
-        .join(Deal, PendingSuggestion.deal_id == Deal.id)
+        .outerjoin(Deal, PendingSuggestion.deal_id == Deal.id)
         .where(PendingSuggestion.status == "pending")
         .order_by(PendingSuggestion.created_at.desc())
     )
     rows = result.all()
-    return [
-        {
+    response = []
+    for s, d in rows:
+        if s.suggested_field == "new_deal":
+            try:
+                nd = json.loads(s.suggested_value or "{}")
+            except (json.JSONDecodeError, TypeError):
+                nd = {}
+            company_name = nd.get("company_name", "Unknown")
+            stage = None
+        else:
+            company_name = d.company_name if d else "Unknown"
+            stage = d.stage if d else None
+        response.append({
             "id": s.id,
             "deal_id": s.deal_id,
-            "company_name": d.company_name,
-            "stage": d.stage,
+            "company_name": company_name,
+            "stage": stage,
             "suggested_field": s.suggested_field,
             "suggested_value": s.suggested_value,
             "claude_summary": s.claude_summary,
             "email_subject": s.email_subject,
-            "current_commentary": d.commentary,
+            "current_value": s.current_value,
+            "confidence": s.confidence,
             "created_at": s.created_at.isoformat(),
-        }
-        for s, d in rows
-    ]
+        })
+    return response
 
 
 class ApproveRequest(BaseModel):
@@ -215,6 +227,28 @@ async def approve_suggestion(
     suggestion = result.scalar_one_or_none()
     if not suggestion:
         raise HTTPException(status_code=404, detail="Suggestion not found or already reviewed")
+
+    # New deal creation
+    if suggestion.suggested_field == "new_deal":
+        try:
+            nd = json.loads(suggestion.suggested_value or "{}")
+        except (json.JSONDecodeError, TypeError):
+            nd = {}
+        ts = datetime.now(timezone.utc).strftime("%Y/%m/%d")
+        new_deal = Deal(
+            company_name=nd.get("company_name", "Unknown"),
+            sector_primary=nd.get("sector"),
+            bucket="Active-Discussions",
+            stage="Initial Conversations",
+            commentary=f"{ts}: [Auto] {nd.get('summary', '')}",
+            updated_by="email_scan",
+        )
+        db.add(new_deal)
+        await db.flush()
+        suggestion.status = "approved"
+        suggestion.reviewed_at = datetime.now(timezone.utc)
+        suggestion.reviewed_by = body.reviewer
+        return {"ok": True, "deal_id": new_deal.id, "company_name": new_deal.company_name, "created": True}
 
     deal_res = await db.execute(select(Deal).where(Deal.id == suggestion.deal_id))
     deal = deal_res.scalar_one_or_none()
