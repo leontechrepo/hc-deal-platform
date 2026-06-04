@@ -4,6 +4,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -120,6 +121,8 @@ class PendingSuggestion(Base):
     suggested_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     claude_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     email_subject: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str] = mapped_column(Text, default="email_scan", nullable=False)
     status: Mapped[str] = mapped_column(Text, default="pending", nullable=False)  # pending | approved | rejected
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
@@ -141,8 +144,9 @@ class EmailScanLog(Base):
     graph_message_id: Mapped[str] = mapped_column(Text, nullable=False)
     user_email: Mapped[str] = mapped_column(Text, nullable=False)
     subject: Mapped[str | None] = mapped_column(Text, nullable=True)
+    thread_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     matched_deal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True)
     claude_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
-    action_taken: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action_taken: Mapped[str | None] = mapped_column(Text, nullable=True)  # no_match | queued_for_review | filtered | new_deal_detected
