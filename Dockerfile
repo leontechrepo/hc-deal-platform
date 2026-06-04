@@ -17,6 +17,8 @@ COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install
 
 COPY frontend/ ./frontend/
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 RUN cd frontend && npm run build
 
 # Copy rest of app
