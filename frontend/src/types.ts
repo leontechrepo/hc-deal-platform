@@ -11,6 +11,7 @@ export interface Deal {
   security: string | null
   uop: string | null
   source: string | null
+  timing_qtr: string | null
   nda: string | null
   dataroom: string | null
   mgmt_meeting: string | null
