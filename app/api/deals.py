@@ -74,6 +74,7 @@ async def list_deals(db: AsyncSession = Depends(get_db)):
             "security": d.security,
             "uop": d.uop,
             "source": d.source,
+            "timing_qtr": d.timing_qtr,
             "nda": d.nda,
             "dataroom": d.dataroom,
             "mgmt_meeting": d.mgmt_meeting,
