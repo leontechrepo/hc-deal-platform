@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { PendingSuggestion } from '../../types'
 import { useReviewQueue, useApproveSuggestion, useRejectSuggestion } from '../../hooks/useReviewQueue'
 import { StagePill } from '../DealTable/StagePill'
@@ -92,6 +92,10 @@ function ConfidenceBadge({ confidence }: { confidence: number | null }) {
 function SuggestionCard({ suggestion: s, showDealHeader, onApprove, onReject, busy }: CardProps) {
   const [draft, setDraft] = useState(s.suggested_value ?? s.claude_summary ?? '')
   const [editing, setEditing] = useState(false)
+
+  useEffect(() => {
+    setDraft(s.suggested_value ?? s.claude_summary ?? '')
+  }, [s.suggested_value, s.claude_summary])
 
   const isNewDeal = s.suggested_field === 'new_deal'
   const isFieldUpdate = !isNewDeal && s.suggested_field !== 'commentary'

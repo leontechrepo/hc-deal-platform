@@ -22,6 +22,9 @@ _SKIP_SUBJECT_PREFIXES = (
 )
 _SKIP_SENDER_PATTERNS = ("noreply@", "no-reply@", "donotreply@")
 
+# Explicit allowlist — matches exactly the fields listed in the Claude prompt
+_ALLOWED_FIELD_UPDATES = frozenset({"stage", "bucket", "nda", "mgmt_meeting", "ioi_offered", "ioi_signed"})
+
 
 def _is_low_value(subject: str, sender: str) -> bool:
     subj = subject.lower().strip()
@@ -254,7 +257,7 @@ async def run_scan(db: AsyncSession) -> int:
                         for fu in field_updates:
                             field = fu.get("field", "")
                             value = fu.get("value", "")
-                            if field and hasattr(deal, field):
+                            if field and field in _ALLOWED_FIELD_UPDATES:
                                 await _upsert_suggestion(
                                     db,
                                     deal_id=deal_id,
