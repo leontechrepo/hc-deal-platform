@@ -23,6 +23,83 @@ export interface Deal {
   last_updated: string | null
   updated_by: string
   total_funded_m: number | null
+  // Pipeline model (migration 004+)
+  pipeline_stage: string | null
+  status: string | null
+  // Structural / financial / covenant fields (migration 005)
+  state: string | null
+  next_action: string | null
+  sourcing_date: string | null
+  contact_name: string | null
+  contact_role: string | null
+  nda_date: string | null
+  nda_status: string | null
+  tenor_months: number | null
+  amortization: string | null
+  oid_pct: number | null
+  sofr_floor_pct: number | null
+  call_protection: string | null
+  maturity_date: string | null
+  total_leverage: number | null
+  spread_bps: number | null
+  base_rate: string | null
+  sofr_rate: number | null
+  all_in_rate: number | null
+  hold_amount_m: number | null
+  ltm_revenue_m: number | null
+  ltm_ebitda_m: number | null
+  ebitda_margin: number | null
+  revenue_growth_pct: number | null
+  ebitda_growth_pct: number | null
+  capex_m: number | null
+  fcf_m: number | null
+  dscr: number | null
+  fccr: number | null
+  interest_coverage: number | null
+  max_leverage_covenant: number | null
+  min_fccr_covenant: number | null
+  capex_limit_covenant_m: number | null
+  employees: number | null
+  locations_count: number | null
+  year_founded: number | null
+  risk_score: number | null
+  deal_team: string[] | null
+  underwriting_locked: boolean
+}
+
+export interface CreateDealInput {
+  company_name: string
+  location?: string | null
+  sector_primary?: string | null
+  sector_full?: string | null
+  subsector?: string | null
+  security?: string | null
+  uop?: string | null
+  source?: string | null
+  state?: string | null
+  contact_name?: string | null
+  contact_role?: string | null
+  employees?: number | null
+  locations_count?: number | null
+  year_founded?: number | null
+  deal_size_m?: number | null
+  hold_amount_m?: number | null
+  tenor_months?: number | null
+  oid_pct?: number | null
+  spread_bps?: number | null
+  sofr_rate?: number | null
+  sofr_floor_pct?: number | null
+  ltm_revenue_m?: number | null
+  ltm_ebitda_m?: number | null
+  capex_m?: number | null
+  ebitda_margin?: number | null
+  revenue_growth_pct?: number | null
+  max_leverage_covenant?: number | null
+  min_fccr_covenant?: number | null
+  capex_limit_covenant_m?: number | null
+  pipeline_stage?: string
+  status?: string
+  base_rate?: string | null
 }
 
 export interface KPIs {

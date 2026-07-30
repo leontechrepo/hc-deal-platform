@@ -21,11 +21,19 @@
   margin-top: 2px;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
 .tabs {
   display: flex;
   gap: 0;
-  border-bottom: 2px solid var(--gray-200);
-  margin-bottom: 20px;
 }
 
 .tab {
@@ -50,6 +58,13 @@
   color: var(--navy);
   border-bottom-color: var(--gold);
   font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .loading {

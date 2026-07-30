@@ -1,5 +1,19 @@
 import { Badge, type BadgeTone } from '../ui/Badge/Badge'
 
+export const PIPELINE_STAGES = [
+  'sourcing',
+  'intake_triage',
+  'nda_execution',
+  'screening',
+  'pre_loi_diligence',
+  'loi_negotiation',
+  'loi_signed',
+  'post_loi_diligence',
+  'ic_approval',
+  'documentation',
+  'portfolio_monitoring',
+] as const
+
 const PIPELINE_STAGE_TONE: Record<string, BadgeTone> = {
   sourcing: 'gray',
   intake_triage: 'gray',
