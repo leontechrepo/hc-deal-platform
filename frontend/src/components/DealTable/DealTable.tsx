@@ -1,13 +1,14 @@
 import type { Deal } from '../../types'
+import { InlineEdit } from './InlineEdit'
+import { ProcessDots } from './ProcessDots'
+import { StagePill } from './StagePill'
+import { DataTable, type Column } from '../ui/DataTable/DataTable'
+import styles from './DealTable.module.css'
 
 function parseLocalDate(s: string) {
   const [y, m, d] = s.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
-import { InlineEdit } from './InlineEdit'
-import { ProcessDots } from './ProcessDots'
-import { StagePill } from './StagePill'
-import styles from './DealTable.module.css'
 
 const STAGE_ORDER = [
   'Closed',
@@ -21,6 +22,60 @@ interface Props {
   deals: Deal[]
   showStage?: boolean  // reserved for future use (All Active tab)
 }
+
+const columns: Column<Deal>[] = [
+  {
+    key: 'company',
+    header: 'Company / Location',
+    render: (deal) => (
+      <>
+        <span className={styles.companyName}>{deal.company_name}</span>
+        <span className={styles.companyMeta}>
+          {[deal.sector_primary, deal.location].filter(Boolean).join(' · ')}
+          {deal.last_updated && (
+            <> · {parseLocalDate(deal.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+          )}
+        </span>
+      </>
+    ),
+  },
+  {
+    key: 'size',
+    header: 'Size ($M)',
+    mono: true,
+    render: (deal) => (
+      <span className={styles.size}>
+        {deal.deal_size_m ? `$${deal.deal_size_m}M` : <span className={styles.dim}>TBD</span>}
+      </span>
+    ),
+  },
+  {
+    key: 'sector',
+    header: 'Sector',
+    render: (deal) => (
+      <>
+        <InlineEdit dealId={deal.id} field="sector_primary" value={deal.sector_primary} />
+        {deal.subsector && <div className={styles.subsector}>{deal.subsector}</div>}
+      </>
+    ),
+  },
+  {
+    key: 'security',
+    header: 'Security',
+    render: (deal) => deal.security ?? <span className={styles.dim}>—</span>,
+  },
+  {
+    key: 'process',
+    header: 'Process',
+    render: (deal) => <ProcessDots deal={deal} />,
+  },
+  {
+    key: 'commentary',
+    header: 'Commentary / Next Steps',
+    width: 200,
+    render: (deal) => <InlineEdit dealId={deal.id} field="commentary" value={deal.commentary} multiline />,
+  },
+]
 
 export function DealTable({ deals, showStage: _showStage = false }: Props) {
   if (deals.length === 0) {
@@ -46,51 +101,11 @@ export function DealTable({ deals, showStage: _showStage = false }: Props) {
         <div key={stage} className={styles.section}>
           <div className={styles.stageHeader}>
             <StagePill stage={stage} />
-            <span style={{ color: 'var(--gray-400)', fontWeight: 400 }}>
+            <span className={styles.dealCount}>
               {byStage.get(stage)!.length} deal{byStage.get(stage)!.length !== 1 ? 's' : ''}
             </span>
           </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Company / Location</th>
-                <th>Size ($M)</th>
-                <th>Sector</th>
-                <th>Security</th>
-                <th>Process</th>
-                <th style={{ minWidth: 200 }}>Commentary / Next Steps</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byStage.get(stage)!.map(deal => (
-                <tr key={deal.id}>
-                  <td>
-                    <span className={styles.companyName}>{deal.company_name}</span>
-                    <span className={styles.companyMeta}>
-                      {[deal.sector_primary, deal.location].filter(Boolean).join(' · ')}
-                      {deal.last_updated && (
-                        <> · {parseLocalDate(deal.last_updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
-                      )}
-                    </span>
-                  </td>
-                  <td className={styles.size}>
-                    {deal.deal_size_m ? `$${deal.deal_size_m}M` : <span style={{ color: 'var(--gray-400)' }}>TBD</span>}
-                  </td>
-                  <td>
-                    <InlineEdit dealId={deal.id} field="sector_primary" value={deal.sector_primary} />
-                    {deal.subsector && (
-                      <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 2 }}>{deal.subsector}</div>
-                    )}
-                  </td>
-                  <td>{deal.security ?? <span style={{ color: 'var(--gray-400)' }}>—</span>}</td>
-                  <td><ProcessDots deal={deal} /></td>
-                  <td>
-                    <InlineEdit dealId={deal.id} field="commentary" value={deal.commentary} multiline />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable columns={columns} rows={byStage.get(stage)!} rowKey={(deal) => deal.id} />
         </div>
       ))}
     </div>

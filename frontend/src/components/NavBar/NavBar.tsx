@@ -4,6 +4,7 @@ import { useClerk } from '@clerk/react'
 import { triggerScan } from '../../api/admin'
 import { useNav } from '../../NavContext'
 import { useToast } from '../Toast/Toast'
+import leonLogo from '../../assets/leon-logo.png'
 import styles from './NavBar.module.css'
 
 function IconDashboard() {
@@ -97,18 +98,14 @@ export function NavBar() {
   return (
     <nav className={cls}>
       <div className={styles.logo}>
-        {collapsed ? (
-          <div className={styles.logoIcon}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M10 5v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </div>
-        ) : (
-          <>
+        <div className={styles.logoMark}>
+          <img src={leonLogo} alt="Leon" className={styles.logoImg} />
+        </div>
+        {!collapsed && (
+          <div className={styles.logoText}>
             <span className={styles.logoTitle}>LHP Private Credit</span>
             <span className={styles.logoSub}>Deal Pipeline</span>
-          </>
+          </div>
         )}
       </div>
 

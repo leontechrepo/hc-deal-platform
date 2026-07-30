@@ -16,38 +16,9 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.table th {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.dealCount {
   color: var(--gray-400);
-  padding: 6px 10px;
-  text-align: left;
-  border-bottom: 1px solid var(--gray-200);
-  background: var(--gray-100);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 9px 10px;
-  vertical-align: top;
-  border-bottom: 1px solid var(--gray-100);
-  color: var(--navy);
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.table tbody tr:hover td {
-  background: var(--gray-100);
+  font-weight: 400;
 }
 
 .companyName {
@@ -62,9 +33,19 @@
   margin-top: 2px;
 }
 
+.subsector {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
 .size {
   font-weight: 500;
   white-space: nowrap;
+}
+
+.dim {
+  color: var(--gray-400);
 }
 
 .empty {

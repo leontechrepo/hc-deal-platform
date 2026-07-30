@@ -7,7 +7,7 @@
 }
 
 .mastheadTitle {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 600;
   color: var(--navy);

@@ -1,0 +1,74 @@
+:root {
+  --navy: #0a1f44;
+  --navy2: #0d2b5e;
+  --navy-light: #0d2b5e;
+  --gold: #c9a84c;
+  --gold-light: #F5ECD7;
+  --white: #ffffff;
+  --off-white: #f0f2f6;
+  --lt: #f0f2f6;
+  --surface: #f0f2f6;
+  --border: #dde1e9;
+  --text: #1a2340;
+  --muted: #6b7a9b;
+
+  --gray-100: #F2F1EE;
+  --gray-200: #dde1e9;
+  --gray-400: #6b7a9b;
+  --gray-700: #4A4845;
+
+  --green: #2ecc8f;
+  --green-bg: #EAF4EA;
+  --green-fg: #1A5C1A;
+  --red: #e05c5c;
+  --red-bg: #FDECEA;
+  --red-fg: #C62828;
+  --amber: #f0a030;
+  --blue: #6478dc;
+  --blue-bg: #E8F0FB;
+  --blue-fg: #154A7A;
+  --yellow-bg: #FFFBEA;
+  --yellow-fg: #7A6200;
+  --purple-bg: #F0EBF8;
+  --purple-fg: #4A1A7A;
+  --gray-bg: #F2F1EE;
+  --gray-fg: #6b7a9b;
+  --orange-bg: #FDF1E3;
+  --orange-fg: #B5650A;
+
+  --font: 'Jost', 'Segoe UI', sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'DM Mono', 'Fira Mono', monospace;
+
+  --heading: #0a1f44;
+  --on-gold: #0a1f44;
+
+  --workspace: #f6f8fb;
+  --workspace-soft: #eef3f8;
+  --panel: rgba(255,255,255,.86);
+  --panel-solid: #ffffff;
+  --panel-raised: rgba(255,255,255,.94);
+  --glass-border: rgba(131,145,169,.26);
+  --glass-border-strong: rgba(201,168,76,.42);
+
+  --shadow-soft: 0 10px 26px rgba(10,31,68,.07);
+  --shadow-float: 0 18px 44px rgba(10,31,68,.11);
+  --shadow-hover: 0 22px 50px rgba(10,31,68,.14);
+
+  --card-border-gold: rgba(201,168,76,.14);
+  --input-gold-border: rgba(201,168,76,.55);
+  --input-gold-ring: rgba(201,168,76,.16);
+  --input-gold-ring-focus: rgba(201,168,76,.3);
+
+  --chat-navy: #0a1f44;
+  --chat-navy-hover: #0d2b5e;
+  --chat-heading: #0a1f44;
+  --chat-gold: #c9a84c;
+  --chat-surface: rgba(252,247,236,.88);
+  --chat-surface-soft: rgba(248,242,228,.72);
+  --chat-surface-accent: rgba(201,168,76,.10);
+  --chat-focus-ring: rgba(10,31,68,.08);
+
+  --nav-width-expanded: 220px;
+  --nav-width-collapsed: 56px;
+}

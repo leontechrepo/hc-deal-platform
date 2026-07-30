@@ -1,9 +1,11 @@
-const STAGE_STYLES: Record<string, { bg: string; fg: string }> = {
-  'Closed':                { bg: 'var(--green-bg)', fg: 'var(--green)' },
-  'Pre-LOI Diligence':     { bg: 'var(--blue-bg)', fg: 'var(--blue-fg)' },
-  'Initial Conversations': { bg: 'var(--purple-bg)', fg: 'var(--purple-fg)' },
-  'On Hold':               { bg: 'var(--yellow-bg)', fg: 'var(--yellow-fg)' },
-  'Passed':                { bg: 'var(--red-bg)', fg: 'var(--red-fg)' },
+import { Badge, type BadgeTone } from '../ui/Badge/Badge'
+
+const STAGE_TONE: Record<string, BadgeTone> = {
+  'Closed':                'green',
+  'Pre-LOI Diligence':     'blue',
+  'Initial Conversations': 'purple',
+  'On Hold':                'yellow',
+  'Passed':                'red',
 }
 
 interface Props {
@@ -12,19 +14,6 @@ interface Props {
 
 export function StagePill({ stage }: Props) {
   if (!stage) return null
-  const s = STAGE_STYLES[stage] ?? { bg: 'var(--gray-100)', fg: 'var(--gray-400)' }
-  return (
-    <span style={{
-      display: 'inline-block',
-      padding: '2px 8px',
-      borderRadius: '12px',
-      fontSize: '11px',
-      fontWeight: 500,
-      background: s.bg,
-      color: s.fg,
-      whiteSpace: 'nowrap',
-    }}>
-      {stage}
-    </span>
-  )
+  const tone = STAGE_TONE[stage] ?? 'gray'
+  return <Badge tone={tone}>{stage}</Badge>
 }

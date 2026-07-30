@@ -1,0 +1,27 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.range {
+  width: 100%;
+  accent-color: var(--navy);
+}

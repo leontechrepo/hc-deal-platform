@@ -3,7 +3,7 @@
 }
 
 .pageTitle {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 600;
   color: var(--navy);
@@ -90,7 +90,7 @@
 
 .source.excel_import {
   background: var(--green-bg);
-  color: var(--green);
+  color: var(--green-fg);
 }
 
 .valueChange {
@@ -113,7 +113,7 @@
 }
 
 .newVal {
-  color: var(--green);
+  color: var(--green-fg);
   background: var(--green-bg);
   padding: 1px 5px;
   border-radius: 3px;

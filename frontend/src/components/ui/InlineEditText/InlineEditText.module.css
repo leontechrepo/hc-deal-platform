@@ -1,0 +1,30 @@
+.display {
+  display: inline-block;
+  cursor: pointer;
+  min-height: 1.2em;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.1s;
+}
+
+.display:hover {
+  background: var(--gray-100);
+}
+
+.placeholder {
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--white);
+  outline: none;
+  resize: vertical;
+}

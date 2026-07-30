@@ -3,6 +3,8 @@ import type { PendingSuggestion } from '../../types'
 import { useReviewQueue, useApproveSuggestion, useRejectSuggestion } from '../../hooks/useReviewQueue'
 import { StagePill } from '../DealTable/StagePill'
 import { useToast } from '../Toast/Toast'
+import { ConfidenceBadge } from '../ui/ConfidenceBadge/ConfidenceBadge'
+import { ApproveRejectActions } from '../ui/ApproveRejectActions/ApproveRejectActions'
 import styles from './ReviewBanner.module.css'
 
 // Group suggestions by deal_id (null deal_id = new deal, each gets its own group)
@@ -82,13 +84,6 @@ interface CardProps {
   busy: boolean
 }
 
-function ConfidenceBadge({ confidence }: { confidence: number | null }) {
-  if (confidence === null) return null
-  const pct = Math.round(confidence * 100)
-  const cls = confidence >= 0.85 ? styles.confHigh : confidence >= 0.7 ? styles.confMed : styles.confLow
-  return <span className={`${styles.confidenceBadge} ${cls}`}>{pct}% conf</span>
-}
-
 function SuggestionCard({ suggestion: s, showDealHeader, onApprove, onReject, busy }: CardProps) {
   const [draft, setDraft] = useState(s.suggested_value ?? s.claude_summary ?? '')
   const [editing, setEditing] = useState(false)
@@ -144,18 +139,12 @@ function SuggestionCard({ suggestion: s, showDealHeader, onApprove, onReject, bu
         />
       )}
 
-      <div className={styles.actions}>
-        <button
-          className={styles.approveBtn}
-          disabled={busy}
-          onClick={() => onApprove(isFieldUpdate || isNewDeal ? (s.suggested_value ?? '') : draft)}
-        >
-          {isNewDeal ? 'Add Deal' : 'Approve'}
-        </button>
-        <button className={styles.rejectBtn} disabled={busy} onClick={onReject}>
-          Reject
-        </button>
-      </div>
+      <ApproveRejectActions
+        busy={busy}
+        approveLabel={isNewDeal ? 'Add Deal' : 'Approve'}
+        onApprove={() => onApprove(isFieldUpdate || isNewDeal ? (s.suggested_value ?? '') : draft)}
+        onReject={onReject}
+      />
     </div>
   )
 }

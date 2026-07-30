@@ -20,7 +20,7 @@ function AuthBridge() {
 
 function Layout() {
   const { collapsed } = useNav()
-  const navWidth = collapsed ? '56px' : '220px'
+  const navWidth = collapsed ? 'var(--nav-width-collapsed)' : 'var(--nav-width-expanded)'
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
