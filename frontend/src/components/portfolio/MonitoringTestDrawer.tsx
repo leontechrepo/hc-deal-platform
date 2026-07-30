@@ -169,6 +169,7 @@ export function MonitoringTestDrawer({ position }: Props) {
               <input
                 className={formStyles.input}
                 type="number"
+              step="any"
                 value={testForm.leverage ?? ''}
                 onChange={e => setTestForm(f => ({ ...f, leverage: toNullableNumber(e.target.value) }))}
               />
@@ -180,6 +181,7 @@ export function MonitoringTestDrawer({ position }: Props) {
               <input
                 className={formStyles.input}
                 type="number"
+              step="any"
                 value={testForm.dscr ?? ''}
                 onChange={e => setTestForm(f => ({ ...f, dscr: toNullableNumber(e.target.value) }))}
               />
@@ -189,6 +191,7 @@ export function MonitoringTestDrawer({ position }: Props) {
               <input
                 className={formStyles.input}
                 type="number"
+              step="any"
                 value={testForm.fccr ?? ''}
                 onChange={e => setTestForm(f => ({ ...f, fccr: toNullableNumber(e.target.value) }))}
               />

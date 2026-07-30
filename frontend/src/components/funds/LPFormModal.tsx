@@ -63,6 +63,7 @@ export function LPFormModal({ open, onClose, initial, onSubmit }: Props) {
             <input
               className={formStyles.input}
               type="number"
+              step="any"
               value={form.commitment_m ?? ''}
               onChange={e => setForm(f => ({ ...f, commitment_m: toNullableNumber(e.target.value) }))}
             />
@@ -72,6 +73,7 @@ export function LPFormModal({ open, onClose, initial, onSubmit }: Props) {
             <input
               className={formStyles.input}
               type="number"
+              step="any"
               value={form.called_m ?? ''}
               onChange={e => setForm(f => ({ ...f, called_m: toNullableNumber(e.target.value) }))}
             />

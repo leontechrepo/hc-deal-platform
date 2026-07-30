@@ -118,22 +118,26 @@ export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Total Commitment ($M)</label>
-            <input className={formStyles.input} type="number" value={form.total_commitment_m ?? ''} onChange={e => set('total_commitment_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.total_commitment_m ?? ''} onChange={e => set('total_commitment_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Called Capital ($M)</label>
-            <input className={formStyles.input} type="number" value={form.called_capital_m ?? ''} onChange={e => set('called_capital_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.called_capital_m ?? ''} onChange={e => set('called_capital_m', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Deployed Capital ($M)</label>
-            <input className={formStyles.input} type="number" value={form.deployed_capital_m ?? ''} onChange={e => set('deployed_capital_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.deployed_capital_m ?? ''} onChange={e => set('deployed_capital_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Available Capital ($M)</label>
-            <input className={formStyles.input} type="number" value={form.available_capital_m ?? ''} onChange={e => set('available_capital_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.available_capital_m ?? ''} onChange={e => set('available_capital_m', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
@@ -149,14 +153,16 @@ export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Target Leverage (x)</label>
-            <input className={formStyles.input} type="number" value={form.target_leverage ?? ''} onChange={e => set('target_leverage', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.target_leverage ?? ''} onChange={e => set('target_leverage', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Max Single Exposure (%)</label>
-            <input className={formStyles.input} type="number" value={form.max_single_exposure_pct ?? ''} onChange={e => set('max_single_exposure_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.max_single_exposure_pct ?? ''} onChange={e => set('max_single_exposure_pct', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Target Hold</label>
@@ -167,18 +173,21 @@ export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>GP Commitment ($M)</label>
-            <input className={formStyles.input} type="number" value={form.gp_commitment_m ?? ''} onChange={e => set('gp_commitment_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.gp_commitment_m ?? ''} onChange={e => set('gp_commitment_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Mgmt Fee (%)</label>
-            <input className={formStyles.input} type="number" value={form.mgmt_fee_pct ?? ''} onChange={e => set('mgmt_fee_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.mgmt_fee_pct ?? ''} onChange={e => set('mgmt_fee_pct', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Carried Interest (%)</label>
-            <input className={formStyles.input} type="number" value={form.carried_interest_pct ?? ''} onChange={e => set('carried_interest_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} type="number"
+              step="any" value={form.carried_interest_pct ?? ''} onChange={e => set('carried_interest_pct', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Investment Period</label>

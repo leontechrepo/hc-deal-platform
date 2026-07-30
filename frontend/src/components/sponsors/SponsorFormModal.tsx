@@ -97,6 +97,7 @@ export function SponsorFormModal({ open, onClose, initial, onSubmit }: Props) {
             <input
               className={formStyles.input}
               type="number"
+              step="any"
               value={form.aum_m ?? ''}
               onChange={e => set('aum_m', toNullableNumber(e.target.value))}
             />
