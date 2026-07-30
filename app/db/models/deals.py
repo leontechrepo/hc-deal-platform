@@ -1,16 +1,14 @@
 from datetime import date, datetime, timezone
 
 from sqlalchemy import (
-    Boolean,
+    ARRAY,
     Date,
     DateTime,
-    Float,
     ForeignKey,
     Index,
     Integer,
     Numeric,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +25,10 @@ class Deal(Base):
         Index("idx_deals_stage", "stage"),
         Index("idx_deals_bucket", "bucket"),
         Index("idx_deals_sector_primary", "sector_primary"),
+        Index("idx_deals_pipeline_stage", "pipeline_stage"),
+        Index("idx_deals_status", "status"),
+        Index("idx_deals_sponsor_id", "sponsor_id"),
+        Index("idx_deals_fund_id", "fund_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -35,7 +37,8 @@ class Deal(Base):
     company_name: Mapped[str] = mapped_column(Text, nullable=False)
     location: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Classification
+    # Legacy classification (kept as-is — audit trail + backfill input for
+    # pipeline_stage/status; the Excel importer still writes these)
     bucket: Mapped[str | None] = mapped_column(Text, nullable=True)  # Closed / Active-Diligence / Active-Discussions / Dead-Hold
     stage: Mapped[str | None] = mapped_column(Text, nullable=True)   # Closed / Pre-LOI Diligence / Initial Conversations / On Hold / Passed
     sector_primary: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -50,7 +53,7 @@ class Deal(Base):
     timing_qtr: Mapped[str | None] = mapped_column(Text, nullable=True)
     competition: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Process milestones (P = completed, blank = not yet)
+    # Process milestones (P = completed, blank = not yet) — legacy, kept as-is
     nda: Mapped[str | None] = mapped_column(Text, nullable=True)
     dataroom: Mapped[str | None] = mapped_column(Text, nullable=True)
     mgmt_meeting: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -62,7 +65,7 @@ class Deal(Base):
     commentary: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_updated: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    # Financials
+    # Financials (legacy Excel-era)
     ltm_revenue_m: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
     ltm_ebitda_m: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
     ebitda_margin: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
@@ -80,6 +83,50 @@ class Deal(Base):
     updated_by: Mapped[str] = mapped_column(Text, default="excel_import", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now, nullable=False)
+
+    # --- New pipeline model (migration 004) ---
+    pipeline_stage: Mapped[str] = mapped_column(Text, nullable=False)  # 11-value funnel, see app/domain/pipeline_stage.py
+    status: Mapped[str] = mapped_column(Text, nullable=False)  # Active / On Hold / Passed / Dead / Closed
+
+    # --- New structural/financial/covenant fields (migration 005) ---
+    state: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sourcing_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_role: Mapped[str | None] = mapped_column(Text, nullable=True)
+    nda_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    nda_status: Mapped[str | None] = mapped_column(Text, nullable=True)  # Not Started / Sent / Signed
+    tenor_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    amortization: Mapped[str | None] = mapped_column(Text, nullable=True)
+    oid_pct: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    sofr_floor_pct: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    call_protection: Mapped[str | None] = mapped_column(Text, nullable=True)
+    maturity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    total_leverage: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    spread_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    base_rate: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sofr_rate: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    all_in_rate: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    hold_amount_m: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    revenue_growth_pct: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    ebitda_growth_pct: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    capex_m: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
+    fcf_m: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
+    dscr: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    fccr: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    interest_coverage: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    max_leverage_covenant: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    min_fccr_covenant: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    capex_limit_covenant_m: Mapped[float | None] = mapped_column(Numeric(10, 3), nullable=True)
+    employees: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    locations_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    year_founded: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    risk_score: Mapped[float | None] = mapped_column(Numeric(4, 1), nullable=True)
+    deal_team: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+
+    # --- Sponsor/Fund references (migration 006) ---
+    sponsor_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("sponsors.id", ondelete="SET NULL"), nullable=True)
+    fund_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("funds.id", ondelete="SET NULL"), nullable=True)
 
     update_log: Mapped[list["DealUpdateLog"]] = relationship(
         back_populates="deal", cascade="all, delete-orphan"
@@ -103,50 +150,3 @@ class DealUpdateLog(Base):
     email_subject: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     deal: Mapped["Deal"] = relationship(back_populates="update_log")
-
-
-class PendingSuggestion(Base):
-    """AI-proposed deal update awaiting human approval."""
-
-    __tablename__ = "pending_suggestions"
-    __table_args__ = (
-        Index("idx_ps_status", "status"),
-        Index("idx_ps_deal_id", "deal_id"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    deal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deals.id", ondelete="CASCADE"), nullable=True)
-    email_scan_log_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("email_scan_log.id", ondelete="SET NULL"), nullable=True)
-    suggested_field: Mapped[str] = mapped_column(Text, default="commentary", nullable=False)
-    suggested_value: Mapped[str | None] = mapped_column(Text, nullable=True)
-    claude_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
-    email_subject: Mapped[str | None] = mapped_column(Text, nullable=True)
-    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
-    current_value: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source: Mapped[str] = mapped_column(Text, default="email_scan", nullable=False)
-    status: Mapped[str] = mapped_column(Text, default="pending", nullable=False)  # pending | approved | rejected
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    reviewed_by: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    deal: Mapped["Deal | None"] = relationship("Deal", foreign_keys=[deal_id])
-
-
-class EmailScanLog(Base):
-    __tablename__ = "email_scan_log"
-    __table_args__ = (
-        UniqueConstraint("graph_message_id", name="uq_email_scan_log_message_id"),
-        Index("idx_esl_received_at", "received_at"),
-        Index("idx_esl_matched_deal_id", "matched_deal_id"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    graph_message_id: Mapped[str] = mapped_column(Text, nullable=False)
-    user_email: Mapped[str] = mapped_column(Text, nullable=False)
-    subject: Mapped[str | None] = mapped_column(Text, nullable=True)
-    thread_id: Mapped[str | None] = mapped_column(Text, nullable=True)
-    received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    matched_deal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True)
-    claude_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
-    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
-    action_taken: Mapped[str | None] = mapped_column(Text, nullable=True)  # no_match | queued_for_review | filtered | new_deal_detected

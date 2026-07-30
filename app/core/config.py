@@ -16,7 +16,20 @@ class Settings(BaseSettings):
     CLERK_JWKS_URL: str = ""
     SCAN_INTERVAL_MINUTES: int = 240
 
+    # Railway's native S3-compatible object storage bucket, used for deal
+    # document uploads (app/storage/documents.py). Left empty in local dev —
+    # document metadata still works, uploads/downloads 503 until configured.
+    STORAGE_BUCKET_NAME: str = ""
+    STORAGE_ENDPOINT_URL: str = ""
+    STORAGE_ACCESS_KEY_ID: str = ""
+    STORAGE_SECRET_ACCESS_KEY: str = ""
+    STORAGE_REGION: str = "auto"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def storage_configured(self) -> bool:
+        return bool(self.STORAGE_BUCKET_NAME and self.STORAGE_ENDPOINT_URL and self.STORAGE_ACCESS_KEY_ID)
 
     @property
     def monitored_users(self) -> list[str]:

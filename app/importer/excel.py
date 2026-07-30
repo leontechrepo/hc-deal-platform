@@ -17,6 +17,7 @@ from typing import Any
 import openpyxl
 
 from app.db.session import AsyncSessionLocal, init_db
+from app.domain.pipeline_stage import derive_pipeline_stage
 
 
 # Column indices (0-based) in the "Internal Pipeline" sheet
@@ -222,6 +223,18 @@ async def _upsert(deals: list[dict]) -> None:
                     {**d, "id": row[0]},
                 )
             else:
+                # New deal (not yet touched by the granular pipeline_stage UI) —
+                # derive its initial pipeline_stage/status from the legacy
+                # bucket/stage/milestone fields, same as the migration 004
+                # backfill. Existing deals are NOT re-derived on UPDATE above:
+                # once a deal is being tracked in the new UI, pipeline_stage is
+                # advanced manually there and must not be regressed by a stale
+                # Excel re-import that has no visibility into the finer stages
+                # (post_loi_diligence / ic_approval / documentation).
+                pipeline_stage, status = derive_pipeline_stage(
+                    d["bucket"], d["stage"], d["nda"], d["dataroom"],
+                    d["mgmt_meeting"], d["ioi_offered"], d["ioi_signed"],
+                )
                 await session.execute(
                     text("""
                         INSERT INTO deals (
@@ -234,7 +247,8 @@ async def _upsert(deals: list[dict]) -> None:
                             ltm_revenue_m, ltm_ebitda_m, ebitda_margin,
                             committed_upfront_m, committed_ddtl_m, total_funded_m,
                             cash_int_pct, pik_int_pct, total_int_pct,
-                            reasons_for_passing, updated_by
+                            reasons_for_passing, updated_by,
+                            pipeline_stage, status
                         ) VALUES (
                             :company_name, :location, :bucket, :stage,
                             :sector_full, :sector_primary, :subsector,
@@ -245,10 +259,11 @@ async def _upsert(deals: list[dict]) -> None:
                             :ltm_revenue_m, :ltm_ebitda_m, :ebitda_margin,
                             :committed_upfront_m, :committed_ddtl_m, :total_funded_m,
                             :cash_int_pct, :pik_int_pct, :total_int_pct,
-                            :reasons_for_passing, :updated_by
+                            :reasons_for_passing, :updated_by,
+                            :pipeline_stage, :status
                         )
                     """),
-                    d,
+                    {**d, "pipeline_stage": pipeline_stage, "status": status},
                 )
         await session.commit()
 
