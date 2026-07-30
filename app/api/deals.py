@@ -1,4 +1,3 @@
-import json
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -8,21 +7,63 @@ from sqlalchemy import select, text, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import require_auth
-from app.db.models import Deal, DealUpdateLog, EmailScanLog, PendingSuggestion
+from app.db.activity import log_activity
+from app.db.models import Deal, DealUpdateLog, EmailScanLog
+from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
+from app.domain.pipeline_stage import (
+    PIPELINE_STAGES,
+    STATUSES,
+    UNDERWRITING_FIELDS,
+    is_underwriting_locked,
+)
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
+# Legacy fields (kept editable — the old Dashboard's inline-edit still targets
+# these) plus every new structural/financial/covenant field from migration 005
+# and the new pipeline_stage/status columns from migration 004.
 EDITABLE_FIELDS = {
     "company_name", "location", "stage", "sector_primary", "sector_full",
     "subsector", "deal_size_m", "security", "uop", "source", "commentary",
     "reasons_for_passing", "bucket",
+    "pipeline_stage", "status",
+    "state", "next_action", "sourcing_date", "contact_name", "contact_role",
+    "nda_date", "nda_status", "tenor_months", "amortization", "oid_pct",
+    "sofr_floor_pct", "call_protection", "maturity_date", "total_leverage",
+    "spread_bps", "base_rate", "sofr_rate", "all_in_rate", "hold_amount_m",
+    "revenue_growth_pct", "ebitda_growth_pct", "capex_m", "fcf_m", "dscr",
+    "fccr", "interest_coverage", "max_leverage_covenant", "min_fccr_covenant",
+    "capex_limit_covenant_m", "employees", "locations_count", "year_founded",
+    "risk_score", "ltm_revenue_m", "ltm_ebitda_m", "ebitda_margin",
 }
+
+_DATE_FIELDS = {"target_close", "sourcing_date", "nda_date", "maturity_date"}
+_NUMERIC_FIELDS = {
+    "deal_size_m", "total_funded_m", "ltm_revenue_m", "ltm_ebitda_m", "ebitda_margin",
+    "oid_pct", "sofr_floor_pct", "total_leverage", "sofr_rate", "all_in_rate",
+    "hold_amount_m", "revenue_growth_pct", "ebitda_growth_pct", "capex_m", "fcf_m",
+    "dscr", "fccr", "interest_coverage", "max_leverage_covenant", "min_fccr_covenant",
+    "capex_limit_covenant_m", "risk_score",
+}
+_INT_FIELDS = {"tenor_months", "spread_bps", "employees", "locations_count", "year_founded"}
+
+
+def _coerce_field_value(field: str, value):
+    if value is None or value == "":
+        return None
+    if field in _DATE_FIELDS:
+        return value if isinstance(value, date) else date.fromisoformat(str(value))
+    if field in _NUMERIC_FIELDS:
+        return float(value)
+    if field in _INT_FIELDS:
+        return int(value)
+    return value
 
 
 class PatchRequest(BaseModel):
     field: str
-    value: str | None
+    value: str | float | int | None = None
 
 
 @router.patch("/deals/{deal_id}")
@@ -39,9 +80,27 @@ async def patch_deal(
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
 
+    if body.field in UNDERWRITING_FIELDS and is_underwriting_locked(deal.pipeline_stage):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"'{body.field}' is locked — underwriting fields become read-only once a "
+                "deal reaches loi_signed or later. Contact an admin to unlock."
+            ),
+        )
+    if body.field == "pipeline_stage" and body.value not in PIPELINE_STAGES:
+        raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {body.value!r}")
+    if body.field == "status" and body.value not in STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {body.value!r}")
+
     old_value = str(getattr(deal, body.field)) if getattr(deal, body.field) is not None else None
 
-    setattr(deal, body.field, body.value)
+    try:
+        coerced = _coerce_field_value(body.field, body.value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid value for '{body.field}': {exc}")
+
+    setattr(deal, body.field, coerced)
     deal.updated_by = "manual_edit"
     deal.updated_at = datetime.now(timezone.utc)
 
@@ -49,47 +108,214 @@ async def patch_deal(
         deal_id=deal_id,
         field_changed=body.field,
         old_value=old_value,
-        new_value=body.value,
+        new_value=str(coerced) if coerced is not None else None,
         source="manual_edit",
     )
     db.add(log)
 
-    return {"ok": True, "deal_id": deal_id, "field": body.field, "value": body.value}
+    if body.field == "pipeline_stage" and coerced == "portfolio_monitoring":
+        await ensure_portfolio_position(deal, db)
+
+    activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
+        "status_change" if body.field == "status" else "system"
+    await log_activity(
+        db, deal_id, "user", activity_type,
+        f"{body.field} changed from {old_value!r} to {coerced!r}",
+    )
+
+    return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
+
+
+def _deal_to_dict(d: Deal) -> dict:
+    return {
+        "id": d.id,
+        "company_name": d.company_name,
+        "bucket": d.bucket,
+        "stage": d.stage,
+        "location": d.location,
+        "deal_size_m": float(d.deal_size_m) if d.deal_size_m is not None else None,
+        "sector_primary": d.sector_primary,
+        "sector_full": d.sector_full,
+        "subsector": d.subsector,
+        "security": d.security,
+        "uop": d.uop,
+        "source": d.source,
+        "timing_qtr": d.timing_qtr,
+        "nda": d.nda,
+        "dataroom": d.dataroom,
+        "mgmt_meeting": d.mgmt_meeting,
+        "ioi_offered": d.ioi_offered,
+        "ioi_signed": d.ioi_signed,
+        "target_close": d.target_close.isoformat() if d.target_close else None,
+        "commentary": d.commentary,
+        "reasons_for_passing": d.reasons_for_passing,
+        "last_updated": d.last_updated.isoformat() if d.last_updated else None,
+        "updated_by": d.updated_by,
+        "total_funded_m": float(d.total_funded_m) if d.total_funded_m is not None else None,
+        # Pipeline model
+        "pipeline_stage": d.pipeline_stage,
+        "status": d.status,
+        # Structural / financial / covenant fields
+        "state": d.state,
+        "next_action": d.next_action,
+        "sourcing_date": d.sourcing_date.isoformat() if d.sourcing_date else None,
+        "contact_name": d.contact_name,
+        "contact_role": d.contact_role,
+        "nda_date": d.nda_date.isoformat() if d.nda_date else None,
+        "nda_status": d.nda_status,
+        "tenor_months": d.tenor_months,
+        "amortization": d.amortization,
+        "oid_pct": float(d.oid_pct) if d.oid_pct is not None else None,
+        "sofr_floor_pct": float(d.sofr_floor_pct) if d.sofr_floor_pct is not None else None,
+        "call_protection": d.call_protection,
+        "maturity_date": d.maturity_date.isoformat() if d.maturity_date else None,
+        "total_leverage": float(d.total_leverage) if d.total_leverage is not None else None,
+        "spread_bps": d.spread_bps,
+        "base_rate": d.base_rate,
+        "sofr_rate": float(d.sofr_rate) if d.sofr_rate is not None else None,
+        "all_in_rate": float(d.all_in_rate) if d.all_in_rate is not None else None,
+        "hold_amount_m": float(d.hold_amount_m) if d.hold_amount_m is not None else None,
+        "ltm_revenue_m": float(d.ltm_revenue_m) if d.ltm_revenue_m is not None else None,
+        "ltm_ebitda_m": float(d.ltm_ebitda_m) if d.ltm_ebitda_m is not None else None,
+        "ebitda_margin": float(d.ebitda_margin) if d.ebitda_margin is not None else None,
+        "revenue_growth_pct": float(d.revenue_growth_pct) if d.revenue_growth_pct is not None else None,
+        "ebitda_growth_pct": float(d.ebitda_growth_pct) if d.ebitda_growth_pct is not None else None,
+        "capex_m": float(d.capex_m) if d.capex_m is not None else None,
+        "fcf_m": float(d.fcf_m) if d.fcf_m is not None else None,
+        "dscr": float(d.dscr) if d.dscr is not None else None,
+        "fccr": float(d.fccr) if d.fccr is not None else None,
+        "interest_coverage": float(d.interest_coverage) if d.interest_coverage is not None else None,
+        "max_leverage_covenant": float(d.max_leverage_covenant) if d.max_leverage_covenant is not None else None,
+        "min_fccr_covenant": float(d.min_fccr_covenant) if d.min_fccr_covenant is not None else None,
+        "capex_limit_covenant_m": float(d.capex_limit_covenant_m) if d.capex_limit_covenant_m is not None else None,
+        "employees": d.employees,
+        "locations_count": d.locations_count,
+        "year_founded": d.year_founded,
+        "risk_score": float(d.risk_score) if d.risk_score is not None else None,
+        "deal_team": d.deal_team,
+        "underwriting_locked": is_underwriting_locked(d.pipeline_stage),
+    }
 
 
 @router.get("/deals")
 async def list_deals(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Deal).order_by(Deal.bucket, Deal.company_name))
     deals = result.scalars().all()
-    return [
-        {
-            "id": d.id,
-            "company_name": d.company_name,
-            "bucket": d.bucket,
-            "stage": d.stage,
-            "location": d.location,
-            "deal_size_m": float(d.deal_size_m) if d.deal_size_m else None,
-            "sector_primary": d.sector_primary,
-            "sector_full": d.sector_full,
-            "subsector": d.subsector,
-            "security": d.security,
-            "uop": d.uop,
-            "source": d.source,
-            "timing_qtr": d.timing_qtr,
-            "nda": d.nda,
-            "dataroom": d.dataroom,
-            "mgmt_meeting": d.mgmt_meeting,
-            "ioi_offered": d.ioi_offered,
-            "ioi_signed": d.ioi_signed,
-            "target_close": d.target_close.isoformat() if d.target_close else None,
-            "commentary": d.commentary,
-            "reasons_for_passing": d.reasons_for_passing,
-            "last_updated": d.last_updated.isoformat() if d.last_updated else None,
-            "updated_by": d.updated_by,
-            "total_funded_m": float(d.total_funded_m) if d.total_funded_m else None,
-        }
-        for d in deals
-    ]
+    return [_deal_to_dict(d) for d in deals]
+
+
+@router.get("/deals/{deal_id}")
+async def get_deal(deal_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    return _deal_to_dict(deal)
+
+
+class CreateDealRequest(BaseModel):
+    company_name: str
+    location: Optional[str] = None
+    sector_primary: Optional[str] = None
+    sector_full: Optional[str] = None
+    subsector: Optional[str] = None
+    security: Optional[str] = None
+    uop: Optional[str] = None
+    source: Optional[str] = None
+    pipeline_stage: str = "sourcing"
+    status: str = "Active"
+    state: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_role: Optional[str] = None
+    employees: Optional[int] = None
+    locations_count: Optional[int] = None
+    year_founded: Optional[int] = None
+    deal_size_m: Optional[float] = None
+    hold_amount_m: Optional[float] = None
+    tenor_months: Optional[int] = None
+    oid_pct: Optional[float] = None
+    spread_bps: Optional[int] = None
+    base_rate: Optional[str] = "SOFR"
+    sofr_rate: Optional[float] = None
+    sofr_floor_pct: Optional[float] = None
+    ltm_revenue_m: Optional[float] = None
+    ltm_ebitda_m: Optional[float] = None
+    capex_m: Optional[float] = None
+    ebitda_margin: Optional[float] = None
+    revenue_growth_pct: Optional[float] = None
+    max_leverage_covenant: Optional[float] = None
+    min_fccr_covenant: Optional[float] = None
+    capex_limit_covenant_m: Optional[float] = None
+
+
+@router.post("/deals")
+async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db)):
+    if body.pipeline_stage not in PIPELINE_STAGES:
+        raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {body.pipeline_stage!r}")
+    if body.status not in STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {body.status!r}")
+
+    # Derived fields computed the same way the mockup's New Deal form does,
+    # so a freshly-created deal shows a sensible leverage/all-in-rate immediately.
+    all_in_rate = None
+    if body.sofr_rate is not None and body.spread_bps is not None:
+        all_in_rate = round(body.sofr_rate + body.spread_bps / 100, 4)
+    total_leverage = None
+    if body.deal_size_m is not None and body.ltm_ebitda_m:
+        total_leverage = round(body.deal_size_m / body.ltm_ebitda_m, 2)
+
+    deal = Deal(
+        company_name=body.company_name,
+        location=body.location,
+        sector_primary=body.sector_primary,
+        sector_full=body.sector_full,
+        subsector=body.subsector,
+        security=body.security,
+        uop=body.uop,
+        source=body.source,
+        bucket="Active-Discussions",
+        stage="Initial Conversations",
+        pipeline_stage=body.pipeline_stage,
+        status=body.status,
+        state=body.state,
+        contact_name=body.contact_name,
+        contact_role=body.contact_role,
+        employees=body.employees,
+        locations_count=body.locations_count,
+        year_founded=body.year_founded,
+        deal_size_m=body.deal_size_m,
+        hold_amount_m=body.hold_amount_m,
+        tenor_months=body.tenor_months,
+        oid_pct=body.oid_pct,
+        spread_bps=body.spread_bps,
+        base_rate=body.base_rate,
+        sofr_rate=body.sofr_rate,
+        sofr_floor_pct=body.sofr_floor_pct,
+        all_in_rate=all_in_rate,
+        total_leverage=total_leverage,
+        ltm_revenue_m=body.ltm_revenue_m,
+        ltm_ebitda_m=body.ltm_ebitda_m,
+        capex_m=body.capex_m,
+        ebitda_margin=body.ebitda_margin,
+        revenue_growth_pct=body.revenue_growth_pct,
+        max_leverage_covenant=body.max_leverage_covenant,
+        min_fccr_covenant=body.min_fccr_covenant,
+        capex_limit_covenant_m=body.capex_limit_covenant_m,
+        updated_by="manual_edit",
+    )
+    db.add(deal)
+    await db.flush()
+
+    db.add(DealUpdateLog(
+        deal_id=deal.id,
+        field_changed="pipeline_stage",
+        old_value=None,
+        new_value=deal.pipeline_stage,
+        source="manual_edit",
+    ))
+    await log_activity(db, deal.id, "user", "system", "Deal created — entered via New Deal form")
+
+    return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
 
 
 @router.get("/kpis")
@@ -170,143 +396,6 @@ async def get_email_scan_logs(
     ]
 
 
-@router.get("/review-queue")
-async def get_review_queue(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(PendingSuggestion, Deal)
-        .outerjoin(Deal, PendingSuggestion.deal_id == Deal.id)
-        .where(PendingSuggestion.status == "pending")
-        .order_by(PendingSuggestion.created_at.desc())
-    )
-    rows = result.all()
-    response = []
-    for s, d in rows:
-        if s.suggested_field == "new_deal":
-            try:
-                nd = json.loads(s.suggested_value or "{}")
-            except (json.JSONDecodeError, TypeError):
-                nd = {}
-            company_name = nd.get("company_name", "Unknown")
-            stage = None
-        else:
-            company_name = d.company_name if d else "Unknown"
-            stage = d.stage if d else None
-        response.append({
-            "id": s.id,
-            "deal_id": s.deal_id,
-            "company_name": company_name,
-            "stage": stage,
-            "suggested_field": s.suggested_field,
-            "suggested_value": s.suggested_value,
-            "claude_summary": s.claude_summary,
-            "email_subject": s.email_subject,
-            "current_value": s.current_value,
-            "confidence": s.confidence,
-            "created_at": s.created_at.isoformat(),
-        })
-    return response
-
-
-class ApproveRequest(BaseModel):
-    reviewer: str = "user"
-    value: str | None = None  # optional edited value; falls back to suggestion.suggested_value
-
-
-@router.post("/review-queue/{suggestion_id}/approve")
-async def approve_suggestion(
-    suggestion_id: int,
-    body: ApproveRequest = ApproveRequest(),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(PendingSuggestion).where(
-            PendingSuggestion.id == suggestion_id,
-            PendingSuggestion.status == "pending",
-        )
-    )
-    suggestion = result.scalar_one_or_none()
-    if not suggestion:
-        raise HTTPException(status_code=404, detail="Suggestion not found or already reviewed")
-
-    # New deal creation
-    if suggestion.suggested_field == "new_deal":
-        try:
-            nd = json.loads(suggestion.suggested_value or "{}")
-        except (json.JSONDecodeError, TypeError):
-            nd = {}
-        ts = datetime.now(timezone.utc).strftime("%Y/%m/%d")
-        new_deal = Deal(
-            company_name=nd.get("company_name", "Unknown"),
-            sector_primary=nd.get("sector"),
-            bucket="Active-Discussions",
-            stage="Initial Conversations",
-            commentary=f"{ts}: [Auto] {nd.get('summary', '')}",
-            updated_by="email_scan",
-        )
-        db.add(new_deal)
-        await db.flush()
-        suggestion.status = "approved"
-        suggestion.reviewed_at = datetime.now(timezone.utc)
-        suggestion.reviewed_by = body.reviewer
-        return {"ok": True, "deal_id": new_deal.id, "company_name": new_deal.company_name, "created": True}
-
-    deal_res = await db.execute(select(Deal).where(Deal.id == suggestion.deal_id))
-    deal = deal_res.scalar_one_or_none()
-    if not deal:
-        raise HTTPException(status_code=404, detail="Deal not found")
-
-    new_line = body.value if body.value is not None else suggestion.suggested_value
-
-    if suggestion.suggested_field == "commentary":
-        existing = deal.commentary or ""
-        final_value = f"{existing}\n{new_line}".strip() if existing else (new_line or "")
-    else:
-        final_value = new_line
-
-    old_value = str(getattr(deal, suggestion.suggested_field) or "")
-    setattr(deal, suggestion.suggested_field, final_value)
-    deal.last_updated = datetime.now(timezone.utc).date()
-    deal.updated_by = "email_scan"
-
-    db.add(DealUpdateLog(
-        deal_id=deal.id,
-        field_changed=suggestion.suggested_field,
-        old_value=old_value[:500] if old_value else None,
-        new_value=(final_value or "")[:500],
-        source="email_scan",
-        email_subject=suggestion.email_subject,
-    ))
-
-    suggestion.status = "approved"
-    suggestion.reviewed_at = datetime.now(timezone.utc)
-    suggestion.reviewed_by = body.reviewer
-
-    return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
-
-
-@router.post("/review-queue/{suggestion_id}/reject")
-async def reject_suggestion(
-    suggestion_id: int,
-    reviewer: str = "user",
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(PendingSuggestion).where(
-            PendingSuggestion.id == suggestion_id,
-            PendingSuggestion.status == "pending",
-        )
-    )
-    suggestion = result.scalar_one_or_none()
-    if not suggestion:
-        raise HTTPException(status_code=404, detail="Suggestion not found or already reviewed")
-
-    suggestion.status = "rejected"
-    suggestion.reviewed_at = datetime.now(timezone.utc)
-    suggestion.reviewed_by = "user"
-
-    return {"ok": True, "suggestion_id": suggestion_id}
-
-
 @router.get("/analytics")
 async def get_analytics(db: AsyncSession = Depends(get_db)):
     all_deals = (await db.execute(select(Deal))).scalars().all()
@@ -349,10 +438,3 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
         "deal_sources": deal_sources,
         "deals_by_quarter": deals_by_quarter,
     }
-
-
-@router.post("/admin/scan")
-async def trigger_scan(db: AsyncSession = Depends(get_db)):
-    from app.automation.scanner import run_scan
-    count = await run_scan(db)
-    return {"ok": True, "emails_processed": count}

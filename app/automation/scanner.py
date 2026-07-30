@@ -13,7 +13,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.models import Deal, DealUpdateLog, EmailScanLog, PendingSuggestion
+from app.db.models import Deal, DealUpdateLog, EmailScanLog, PendingSuggestion, Sponsor
+from app.domain.pipeline_stage import PIPELINE_STAGES
 from app.graph.mail import fetch_messages_since
 
 _SKIP_SUBJECT_PREFIXES = (
@@ -22,8 +23,11 @@ _SKIP_SUBJECT_PREFIXES = (
 )
 _SKIP_SENDER_PATTERNS = ("noreply@", "no-reply@", "donotreply@")
 
-# Explicit allowlist — matches exactly the fields listed in the Claude prompt
-_ALLOWED_FIELD_UPDATES = frozenset({"stage", "bucket", "nda", "mgmt_meeting", "ioi_offered", "ioi_signed"})
+# Explicit allowlist — matches exactly the field Claude is prompted to propose.
+# pipeline_stage is the sole updatable field now; validated against the
+# 11-value list defensively (in addition to the DB CHECK constraint) so a
+# hallucinated stage name is rejected here rather than failing at commit time.
+_ALLOWED_FIELD_UPDATES = frozenset({"pipeline_stage"})
 
 
 def _is_low_value(subject: str, sender: str) -> bool:
@@ -35,10 +39,11 @@ def _is_low_value(subject: str, sender: str) -> bool:
 
 def _build_system_prompt(deals: list[Deal]) -> str:
     deal_list = "\n".join(
-        f"- ID {d.id}: {d.company_name} (stage: {d.stage}, bucket: {d.bucket}, sector: {d.sector_primary})"
+        f"- ID {d.id}: {d.company_name} (pipeline_stage: {d.pipeline_stage}, status: {d.status}, sector: {d.sector_primary})"
         for d in deals
-        if d.bucket not in ("Dead-Hold",)
+        if d.status not in ("Passed", "Dead")
     )
+    stage_list = ", ".join(PIPELINE_STAGES)
     return f"""You are a deal pipeline assistant for Leon Healthcare Partners (LHP), a healthcare private credit firm.
 
 Active deals in pipeline:
@@ -47,20 +52,22 @@ Active deals in pipeline:
 When given an email, return ONLY valid JSON in one of these formats:
 
 Matched existing deal:
-{{"matched": true, "deal_id": 123, "confidence": 0.9, "commentary": "One sentence update (max 120 chars).", "field_updates": [{{"field": "nda", "value": "P", "reasoning": "NDA confirmed signed"}}]}}
+{{"matched": true, "deal_id": 123, "confidence": 0.9, "commentary": "One sentence update (max 120 chars).", "field_updates": [{{"field": "pipeline_stage", "value": "screening", "reasoning": "NDA confirmed signed"}}]}}
 (omit field_updates if no structural changes are clearly evidenced)
 
 New healthcare investment opportunity not in pipeline:
-{{"matched": false, "new_deal": true, "confidence": 0.75, "company_name": "Acme Health", "sector": "Cardiology", "summary": "Brief one-sentence description."}}
+{{"matched": false, "new_deal": true, "confidence": 0.75, "company_name": "Acme Health", "sector": "Cardiology", "summary": "Brief one-sentence description.", "estimated_size_m": 12.5}}
+(omit estimated_size_m if no facility/deal size is mentioned)
 
 No match / not relevant:
 {{"matched": false}}
 
-Updatable fields: stage, bucket, nda, mgmt_meeting, ioi_offered, ioi_signed.
+Updatable fields: pipeline_stage only, one of: {stage_list}.
+Only propose a pipeline_stage change to the NEXT adjacent stage in that list, never skip ahead — this is a funnel, deals advance one step at a time.
 Rules:
 - confidence 0.0-1.0; use 0.85+ only when unambiguous
 - commentary max 120 characters
-- Only propose field_updates when evidence is explicit (e.g. "NDA was executed today")
+- Only propose field_updates when evidence is explicit (e.g. "NDA was executed today" -> pipeline_stage: screening)
 - new_deal only for genuine healthcare investment opportunity introductions
 - Do not match calendar accepts/declines, meeting invites, or internal admin messages"""
 
@@ -111,6 +118,9 @@ async def _upsert_suggestion(
     email_subject: str,
     confidence: float,
     current_value: str | None = None,
+    email_snippet: str | None = None,
+    estimated_size_m: float | None = None,
+    estimated_sector: str | None = None,
 ) -> None:
     """Create suggestion or update an existing pending one for the same (deal, thread, field)."""
     if thread_id:
@@ -136,6 +146,11 @@ async def _upsert_suggestion(
             existing.confidence = confidence
             existing.email_subject = email_subject
             existing.email_scan_log_id = scan_log_id
+            existing.email_snippet = email_snippet
+            if estimated_size_m is not None:
+                existing.estimated_size_m = estimated_size_m
+            if estimated_sector is not None:
+                existing.estimated_sector = estimated_sector
             return
 
     db.add(PendingSuggestion(
@@ -147,6 +162,9 @@ async def _upsert_suggestion(
         email_subject=email_subject,
         confidence=confidence,
         current_value=current_value,
+        email_snippet=email_snippet,
+        estimated_size_m=estimated_size_m,
+        estimated_sector=estimated_sector,
         source="email_scan",
         status="pending",
     ))
@@ -228,6 +246,8 @@ async def run_scan(db: AsyncSession) -> int:
                 db.add(scan_log)
                 await db.flush()
 
+                email_snippet = body[:200] if body else None
+
                 if result_cls.get("matched") and confidence >= 0.65:
                     deal_id = result_cls.get("deal_id")
                     commentary = result_cls.get("commentary", "")
@@ -252,29 +272,54 @@ async def run_scan(db: AsyncSession) -> int:
                             email_subject=subject,
                             confidence=confidence,
                             current_value=deal.commentary,
+                            email_snippet=email_snippet,
                         )
 
                         for fu in field_updates:
                             field = fu.get("field", "")
-                            value = fu.get("value", "")
-                            if field and field in _ALLOWED_FIELD_UPDATES:
+                            value = str(fu.get("value", ""))
+                            if field in _ALLOWED_FIELD_UPDATES and value in PIPELINE_STAGES:
                                 await _upsert_suggestion(
                                     db,
                                     deal_id=deal_id,
                                     thread_id=thread_id,
                                     scan_log_id=scan_log.id,
                                     suggested_field=field,
-                                    suggested_value=str(value),
+                                    suggested_value=value,
                                     claude_summary=fu.get("reasoning", ""),
                                     email_subject=subject,
                                     confidence=confidence,
                                     current_value=str(getattr(deal, field) or ""),
+                                    email_snippet=email_snippet,
+                                )
+
+                        # Best-effort sponsor auto-suggestion from the sender's
+                        # email domain — never auto-creates a sponsor, only
+                        # proposes linking to one that already exists.
+                        if not deal.sponsor_id and "@" in sender:
+                            domain = sender.split("@")[-1].lower()
+                            sp_res = await db.execute(select(Sponsor).where(Sponsor.email_domain == domain))
+                            sponsor = sp_res.scalar_one_or_none()
+                            if sponsor:
+                                await _upsert_suggestion(
+                                    db,
+                                    deal_id=deal_id,
+                                    thread_id=thread_id,
+                                    scan_log_id=scan_log.id,
+                                    suggested_field="sponsor_id",
+                                    suggested_value=str(sponsor.id),
+                                    claude_summary=f"Sender domain {domain} matches sponsor {sponsor.name}",
+                                    email_subject=subject,
+                                    confidence=0.7,
+                                    current_value=None,
+                                    email_snippet=email_snippet,
                                 )
 
                 elif result_cls.get("new_deal") and confidence >= 0.65:
                     company_name = result_cls.get("company_name", "")
                     sector = result_cls.get("sector", "")
                     summary = result_cls.get("summary", "")
+                    estimated_size_m = result_cls.get("estimated_size_m")
 
                     scan_log.action_taken = "new_deal_detected"
                     scan_log.claude_summary = summary
@@ -293,6 +338,9 @@ async def run_scan(db: AsyncSession) -> int:
                         claude_summary=summary,
                         email_subject=subject,
                         confidence=confidence,
+                        email_snippet=email_snippet,
+                        estimated_size_m=float(estimated_size_m) if estimated_size_m else None,
+                        estimated_sector=sector or None,
                     )
 
                 processed += 1

@@ -48,9 +48,25 @@ app = FastAPI(title="LHP Private Credit Pipeline", lifespan=lifespan)
 
 from app.api.dashboard import router as dashboard_router
 from app.api.deals import router as deals_router
+from app.api.sponsors import router as sponsors_router
+from app.api.funds import router as funds_router
+from app.api.portfolio import router as portfolio_router
+from app.api.deal_documents import router as deal_documents_router
+from app.api.deal_activity import router as deal_activity_router
+from app.api.deal_timeline import router as deal_timeline_router
+from app.api.inbox import router as inbox_router
+from app.api.chat import router as chat_router
 
 app.include_router(dashboard_router)
 app.include_router(deals_router)
+app.include_router(sponsors_router)
+app.include_router(funds_router)
+app.include_router(portfolio_router)
+app.include_router(deal_documents_router)
+app.include_router(deal_activity_router)
+app.include_router(deal_timeline_router)
+app.include_router(inbox_router)
+app.include_router(chat_router)
 
 # Serve React build — only when frontend/dist exists (skips gracefully in dev)
 if (FRONTEND_DIST / "assets").exists():

@@ -12,3 +12,4 @@ apscheduler>=3.10.0
 python-multipart>=0.0.9
 PyJWT[cryptography]>=2.4.0
 cryptography>=42.0.0
+boto3>=1.34.0
