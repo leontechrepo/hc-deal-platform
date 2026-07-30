@@ -3,6 +3,7 @@ DB-backed smoke tests for the extended /api/deals surface. See conftest.py for
 how to point these at a throwaway Postgres — skipped automatically otherwise.
 """
 import pytest
+from sqlalchemy import select
 
 from app.api.deals import (
     CreateDealRequest,
@@ -11,6 +12,7 @@ from app.api.deals import (
     list_deals,
     patch_deal,
 )
+from app.db.models.portfolio import PortfolioPosition
 from app.domain.pipeline_stage import PIPELINE_STAGES, STATUSES
 
 
@@ -34,6 +36,20 @@ async def test_create_deal_computes_derived_fields(db_session):
     deal = next(d for d in deals if d["id"] == result["deal_id"])
     assert deal["total_leverage"] == 4.0
     assert deal["all_in_rate"] == 9.82
+
+
+async def test_creating_deal_at_portfolio_monitoring_creates_position(db_session):
+    result = await create_deal(
+        CreateDealRequest(company_name="Born Funded Co", pipeline_stage="portfolio_monitoring", deal_size_m=15.0),
+        db_session,
+    )
+    deal_id = result["deal_id"]
+
+    position = (
+        await db_session.execute(select(PortfolioPosition).where(PortfolioPosition.deal_id == deal_id))
+    ).scalar_one_or_none()
+    assert position is not None
+    assert position.original_amount_m == 15.0
 
 
 async def test_underwriting_fields_lock_after_loi_signed(db_session):
