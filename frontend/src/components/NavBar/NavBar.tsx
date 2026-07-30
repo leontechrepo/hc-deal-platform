@@ -63,6 +63,45 @@ function IconAnalytics() {
   )
 }
 
+function IconSponsors() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="11.5" cy="6.5" r="2" stroke="currentColor" strokeWidth="1.5" opacity="0.7"/>
+      <path d="M1.5 14c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M10.5 10.5c1.8.2 3 1.4 3 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
+    </svg>
+  )
+}
+
+function IconFunds() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <ellipse cx="8" cy="4" rx="5.5" ry="2" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2.5 4v4c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2V4" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2.5 8v4c0 1.1 2.46 2 5.5 2s5.5-.9 5.5-2V8" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
+  )
+}
+
+function IconPortfolio() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="2.5" width="12" height="11" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M5 7.5l2 2 4-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function IconInbox() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M1.5 8.5V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v4.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M1.5 8.5h4l1 2h3l1-2h4v3a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
 function IconSignOut() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -139,6 +178,46 @@ export function NavBar() {
         >
           <span className={styles.navIcon}><IconAnalytics /></span>
           <span className={styles.navLabel}>Analytics</span>
+        </NavLink>
+
+        <NavLink
+          to="/inbox"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}><IconInbox /></span>
+          <span className={styles.navLabel}>Inbox</span>
+        </NavLink>
+
+        <NavLink
+          to="/sponsors"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}><IconSponsors /></span>
+          <span className={styles.navLabel}>Sponsors</span>
+        </NavLink>
+
+        <NavLink
+          to="/funds"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}><IconFunds /></span>
+          <span className={styles.navLabel}>Funds</span>
+        </NavLink>
+
+        <NavLink
+          to="/portfolio"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}><IconPortfolio /></span>
+          <span className={styles.navLabel}>Portfolio</span>
         </NavLink>
 
         <div className={styles.divider} />
