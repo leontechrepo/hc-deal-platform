@@ -57,7 +57,7 @@
 }
 
 .displayHeading {
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 42px;
   font-weight: 500;
   line-height: 1.1;
@@ -102,7 +102,7 @@
 }
 
 .formTitle {
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 500;
   color: #fff;
@@ -259,7 +259,7 @@
 }
 
 .brandName {
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 600;
   color: var(--navy);

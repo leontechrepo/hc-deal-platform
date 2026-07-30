@@ -3,7 +3,6 @@
   background: var(--navy);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 20px;
 }
 
 .kpi {
@@ -27,7 +26,7 @@
 }
 
 .value {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 500;
   color: var(--gold);

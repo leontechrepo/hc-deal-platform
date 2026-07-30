@@ -1,0 +1,17 @@
+.track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gray-200);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+
+.gold { background: var(--gold); }
+.green { background: var(--green); }
+.blue { background: var(--blue); }
