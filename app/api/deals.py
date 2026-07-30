@@ -306,6 +306,9 @@ async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db
     db.add(deal)
     await db.flush()
 
+    if deal.pipeline_stage == "portfolio_monitoring":
+        await ensure_portfolio_position(deal, db)
+
     db.add(DealUpdateLog(
         deal_id=deal.id,
         field_changed="pipeline_stage",

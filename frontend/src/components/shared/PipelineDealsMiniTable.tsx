@@ -1,15 +1,7 @@
 import { DataTable, type Column } from '../ui/DataTable/DataTable'
-import { Badge, type BadgeTone } from '../ui/Badge/Badge'
 import { PipelineStageBadge } from './PipelineStageBadge'
+import { StatusBadge } from './StatusBadge'
 import type { FundDealSummary, SponsorDealSummary } from '../../types'
-
-const STATUS_TONE: Record<string, BadgeTone> = {
-  Active: 'blue',
-  'On Hold': 'yellow',
-  Passed: 'red',
-  Dead: 'red',
-  Closed: 'green',
-}
 
 function fmtM(value: number | null): string {
   return value === null ? '—' : `$${value.toFixed(1)}M`
@@ -37,7 +29,7 @@ export function PipelineDealsMiniTable({ deals, showHoldAmount = false }: Props)
     {
       key: 'status',
       header: 'Status',
-      render: d => d.status ? <Badge tone={STATUS_TONE[d.status] ?? 'gray'}>{d.status}</Badge> : null,
+      render: d => <StatusBadge status={d.status} />,
     },
     { key: 'deal_size_m', header: 'Deal Size', render: d => fmtM(d.deal_size_m), mono: true },
     ...(showHoldAmount

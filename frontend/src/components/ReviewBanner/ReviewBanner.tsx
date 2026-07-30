@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { PendingSuggestion } from '../../types'
 import { useReviewQueue, useApproveSuggestion, useRejectSuggestion } from '../../hooks/useReviewQueue'
-import { StagePill } from '../DealTable/StagePill'
+import { PipelineStageBadge } from '../shared/PipelineStageBadge'
 import { useToast } from '../Toast/Toast'
 import { ConfidenceBadge } from '../ui/ConfidenceBadge/ConfidenceBadge'
 import { ApproveRejectActions } from '../ui/ApproveRejectActions/ApproveRejectActions'
@@ -9,11 +9,11 @@ import styles from './ReviewBanner.module.css'
 
 // Group suggestions by deal_id (null deal_id = new deal, each gets its own group)
 function buildGroups(suggestions: PendingSuggestion[]) {
-  const groups = new Map<string, { companyName: string; stage: string | null; suggestions: PendingSuggestion[] }>()
+  const groups = new Map<string, { companyName: string; pipelineStage: string | null; suggestions: PendingSuggestion[] }>()
   for (const s of suggestions) {
     const key = s.deal_id !== null ? String(s.deal_id) : `new_${s.id}`
     if (!groups.has(key)) {
-      groups.set(key, { companyName: s.company_name, stage: s.stage, suggestions: [] })
+      groups.set(key, { companyName: s.company_name, pipelineStage: s.pipeline_stage, suggestions: [] })
     }
     groups.get(key)!.suggestions.push(s)
   }
@@ -45,7 +45,7 @@ export function ReviewBanner() {
             {group.suggestions.length > 1 && (
               <div className={styles.dealGroupHeader}>
                 <span className={styles.groupCompany}>{group.companyName}</span>
-                {group.stage && <StagePill stage={group.stage} />}
+                {group.pipelineStage && <PipelineStageBadge stage={group.pipelineStage} />}
                 <span className={styles.groupCount}>{group.suggestions.length} suggestions</span>
               </div>
             )}
@@ -108,7 +108,7 @@ function SuggestionCard({ suggestion: s, showDealHeader, onApprove, onReject, bu
             ? <span className={styles.newDealBadge}>New Deal Detected</span>
             : <span className={styles.company}>{s.company_name}</span>
           }
-          {!isNewDeal && <StagePill stage={s.stage} />}
+          {!isNewDeal && <PipelineStageBadge stage={s.pipeline_stage} />}
           {s.email_subject && <span className={styles.emailSubject}>Re: {s.email_subject}</span>}
           <ConfidenceBadge confidence={s.confidence} />
         </div>

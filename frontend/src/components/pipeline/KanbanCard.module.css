@@ -1,0 +1,48 @@
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-float);
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.company {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 3px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.size {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.dim {
+  color: var(--gray-400);
+  font-weight: 400;
+}

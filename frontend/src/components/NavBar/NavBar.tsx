@@ -7,7 +7,7 @@ import { useToast } from '../Toast/Toast'
 import leonLogo from '../../assets/leon-logo.png'
 import styles from './NavBar.module.css'
 
-function IconDashboard() {
+function IconPipeline() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.8"/>
@@ -150,14 +150,13 @@ export function NavBar() {
 
       <div className={styles.navItems}>
         <NavLink
-          to="/"
-          end
+          to="/pipeline"
           className={({ isActive }) =>
             [styles.navItem, isActive ? styles.active : ''].join(' ')
           }
         >
-          <span className={styles.navIcon}><IconDashboard /></span>
-          <span className={styles.navLabel}>Dashboard</span>
+          <span className={styles.navIcon}><IconPipeline /></span>
+          <span className={styles.navLabel}>Pipeline</span>
         </NavLink>
 
         <NavLink

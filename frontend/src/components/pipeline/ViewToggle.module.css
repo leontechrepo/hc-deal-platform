@@ -1,0 +1,31 @@
+.toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.option {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-400);
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.option + .option {
+  border-left: 1px solid var(--border);
+}
+
+.option:hover {
+  color: var(--navy);
+}
+
+.option.active {
+  color: var(--navy);
+  background: rgba(201, 168, 76, 0.15);
+  font-weight: 600;
+}

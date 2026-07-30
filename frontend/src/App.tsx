@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Show, AuthenticateWithRedirectCallback, useAuth } from '@clerk/react'
 import { NavProvider, useNav } from './NavContext'
 import { NavBar } from './components/NavBar/NavBar'
-import { DashboardPage } from './pages/DashboardPage/DashboardPage'
+import { PipelinePage } from './pages/PipelinePage/PipelinePage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
 import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
 import { SponsorsPage } from './pages/SponsorsPage/SponsorsPage'
@@ -37,7 +37,8 @@ function Layout() {
         transition: 'margin-left 0.22s ease',
       }}>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<Navigate to="/pipeline" replace />} />
+          <Route path="/pipeline" element={<PipelinePage />} />
           <Route path="/logs" element={<LogsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/sponsors" element={<SponsorsPage />} />
