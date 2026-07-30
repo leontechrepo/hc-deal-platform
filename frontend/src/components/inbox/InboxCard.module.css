@@ -1,0 +1,181 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.newDealCard {
+  border-color: var(--gold);
+  background: var(--gold-light);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.company {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.newDealBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--gold);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.emailSubject {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.emailSnippet {
+  font-size: 12px;
+  color: var(--gray-700);
+  background: var(--gray-100);
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.proposedLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.proposedText {
+  font-size: 13px;
+  color: var(--navy);
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--gray-100);
+  line-height: 1.5;
+  min-height: 2em;
+  border: 1px solid transparent;
+}
+
+.proposedText:hover {
+  border-color: var(--gray-200);
+}
+
+.noValue {
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.editTextarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: var(--white);
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+  min-height: 60px;
+}
+
+.fieldUpdateBody {
+  padding: 4px 0;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  color: var(--gray-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.fieldName {
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.fieldValues {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  background: var(--gray-100);
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.currentVal {
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+
+.arrow {
+  color: var(--gray-400);
+  font-size: 11px;
+}
+
+.proposedVal {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.reasoning {
+  font-size: 12px;
+  color: var(--gray-400);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.newDealBody {
+  padding: 4px 0;
+}
+
+.newDealName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.newDealSector {
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-bottom: 4px;
+}
+
+.newDealSize {
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-bottom: 4px;
+}
+
+.newDealSummary {
+  font-size: 13px;
+  color: var(--navy);
+  line-height: 1.5;
+  background: var(--white);
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+}

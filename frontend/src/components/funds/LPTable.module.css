@@ -1,0 +1,32 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.rowActions {
+  display: flex;
+  gap: 10px;
+}
+
+.linkBtn {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--navy-light);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.linkBtn:hover {
+  text-decoration: underline;
+}

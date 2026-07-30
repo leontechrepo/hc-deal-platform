@@ -6,6 +6,10 @@ import { NavBar } from './components/NavBar/NavBar'
 import { DashboardPage } from './pages/DashboardPage/DashboardPage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
 import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
+import { SponsorsPage } from './pages/SponsorsPage/SponsorsPage'
+import { FundsPage } from './pages/FundsPage/FundsPage'
+import { PortfolioPage } from './pages/PortfolioPage/PortfolioPage'
+import { InboxPage } from './pages/InboxPage/InboxPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
 import { registerTokenGetter } from './api/client'
 
@@ -36,6 +40,10 @@ function Layout() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/logs" element={<LogsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/sponsors" element={<SponsorsPage />} />
+          <Route path="/funds" element={<FundsPage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
+          <Route path="/inbox" element={<InboxPage />} />
         </Routes>
       </main>
     </div>
