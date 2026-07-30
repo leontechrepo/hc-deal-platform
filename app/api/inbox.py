@@ -3,6 +3,10 @@ The Inbox — the actionable surface over the email scanner's output
 (pending_suggestions + email_scan_log). Renamed from the old /review-queue
 routes, with a new `assign` action added for linking a detected new-deal
 signal to an existing deal instead of always creating one.
+
+The /api/review-queue/* paths are kept as temporary aliases below, alongside
+the new /api/inbox/* paths — the deployed frontend (frontend/src/api/reviewQueue.ts)
+still calls the old paths and hasn't migrated yet. Remove the aliases once it does.
 """
 import json
 from datetime import datetime, timezone
@@ -15,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal, DealNote, DealUpdateLog, PendingSuggestion
+from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
@@ -28,13 +33,19 @@ def _suggestion_to_dict(s: PendingSuggestion, deal: Deal | None) -> dict:
             nd = {}
         company_name = nd.get("company_name", "Unknown")
         pipeline_stage = None
+        stage = None
     else:
         company_name = deal.company_name if deal else "Unknown"
         pipeline_stage = deal.pipeline_stage if deal else None
+        stage = deal.stage if deal else None
     return {
         "id": s.id,
         "deal_id": s.deal_id,
         "company_name": company_name,
+        # `stage` is the legacy free-text field, kept for the not-yet-migrated
+        # frontend (frontend/src/types.ts PendingSuggestion.stage); pipeline_stage
+        # is the new 11-value field for future Inbox-screen consumers.
+        "stage": stage,
         "pipeline_stage": pipeline_stage,
         "suggested_field": s.suggested_field,
         "suggested_value": s.suggested_value,
@@ -50,6 +61,7 @@ def _suggestion_to_dict(s: PendingSuggestion, deal: Deal | None) -> dict:
 
 
 @router.get("/inbox")
+@router.get("/review-queue")  # temporary alias for the not-yet-migrated frontend
 async def list_inbox(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(PendingSuggestion, Deal)
@@ -79,6 +91,7 @@ class ApproveRequest(BaseModel):
 
 
 @router.post("/inbox/{suggestion_id}/approve")
+@router.post("/review-queue/{suggestion_id}/approve")  # temporary alias for the not-yet-migrated frontend
 async def approve_suggestion(
     suggestion_id: int,
     body: ApproveRequest = ApproveRequest(),
@@ -131,11 +144,14 @@ async def approve_suggestion(
     deal.last_updated = datetime.now(timezone.utc).date()
     deal.updated_by = "email_scan"
 
+    if suggestion.suggested_field == "pipeline_stage" and final_value == "portfolio_monitoring":
+        await ensure_portfolio_position(deal, db)
+
     db.add(DealUpdateLog(
         deal_id=deal.id,
         field_changed=suggestion.suggested_field,
         old_value=old_value[:500] if old_value else None,
-        new_value=(final_value or "")[:500],
+        new_value=str(final_value)[:500] if final_value is not None else None,
         source="email_scan",
         email_subject=suggestion.email_subject,
     ))
@@ -183,6 +199,7 @@ async def assign_suggestion(suggestion_id: int, body: AssignRequest, db: AsyncSe
 
 
 @router.post("/inbox/{suggestion_id}/reject")
+@router.post("/review-queue/{suggestion_id}/reject")  # temporary alias for the not-yet-migrated frontend
 async def reject_suggestion(suggestion_id: int, reviewer: str = "user", db: AsyncSession = Depends(get_db)):
     suggestion = await _get_pending_or_404(suggestion_id, db)
     suggestion.status = "rejected"

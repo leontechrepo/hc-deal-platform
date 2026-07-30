@@ -72,6 +72,10 @@ async def send_chat_message(
     session_id = body.session_id or uuid.uuid4().hex
     session_res = await db.execute(select(ChatSession).where(ChatSession.id == session_id))
     session = session_res.scalar_one_or_none()
+    if session and session.user_sub != user_sub:
+        # Someone else's session id — never read/continue another user's
+        # conversation, and never take over their session row either.
+        raise HTTPException(status_code=403, detail="This chat session does not belong to you")
     if not session:
         session = ChatSession(id=session_id, deal_id=body.deal_id, user_sub=user_sub)
         db.add(session)

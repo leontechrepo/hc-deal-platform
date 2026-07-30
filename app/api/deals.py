@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal, DealUpdateLog, EmailScanLog
-from app.db.models.portfolio import PortfolioPosition
+from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
 from app.domain.pipeline_stage import (
     PIPELINE_STAGES,
@@ -114,7 +114,7 @@ async def patch_deal(
     db.add(log)
 
     if body.field == "pipeline_stage" and coerced == "portfolio_monitoring":
-        await _ensure_portfolio_position(deal, db)
+        await ensure_portfolio_position(deal, db)
 
     activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
         "status_change" if body.field == "status" else "system"
@@ -124,24 +124,6 @@ async def patch_deal(
     )
 
     return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
-
-
-async def _ensure_portfolio_position(deal: Deal, db: AsyncSession) -> None:
-    """Stub-create a PortfolioPosition the first time a deal reaches portfolio_monitoring."""
-    existing = await db.execute(select(PortfolioPosition).where(PortfolioPosition.deal_id == deal.id))
-    if existing.scalar_one_or_none():
-        return
-    db.add(PortfolioPosition(
-        deal_id=deal.id,
-        funded_date=date.today(),
-        original_amount_m=deal.deal_size_m,
-        current_balance_m=deal.deal_size_m,
-        rate=deal.all_in_rate,
-        payment_status="Current",
-        risk="Pass",
-        leverage=deal.total_leverage,
-        dscr=deal.dscr,
-    ))
 
 
 def _deal_to_dict(d: Deal) -> dict:
