@@ -84,7 +84,7 @@ and the existing app keeps working throughout.
   automation) — recommend a manual pass over the create/edit/delete flows
   and the Portfolio test-logging UI before leaning on this in production.
 
-### Frontend — Phase 2 (Pipeline: table + kanban + cutover + New Deal modal) complete
+### Frontend — Phase 2 (Pipeline: table + kanban + cutover + New Deal modal) complete, merged (PR #6, commit `d501d13`)
 
 - New `PipelinePage` (`/pipeline`) fully migrated off the legacy `bucket`/
   `stage` model onto `pipeline_stage`/`status`: `PipelineTable` groups deals
@@ -127,6 +127,12 @@ and the existing app keeps working throughout.
   strip on the new Pipeline page shows the same legacy-bucket numbers as
   before, unrelated to the page's now-fully-migrated table/kanban/status
   logic. Not a regression.
+- Codex review caught and fixed one P2 before merge: the New Deal modal lets
+  a deal be created directly at `portfolio_monitoring`, but `POST
+  /api/deals` never called `ensure_portfolio_position` (only `PATCH` did) —
+  so that deal was invisible to `GET /api/portfolio` despite showing up in
+  the pipeline. Fixed to match the manual-PATCH and inbox-approval paths,
+  with a regression test (`tests/test_deals_api.py`).
 
 ## Next steps
 
