@@ -13,7 +13,7 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
   return (
     <button
       type="button"
-      className={styles.themeToggle}
+      className={[styles.themeToggle, collapsed ? styles.collapsed : ''].filter(Boolean).join(' ')}
       onClick={toggle}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >

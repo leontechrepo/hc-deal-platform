@@ -126,7 +126,10 @@
 
 html.dark {
   --heading: #ffffff;
-  --white: #151b26;
+  /* --white intentionally unchanged — it's consumed throughout the app as a literal
+     white foreground/surface paired directly with colors that stay constant in dark
+     mode (--navy, --red, etc; e.g. Badge's navy tone, Button's danger variant, page-level
+     KanbanCard/Form/Toast). Darkening it here breaks all of those pairings. */
   --lt: #0f141d;
   --surface: #161e2c;
   --border: #2a3548;

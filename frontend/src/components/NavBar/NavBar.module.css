@@ -113,6 +113,11 @@
   color: var(--gold);
 }
 
+.nav.collapsed .navItem {
+  padding: 9px 0;
+  justify-content: center;
+}
+
 .navIcon {
   flex-shrink: 0;
   width: 21px;
