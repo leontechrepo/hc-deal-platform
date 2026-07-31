@@ -140,6 +140,7 @@ async def approve_suggestion(
         final_value = new_line
 
     old_value = str(getattr(deal, suggestion.suggested_field) or "")
+    new_value = str(final_value) if final_value is not None else ""
     setattr(deal, suggestion.suggested_field, final_value)
     deal.last_updated = datetime.now(timezone.utc).date()
     deal.updated_by = "email_scan"
@@ -147,20 +148,24 @@ async def approve_suggestion(
     if suggestion.suggested_field == "pipeline_stage" and final_value == "portfolio_monitoring":
         await ensure_portfolio_position(deal, db)
 
-    db.add(DealUpdateLog(
-        deal_id=deal.id,
-        field_changed=suggestion.suggested_field,
-        old_value=old_value[:500] if old_value else None,
-        new_value=str(final_value)[:500] if final_value is not None else None,
-        source="email_scan",
-        email_subject=suggestion.email_subject,
-    ))
+    # Skip the log/activity entries when the suggestion didn't actually change the value
+    # (e.g. approving a suggestion that matches what's already on the deal) — otherwise
+    # the Logs page shows a colored diff between two identical values.
+    if new_value != old_value:
+        db.add(DealUpdateLog(
+            deal_id=deal.id,
+            field_changed=suggestion.suggested_field,
+            old_value=old_value[:500] if old_value else None,
+            new_value=new_value[:500] if new_value else None,
+            source="email_scan",
+            email_subject=suggestion.email_subject,
+        ))
 
-    activity_type = "stage_change" if suggestion.suggested_field == "pipeline_stage" else "email"
-    await log_activity(
-        db, deal.id, "Email Scanner", activity_type,
-        f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
-    )
+        activity_type = "stage_change" if suggestion.suggested_field == "pipeline_stage" else "email"
+        await log_activity(
+            db, deal.id, "Email Scanner", activity_type,
+            f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
+        )
 
     suggestion.status = "approved"
     suggestion.reviewed_at = datetime.now(timezone.utc)

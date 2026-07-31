@@ -100,28 +100,34 @@ async def patch_deal(
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=f"Invalid value for '{body.field}': {exc}")
 
+    new_value = str(coerced) if coerced is not None else None
+
     setattr(deal, body.field, coerced)
     deal.updated_by = "manual_edit"
     deal.updated_at = datetime.now(timezone.utc)
 
-    log = DealUpdateLog(
-        deal_id=deal_id,
-        field_changed=body.field,
-        old_value=old_value,
-        new_value=str(coerced) if coerced is not None else None,
-        source="manual_edit",
-    )
-    db.add(log)
-
     if body.field == "pipeline_stage" and coerced == "portfolio_monitoring":
         await ensure_portfolio_position(deal, db)
 
-    activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
-        "status_change" if body.field == "status" else "system"
-    await log_activity(
-        db, deal_id, "user", activity_type,
-        f"{body.field} changed from {old_value!r} to {coerced!r}",
-    )
+    # Skip the log/activity entries when the "edit" didn't actually change the value
+    # (e.g. re-saving a field unchanged) — otherwise the Logs page shows a colored
+    # diff between two identical values, which reads as a change that never happened.
+    if new_value != old_value:
+        log = DealUpdateLog(
+            deal_id=deal_id,
+            field_changed=body.field,
+            old_value=old_value,
+            new_value=new_value,
+            source="manual_edit",
+        )
+        db.add(log)
+
+        activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
+            "status_change" if body.field == "status" else "system"
+        await log_activity(
+            db, deal_id, "user", activity_type,
+            f"{body.field} changed from {old_value!r} to {coerced!r}",
+        )
 
     return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
 
