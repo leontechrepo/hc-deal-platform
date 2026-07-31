@@ -242,6 +242,25 @@ export interface PortfolioMonitoringTest {
 
 export type PortfolioTestInput = Omit<PortfolioMonitoringTest, 'id' | 'portfolio_position_id' | 'created_at'>
 
+export interface DealActivity {
+  id: number
+  deal_id: number
+  actor: string | null
+  activity_type: string
+  description: string
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface DealNote {
+  id: number
+  deal_id: number
+  author: string | null
+  body: string
+  created_at: string
+  updated_at: string
+}
+
 export interface DealUpdateLogEntry {
   id: number
   deal_id: number

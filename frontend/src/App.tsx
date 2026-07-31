@@ -11,6 +11,10 @@ import { FundsPage } from './pages/FundsPage/FundsPage'
 import { PortfolioPage } from './pages/PortfolioPage/PortfolioPage'
 import { InboxPage } from './pages/InboxPage/InboxPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
+import { DealDetailPage } from './pages/DealDetailPage/DealDetailPage'
+import { OverviewTab } from './pages/DealDetailPage/tabs/OverviewTab'
+import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
+import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -45,6 +49,12 @@ function Layout() {
           <Route path="/funds" element={<FundsPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/deals/:dealId" element={<DealDetailPage />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<OverviewTab />} />
+            <Route path="activity" element={<ActivityTab />} />
+            <Route path="notes" element={<NotesTab />} />
+          </Route>
         </Routes>
       </main>
     </div>

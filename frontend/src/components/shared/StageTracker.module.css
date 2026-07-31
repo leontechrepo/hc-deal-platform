@@ -1,0 +1,73 @@
+.wrap {
+  overflow-x: auto;
+  padding: var(--space-6) 0;
+}
+
+.track {
+  display: flex;
+  align-items: flex-start;
+  min-width: max-content;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.connectorRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-round);
+  flex-shrink: 0;
+  margin-left: 44px;
+}
+
+.dot.done {
+  background: var(--green);
+}
+
+.dot.active {
+  background: var(--gold);
+  box-shadow: 0 0 0 3px var(--input-gold-ring);
+}
+
+.dot.upcoming {
+  background: var(--border);
+}
+
+.line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 -6px;
+}
+
+.lineDone {
+  background: var(--green);
+}
+
+.label {
+  margin-top: var(--space-3);
+  font-size: 10px;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.label.done,
+.label.active {
+  color: var(--text);
+}
+
+.label.active {
+  font-weight: 700;
+}

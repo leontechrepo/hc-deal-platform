@@ -134,17 +134,68 @@ and the existing app keeps working throughout.
   the pipeline. Fixed to match the manual-PATCH and inbox-approval paths,
   with a regression test (`tests/test_deals_api.py`).
 
+### Frontend — Phase 3a (Deal Detail: shell + overview + activity + notes) complete
+
+- New `/deals/:dealId` route (`DealDetailPage`), fetches the deal once via a
+  new `useDeal(dealId)` (`GET /api/deals/{id}`, not previously exposed on the
+  frontend) and hands it to nested tab routes via `<Outlet context={{deal}}/>`.
+  Shell: back-link to Pipeline, company name + `PipelineStageBadge`/
+  `StatusBadge`, a `KPIGrid` (Deal Size/Total Leverage/All-In Rate/Risk
+  Score), and a new `StageTracker` (`components/shared/StageTracker.tsx`) —
+  a horizontal 11-stage progress tracker sourced from
+  `PipelineStageBadge.tsx`'s existing `PIPELINE_STAGES`/`formatPipelineStage`.
+  `ui/Tabs`'s existing (previously unused for this) routed-`NavLink` mode
+  drives real sub-route tabs; later phases just append more `{key,label,to}`
+  entries, no shell changes needed.
+- **Overview tab**: read/edit every non-underwriting `Deal` field
+  (company/classification, deal terms, process & status, commentary) via
+  `InlineEditText` plus two small file-local `EditableSelect`/`EditableDate`
+  helpers for enum/date fields. Fields in the backend's `UNDERWRITING_FIELDS`
+  set (`deal_size_m`, `security`, etc.) are deliberately read-only here —
+  they 409 once `pipeline_stage >= loi_signed` and their edit UI (with
+  lock-aware handling) belongs to the not-yet-built Underwriting tab. Legacy
+  P-flag milestones and `target_close` are read-only (never editable via
+  `PATCH` at all).
+- **Activity tab**: read-only feed on `GET /api/deals/{id}/activity` — a
+  `DataTable` of the auto-logged audit trail, no manual-entry form (there's
+  no product reason for one).
+- **Notes tab**: full CRUD (`GET/POST/PATCH/DELETE .../notes`) — add, inline-
+  edit (`InlineEditText`), delete.
+- Click-through entry point: `company_name` in `PipelineTable` and
+  `KanbanCard` now links to `/deals/:id` — previously the page would have
+  been unreachable except by typing a URL.
+- **Fast-follow fix**: every mutating endpoint that logs a `DealActivity`
+  from a manual edit (`patch_deal`) hardcoded the literal string `"user"` as
+  the actor, so the Activity tab couldn't show who actually made a change.
+  `PatchRequest` gained an optional `actor` field (backend defaults to
+  `"user"` if omitted, so existing callers are unaffected); the frontend
+  threads a real display name through via a new `useCurrentActor()` hook
+  (Clerk's `useUser()` — `fullName` falling back to the primary email),
+  passed from `usePatchDeal()`/`OverviewTab`'s edit controls and from
+  `NotesTab`'s note-author field.
+- Verified: `tsc --noEmit` clean, production build succeeds, backend/frontend
+  boot locally against the real `hc_deal` Postgres DB, manual click-through
+  via Clerk SSO (table + kanban entry points, all three tabs, field/select/
+  date edits with toast confirmation, note add/edit/delete, both light and
+  dark mode).
+- **Deliberately deferred** (see Next steps): Underwriting tab (+ new
+  `utils/creditFormulas.ts`), Documents tab (blocked — Railway bucket still
+  unprovisioned, uploads/downloads 503), Timeline tab (hand-rolled Gantt),
+  Formulas tab.
+
 ## Next steps
 
-Frontend phases 3–5 (backend is a fixed, already-shipped contract for all of
+Frontend phases 3b–5 (backend is a fixed, already-shipped contract for all of
 these — no backend work required):
 
-1. **Phase 3 — Deal Detail.** Shell + overview tab, then underwriting (writes
-   `utils/creditFormulas.ts`, shared with the Formulas tab — the New Deal
-   modal shipped in Phase 2 without it, since the backend already derives
-   `all_in_rate`/`total_leverage` server-side on create), then
-   documents/activity/notes tabs, then the hand-rolled Gantt timeline tab
-   (highest-effort, sequenced last), then formulas.
+1. **Phase 3b — Deal Detail: Underwriting, Documents, Timeline, Formulas.**
+   Underwriting tab (writes `utils/creditFormulas.ts`, shared with the
+   Formulas tab — the New Deal modal shipped in Phase 2 without it, since the
+   backend already derives `all_in_rate`/`total_leverage` server-side on
+   create; needs lock-aware edit UX for the `UNDERWRITING_FIELDS` set), then
+   the Documents tab (blocked until the Railway S3 bucket is provisioned),
+   then the hand-rolled Gantt timeline tab (highest-effort, sequenced last),
+   then Formulas.
 2. **Phase 4 — Executive Summary + Chat.** Exec Summary needs Deal Detail as
    a click target; Chat has no dependencies and can slot in once convenient.
 3. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL

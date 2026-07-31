@@ -64,6 +64,7 @@ def _coerce_field_value(field: str, value):
 class PatchRequest(BaseModel):
     field: str
     value: str | float | int | None = None
+    actor: str | None = None
 
 
 @router.patch("/deals/{deal_id}")
@@ -125,7 +126,7 @@ async def patch_deal(
         activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
             "status_change" if body.field == "status" else "system"
         await log_activity(
-            db, deal_id, "user", activity_type,
+            db, deal_id, body.actor or "user", activity_type,
             f"{body.field} changed from {old_value!r} to {coerced!r}",
         )
 
