@@ -290,6 +290,7 @@ class CreateDealRequest(BaseModel):
     max_leverage_covenant: Optional[float] = None
     min_fccr_covenant: Optional[float] = None
     capex_limit_covenant_m: Optional[float] = None
+    actor: Optional[str] = None
 
 
 @router.post("/deals")
@@ -360,7 +361,7 @@ async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db
         new_value=deal.pipeline_stage,
         source="manual_edit",
     ))
-    await log_activity(db, deal.id, "user", "system", "Deal created — entered via New Deal form")
+    await log_activity(db, deal.id, body.actor or "user", "system", "Deal created — entered via New Deal form")
 
     return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
 

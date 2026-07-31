@@ -100,6 +100,7 @@ export interface CreateDealInput {
   pipeline_stage?: string
   status?: string
   base_rate?: string | null
+  actor?: string
 }
 
 export interface KPIs {

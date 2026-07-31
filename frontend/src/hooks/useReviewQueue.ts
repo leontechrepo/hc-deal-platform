@@ -8,7 +8,8 @@ export function useReviewQueue() {
 export function useApproveSuggestion() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, value }: { id: number; value?: string }) => approveSuggestion(id, value),
+    mutationFn: ({ id, value, reviewer }: { id: number; value?: string; reviewer?: string }) =>
+      approveSuggestion(id, value, reviewer),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })
       qc.invalidateQueries({ queryKey: ['deals'] })
@@ -20,7 +21,7 @@ export function useApproveSuggestion() {
 export function useRejectSuggestion() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => rejectSuggestion(id),
+    mutationFn: ({ id, reviewer }: { id: number; reviewer?: string }) => rejectSuggestion(id, reviewer),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })
     },

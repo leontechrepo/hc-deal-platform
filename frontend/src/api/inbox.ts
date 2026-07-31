@@ -5,20 +5,25 @@ export function listInbox(): Promise<PendingSuggestion[]> {
   return apiFetch('/api/inbox')
 }
 
-export function approveInboxItem(id: number, value?: string): Promise<{ ok: boolean; deal_id: number; company_name: string; created?: boolean }> {
+export function approveInboxItem(
+  id: number,
+  value?: string,
+  reviewer?: string,
+): Promise<{ ok: boolean; deal_id: number; company_name: string; created?: boolean }> {
   return apiFetch(`/api/inbox/${id}/approve`, {
     method: 'POST',
-    body: JSON.stringify({ reviewer: 'user', value: value ?? null }),
+    body: JSON.stringify({ reviewer: reviewer || 'user', value: value ?? null }),
   })
 }
 
-export function assignInboxItem(id: number, dealId: number): Promise<{ ok: boolean; deal_id: number; company_name: string }> {
+export function assignInboxItem(id: number, dealId: number, reviewer?: string): Promise<{ ok: boolean; deal_id: number; company_name: string }> {
   return apiFetch(`/api/inbox/${id}/assign`, {
     method: 'POST',
-    body: JSON.stringify({ deal_id: dealId, reviewer: 'user' }),
+    body: JSON.stringify({ deal_id: dealId, reviewer: reviewer || 'user' }),
   })
 }
 
-export function rejectInboxItem(id: number): Promise<{ ok: boolean; suggestion_id: number }> {
-  return apiFetch(`/api/inbox/${id}/reject`, { method: 'POST' })
+export function rejectInboxItem(id: number, reviewer?: string): Promise<{ ok: boolean; suggestion_id: number }> {
+  const qs = reviewer ? `?reviewer=${encodeURIComponent(reviewer)}` : ''
+  return apiFetch(`/api/inbox/${id}/reject${qs}`, { method: 'POST' })
 }

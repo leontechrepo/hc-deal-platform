@@ -87,6 +87,7 @@ async def list_timeline_templates():
 class ApplyTemplateRequest(BaseModel):
     template_name: str
     start_date: Optional[date] = None
+    actor: Optional[str] = None
 
 
 @router.post("/deals/{deal_id}/timeline/from-template")
@@ -119,7 +120,7 @@ async def apply_timeline_template(deal_id: int, body: ApplyTemplateRequest, db: 
             ))
 
     await log_activity(
-        db, deal_id, "user", "system",
+        db, deal_id, body.actor or "user", "system",
         f"Closing timeline created from template: {template['label']}",
     )
 

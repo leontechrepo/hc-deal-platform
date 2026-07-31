@@ -122,12 +122,12 @@ async def patch_document(document_id: int, body: DocumentPatchRequest, db: Async
 
 
 @router.delete("/documents/{document_id}")
-async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_document(document_id: int, actor: str = "user", db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DealDocument).where(DealDocument.id == document_id))
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     doc.status = "deleted"
     doc.updated_at = datetime.now(timezone.utc)
-    await log_activity(db, doc.deal_id, "user", "document", f"Deleted document: {doc.name}")
+    await log_activity(db, doc.deal_id, actor, "document", f"Deleted document: {doc.name}")
     return {"ok": True, "document_id": document_id}

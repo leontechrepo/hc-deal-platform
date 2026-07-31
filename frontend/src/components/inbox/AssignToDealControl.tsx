@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDeals } from '../../hooks/useDeals'
 import { useAssignInboxItem } from '../../hooks/useInbox'
+import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../Toast/Toast'
 import { Button } from '../ui/Button/Button'
 import { SearchableSelect } from '../ui/SearchableSelect/SearchableSelect'
@@ -14,6 +15,7 @@ interface Props {
 export function AssignToDealControl({ suggestionId, companyName }: Props) {
   const { data: deals = [] } = useDeals()
   const assign = useAssignInboxItem()
+  const actor = useCurrentActor()
   const { showToast } = useToast()
 
   const [expanded, setExpanded] = useState(false)
@@ -30,7 +32,7 @@ export function AssignToDealControl({ suggestionId, companyName }: Props) {
   async function handleAssign() {
     if (!dealId) return
     try {
-      await assign.mutateAsync({ id: suggestionId, dealId: Number(dealId) })
+      await assign.mutateAsync({ id: suggestionId, dealId: Number(dealId), reviewer: actor })
       showToast(`Linked ${companyName} to existing deal`)
     } catch {
       showToast('Failed to link deal', true)
