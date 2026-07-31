@@ -258,26 +258,88 @@ and the existing app keeps working throughout.
 - Verified: `tsc --noEmit` clean, production build succeeds, backend/frontend
   boot locally against the real `hc_deal` Postgres DB.
 
+### Frontend — Phase 4 (Executive Summary + Credit Co-Pilot Chat) complete
+
+- **Mid-phase correction**: the "Corporate Credit Platform" DesignSync mockup
+  this whole restructure has been built against is a **layout skeleton
+  only** — which elements exist on a screen, roughly arranged — not the
+  source of visual truth. That's the separate `Reip Design System/` reference
+  at the repo root (Leon Capital Group's real, shipped design language for
+  the production REIP platform, `window.ReipDs`), which is what the earlier
+  "Leon Design System Phase A/B" commits already pulled tokens/primitives
+  from. Every visual decision in this phase defers to Reip's real component
+  CSS over the mockup's inline styles — including a `--chat-*` token set and
+  a `--radius-bubble: 14px` token already pre-wired in `tokens.css` from
+  Phase A specifically for this feature, unused until now.
+- New **Executive Summary** page (`/executive-summary`): reuses the existing
+  `KPIGrid` (Active Deals / Total Pipeline / Total Hold / Portfolio / Inbox,
+  aggregated client-side from `useDeals()`/`usePortfolio()`/`useInbox()` —
+  **not** the legacy bucket-derived `useKPIs()`/`GET /api/kpis`, which
+  returns an entirely different, wrong-shaped set of fields) plus a new
+  `components/shared/TableCard.tsx` (Reip's real `.table-card` pattern —
+  titled card wrapper around the existing bare `DataTable`, which
+  intentionally has no card chrome of its own). The mockup's "Export PDF"
+  button and "As of {date}" topbar pill were deliberately dropped — the
+  former is a literal no-op in the prototype with no real feature behind it,
+  and neither has any precedent in this app's actual `PageHeader` (plain
+  eyebrow+title, no action slot on any other page). Deal's row also has no
+  `sponsor` field in this data model, so the mockup's Sponsor column was
+  dropped rather than faked.
+- New **Credit Co-Pilot** chat page (`/chat`) against the already-built
+  `POST /api/chat`: message bubbles, composer (gold-gradient focus halo),
+  and thinking indicator all copied faithfully from Reip's real CSS
+  (`.chat-bubble`, `.chat-composer*`, the `chat-status-pulse` keyframes) via
+  the pre-wired tokens above. New `components/shared/AiStarIcon.tsx`
+  reproduces Reip's exact gold four-point sparkle glyph (the guide's one
+  documented custom brand icon — no Lucide substitute) for the chat nav item
+  and empty-state heading. AI replies render through a small hand-rolled
+  mini-markdown renderer (bold/bullets/line-breaks only, no new npm
+  dependency) — this deliberately mirrors Reip's own real `ChatMarkdown`
+  component, which stays hand-rolled/minimal by choice even though
+  `react-markdown`/`remark-gfm` are available elsewhere in that bundle.
+  **Deliberately out of scope**: Reip's real chat screen has a multi-session
+  sidebar, not built here — our backend only supports one `session_id`
+  round-trip per client with no list/rehydrate endpoint, so a local-only fake
+  session switcher would have had no real data behind it. `sessionStorage`
+  persists the single conversation across a refresh instead. No `deal_id`
+  context-binding UI either (no "ask about this deal" launch button) — not
+  described in the master plan's build order for this pass.
+- `frontend/src/api/client.ts`'s `apiFetch` now throws a new `ApiError`
+  (adds a `.status` field) instead of a plain `Error`, so `useChat` can show
+  distinct copy for a 429 (rate limited) vs. a 503 (chat not configured) vs.
+  any other failure — previously no caller could distinguish status codes
+  from the thrown error at all.
+- Confirmed working, resolving an open item below: `claude-sonnet-4-6`
+  (`app/api/chat.py`, `app/automation/scanner.py`) is a real, callable model
+  — tested directly against the live Anthropic API with the project's real
+  key.
+- Two new flat `NavBar` items (Executive Summary, Credit Co-Pilot) — Phase 5
+  is the dedicated nav-section-restructure pass, so these stay flat for now,
+  same as Phase 1's Sponsors/Funds/Portfolio/Inbox additions.
+- Verified: `tsc --noEmit` clean, production build succeeds, backend/frontend
+  boot locally against the real `hc_deal` Postgres DB, `POST /api/chat`
+  correctly 401s unauthenticated. **Not done**: interactive authenticated
+  click-through via Clerk SSO (same standing limitation as every prior
+  phase) — recommend a manual pass over both new pages, light and dark mode,
+  before leaning on this in production.
+
 ## Next steps
 
-Deal Detail's only remaining piece, plus frontend phases 4–5 (backend is a
-fixed, already-shipped contract for all of these — no backend work required):
+Deal Detail's only remaining piece, plus frontend phase 5 (backend is a
+fixed, already-shipped contract for this — no backend work required):
 
 1. **Documents tab** (blocked until the Railway S3 bucket is provisioned —
    `storage_configured` still gates uploads/downloads with a 503; re-check
    via the Railway MCP/CLI once its session auth is refreshed with
-   `railway login`).
-2. **Phase 4 — Executive Summary + Chat.** Exec Summary needs Deal Detail as
-   a click target; Chat has no dependencies and can slot in once convenient.
-3. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL
+   `railway login` — still unauthorized as of this pass).
+2. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL
    MANAGEMENT / TOOLS sections (folding in the Sponsors/Funds/Portfolio/Inbox
-   items added flat in Phase 1, plus Pipeline added flat in Phase 2), decide
+   items added flat in Phase 1, Pipeline added flat in Phase 2, and
+   Executive Summary/Credit Co-Pilot added flat in Phase 4), decide
    `/analytics` placement, delete `api/analytics.ts`/`useAnalytics.ts` if
    still confirmed dead.
 
 Also open, not blocking frontend work:
 - Provision the Railway S3-compatible bucket + set `STORAGE_*` env vars so
   document upload/download stops 503ing.
-- Verify the chat model id (`claude-sonnet-4-6` in `app/api/chat.py`) is a
-  real, intended model before the Chat page goes live.
 - Add `STORAGE_*` vars to `.env.example`.

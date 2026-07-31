@@ -1,0 +1,56 @@
+.row {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.rowUser {
+  justify-content: flex-end;
+}
+
+.rowAssistant {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 72%;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.user {
+  background: var(--chat-navy);
+  color: #fff;
+  border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble);
+  white-space: pre-wrap;
+}
+
+.assistant {
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 4px;
+}
+
+.assistant.error {
+  border-color: color-mix(in srgb, var(--red) 55%, transparent);
+  color: var(--red);
+}
+
+.bubble p {
+  margin: 0 0 8px;
+}
+
+.bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.bubble ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.bubble li::marker {
+  color: var(--gold);
+}

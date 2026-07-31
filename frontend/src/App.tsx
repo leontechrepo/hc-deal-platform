@@ -10,6 +10,8 @@ import { SponsorsPage } from './pages/SponsorsPage/SponsorsPage'
 import { FundsPage } from './pages/FundsPage/FundsPage'
 import { PortfolioPage } from './pages/PortfolioPage/PortfolioPage'
 import { InboxPage } from './pages/InboxPage/InboxPage'
+import { ExecutiveSummaryPage } from './pages/ExecutiveSummaryPage/ExecutiveSummaryPage'
+import { ChatPage } from './pages/ChatPage/ChatPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
 import { DealDetailPage } from './pages/DealDetailPage/DealDetailPage'
 import { OverviewTab } from './pages/DealDetailPage/tabs/OverviewTab'
@@ -46,12 +48,14 @@ function Layout() {
         <Routes>
           <Route path="/" element={<Navigate to="/pipeline" replace />} />
           <Route path="/pipeline" element={<PipelinePage />} />
+          <Route path="/executive-summary" element={<ExecutiveSummaryPage />} />
           <Route path="/logs" element={<LogsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/sponsors" element={<SponsorsPage />} />
           <Route path="/funds" element={<FundsPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route path="/deals/:dealId" element={<DealDetailPage />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<OverviewTab />} />

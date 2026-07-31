@@ -316,3 +316,15 @@ export interface EmailScanLogEntry {
   claude_summary: string | null
   action_taken: string | null
 }
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  error?: boolean
+}
+
+export interface ChatSendResponse {
+  session_id: string
+  reply: string
+  created_at: string
+}

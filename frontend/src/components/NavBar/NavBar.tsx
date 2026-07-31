@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/react'
 import {
   Kanban,
+  FileText,
   ScrollText,
   BarChart3,
   Inbox as InboxIcon,
@@ -18,6 +19,7 @@ import { triggerScan } from '../../api/admin'
 import { useNav } from '../../NavContext'
 import { useToast } from '../Toast/Toast'
 import { ThemeToggle } from '../ui/ThemeToggle/ThemeToggle'
+import { AiStarIcon } from '../shared/AiStarIcon'
 import { NavIcon } from './NavIcon'
 import leonLogo from '../../assets/leon-logo.png'
 import styles from './NavBar.module.css'
@@ -67,6 +69,17 @@ export function NavBar() {
         >
           <NavIcon icon={Kanban} />
           <span className={styles.navLabel}>Pipeline</span>
+        </NavLink>
+
+        <NavLink
+          to="/executive-summary"
+          title="Executive Summary"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <NavIcon icon={FileText} />
+          <span className={styles.navLabel}>Executive Summary</span>
         </NavLink>
 
         <NavLink
@@ -133,6 +146,19 @@ export function NavBar() {
         >
           <NavIcon icon={Building2} />
           <span className={styles.navLabel}>Portfolio</span>
+        </NavLink>
+
+        <NavLink
+          to="/chat"
+          title="Credit Co-Pilot"
+          className={({ isActive }) =>
+            [styles.navItem, isActive ? styles.active : ''].join(' ')
+          }
+        >
+          <span className={styles.navIcon}>
+            <AiStarIcon size={21} />
+          </span>
+          <span className={styles.navLabel}>Credit Co-Pilot</span>
         </NavLink>
 
         <div className={styles.divider} />
