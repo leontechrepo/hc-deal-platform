@@ -3,7 +3,7 @@ import { useDeals } from '../../hooks/useDeals'
 import { useAssignInboxItem } from '../../hooks/useInbox'
 import { useToast } from '../Toast/Toast'
 import { Button } from '../ui/Button/Button'
-import formStyles from '../shared/Form.module.css'
+import { SearchableSelect } from '../ui/SearchableSelect/SearchableSelect'
 import styles from './AssignToDealControl.module.css'
 
 interface Props {
@@ -17,7 +17,7 @@ export function AssignToDealControl({ suggestionId, companyName }: Props) {
   const { showToast } = useToast()
 
   const [expanded, setExpanded] = useState(false)
-  const [dealId, setDealId] = useState<string>('')
+  const [dealId, setDealId] = useState<string | null>(null)
 
   if (!expanded) {
     return (
@@ -39,12 +39,15 @@ export function AssignToDealControl({ suggestionId, companyName }: Props) {
 
   return (
     <div className={styles.control}>
-      <select className={formStyles.select} value={dealId} onChange={e => setDealId(e.target.value)}>
-        <option value="">Select existing deal…</option>
-        {deals.map(d => (
-          <option key={d.id} value={d.id}>{d.company_name}</option>
-        ))}
-      </select>
+      <div className={styles.selectWrap}>
+        <SearchableSelect
+          options={deals.map(d => ({ id: String(d.id), label: d.company_name }))}
+          value={dealId}
+          onChange={setDealId}
+          noneLabel="Select existing deal…"
+          placeholder="Search deals…"
+        />
+      </div>
       <Button variant="secondary" onClick={handleAssign} disabled={!dealId || assign.isPending}>
         {assign.isPending ? 'Linking…' : 'Link to this deal'}
       </Button>

@@ -20,7 +20,7 @@
 .company {
   font-weight: 600;
   font-size: 14px;
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .newDealBadge {
@@ -112,7 +112,7 @@
   text-transform: none;
   letter-spacing: 0;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .fieldValues {

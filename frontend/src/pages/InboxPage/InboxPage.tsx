@@ -3,6 +3,7 @@ import { useApproveInboxItem, useInbox, useRejectInboxItem } from '../../hooks/u
 import { InboxCard } from '../../components/inbox/InboxCard'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
+import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
 import { useToast } from '../../components/Toast/Toast'
 import styles from './InboxPage.module.css'
 
@@ -23,10 +24,7 @@ export function InboxPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Inbox</h1>
-      </header>
+      <PageHeader title="Inbox" />
 
       <KPIGrid items={kpiItems} />
 

@@ -10,7 +10,7 @@
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .mastheadSub {
@@ -26,38 +26,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 2px solid var(--gray-200);
   margin-bottom: 20px;
   flex-wrap: wrap;
-}
-
-.tabs {
-  display: flex;
-  gap: 0;
-}
-
-.tab {
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-400);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-
-.tab:hover {
-  color: var(--navy);
-}
-
-.tab.active {
-  color: var(--navy);
-  border-bottom-color: var(--gold);
-  font-weight: 600;
 }
 
 .actions {

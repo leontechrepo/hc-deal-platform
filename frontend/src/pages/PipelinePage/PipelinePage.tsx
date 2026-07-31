@@ -7,6 +7,7 @@ import { KanbanBoard } from '../../components/pipeline/KanbanBoard'
 import { ViewToggle, type View } from '../../components/pipeline/ViewToggle'
 import { NewDealModal } from '../../components/pipeline/NewDealModal'
 import { Button } from '../../components/ui/Button/Button'
+import { Tabs } from '../../components/ui/Tabs/Tabs'
 import { STATUSES } from '../../components/shared/StatusBadge'
 import { useKPIs } from '../../hooks/useKPIs'
 import { useDeals } from '../../hooks/useDeals'
@@ -57,17 +58,11 @@ export function PipelinePage() {
       <ReviewBanner />
 
       <div className={styles.toolbar}>
-        <div className={styles.tabs}>
-          {STATUS_TABS.map(tab => (
-            <button
-              key={tab}
-              className={[styles.tab, activeStatus === tab ? styles.active : ''].join(' ')}
-              onClick={() => setActiveStatus(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          items={STATUS_TABS.map(tab => ({ key: tab, label: tab }))}
+          activeKey={activeStatus}
+          onChange={key => setActiveStatus(key as StatusTab)}
+        />
         <div className={styles.actions}>
           <ViewToggle view={view} onChange={setView} />
           <Button variant="primary" onClick={openNewDeal}>+ New Deal</Button>

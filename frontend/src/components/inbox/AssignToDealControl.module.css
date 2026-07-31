@@ -5,6 +5,11 @@
   margin-top: 8px;
 }
 
+.selectWrap {
+  flex: 1;
+  max-width: 320px;
+}
+
 .toggleLink {
   font-size: 11px;
   color: var(--muted);
@@ -15,5 +20,5 @@
 }
 
 .toggleLink:hover {
-  color: var(--navy);
+  color: var(--heading);
 }

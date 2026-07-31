@@ -21,7 +21,7 @@ export function ApproveRejectActions({
       <Button variant="primary" size="sm" disabled={busy} onClick={onApprove}>
         {approveLabel}
       </Button>
-      <Button variant="ghost" size="sm" disabled={busy} onClick={onReject}>
+      <Button variant="secondary" size="sm" disabled={busy} onClick={onReject}>
         {rejectLabel}
       </Button>
     </div>

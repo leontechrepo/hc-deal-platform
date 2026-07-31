@@ -5,6 +5,7 @@ import { FundFormModal } from '../../components/funds/FundFormModal'
 import { Button } from '../../components/ui/Button/Button'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
+import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
 import { useToast } from '../../components/Toast/Toast'
 import type { Fund, FundInput } from '../../types'
 import styles from './FundsPage.module.css'
@@ -76,10 +77,7 @@ export function FundsPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Funds</h1>
-      </header>
+      <PageHeader title="Funds" />
 
       <KPIGrid items={kpiItems} />
 

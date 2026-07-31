@@ -20,7 +20,7 @@
   font-family: var(--font-display);
   font-size: 19px;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .headerActions {
@@ -39,7 +39,7 @@
 }
 
 .iconBtn:hover {
-  color: var(--navy);
+  color: var(--heading);
   border-color: var(--navy-light);
 }
 
@@ -82,7 +82,7 @@
 }
 
 .detailValue {
-  color: var(--navy);
+  color: var(--text);
 }
 
 .sectors {
