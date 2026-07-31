@@ -231,18 +231,42 @@ and the existing app keeps working throughout.
   resolve correctly), backend/frontend boot locally against the real
   `hc_deal` Postgres DB.
 
+### Frontend — Phase 3c (Deal Detail: timeline) complete
+
+- New **Timeline tab**: a hand-rolled Gantt over the already-complete
+  `app/api/deal_timeline.py` backend (full workstream/task CRUD + 2 named
+  templates, `expedited_close`/`pre_close_diligence_only`) — no backend
+  changes needed. New `frontend/src/utils/ganttScale.ts` (pure date↔pixel
+  helpers, no library) backs a fixed-px-per-day scale; the whole chart is one
+  `overflow-x: auto` region where each row (month ruler, workstream headers,
+  task rows) shares a common left "details" panel width and right bar-track
+  width so everything scrolls together as a unit.
+- `components/dealDetail/{GanttChart,TaskRow,MilestoneMarker,
+  CreateTimelineWizard,AddTaskForm}.tsx` — `TaskRow` combines a left CRUD
+  panel (`InlineEditText` for name/owner, date inputs, a status `<select>`
+  driving the bar's color) with its own right-side bar/milestone-diamond
+  segment in one flex row, avoiding `position: sticky` column-freezing.
+  `CreateTimelineWizard` (template picker + start date) stays available even
+  once a timeline exists — the backend doesn't prevent layering a second
+  template's workstreams onto an existing timeline, and there's a real use
+  case for that (e.g. adding the Rating Agency workstream later).
+- **Deliberately out of scope**: dragging/resizing bars to reschedule tasks
+  — dates are edited via plain date inputs in the row instead. The master
+  plan describes a rendered Gantt, not a drag-to-reschedule tool (unlike
+  Kanban's explicit drag-and-drop), and there's no task dependency graph
+  anywhere in the data model to make dragging meaningful beyond a single task.
+- Verified: `tsc --noEmit` clean, production build succeeds, backend/frontend
+  boot locally against the real `hc_deal` Postgres DB.
+
 ## Next steps
 
-Frontend phases 3c–5 (backend is a fixed, already-shipped contract for all of
-these — no backend work required):
+Deal Detail's only remaining piece, plus frontend phases 4–5 (backend is a
+fixed, already-shipped contract for all of these — no backend work required):
 
-1. **Phase 3c — Deal Detail: Documents, Timeline.** Documents tab (blocked
-   until the Railway S3 bucket is provisioned — `storage_configured` still
-   gates uploads/downloads with a 503; re-check via the Railway MCP/CLI once
-   its session auth is refreshed), then the hand-rolled Gantt timeline tab
-   (`GanttChart`/`WorkstreamRow`/`TaskBar`/`MilestoneMarker`, backed by the
-   already-built `app/api/deal_timeline.py` + 2 templates — highest-effort
-   remaining piece, sequenced last for exactly that reason).
+1. **Documents tab** (blocked until the Railway S3 bucket is provisioned —
+   `storage_configured` still gates uploads/downloads with a 503; re-check
+   via the Railway MCP/CLI once its session auth is refreshed with
+   `railway login`).
 2. **Phase 4 — Executive Summary + Chat.** Exec Summary needs Deal Detail as
    a click target; Chat has no dependencies and can slot in once convenient.
 3. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL

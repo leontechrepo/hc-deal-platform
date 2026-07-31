@@ -261,6 +261,37 @@ export interface DealNote {
   updated_at: string
 }
 
+export interface DealTimelineTask {
+  id: number
+  workstream_id: number
+  name: string
+  owner: string | null
+  start_date: string | null
+  end_date: string | null
+  duration_days: number | null
+  status: string
+  is_milestone: boolean
+  sort_order: number
+}
+
+export interface DealTimelineWorkstream {
+  id: number
+  name: string
+  sort_order: number
+  tasks: DealTimelineTask[]
+}
+
+export interface DealTimeline {
+  deal_id: number
+  workstreams: DealTimelineWorkstream[]
+}
+
+export interface TimelineTemplate {
+  key: string
+  label: string
+  description: string
+}
+
 export interface DealUpdateLogEntry {
   id: number
   deal_id: number
