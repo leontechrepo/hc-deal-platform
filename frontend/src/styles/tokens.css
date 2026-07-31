@@ -1,4 +1,5 @@
 :root {
+  /* Brand */
   --navy: #0a1f44;
   --navy2: #0d2b5e;
   --navy-light: #0d2b5e;
@@ -11,22 +12,29 @@
   --border: #dde1e9;
   --text: #1a2340;
   --muted: #6b7a9b;
+  --heading: #0a1f44;
+  --on-gold: #0a1f44;
 
   --gray-100: #F2F1EE;
   --gray-200: #dde1e9;
   --gray-400: #6b7a9b;
   --gray-700: #4A4845;
 
+  /* Semantic (Reip DS core set: green/red/amber/blue) */
   --green: #2ecc8f;
-  --green-bg: #EAF4EA;
-  --green-fg: #1A5C1A;
+  --green-bg: #e8faf3;
+  --green-fg: #1a7a56;
   --red: #e05c5c;
-  --red-bg: #FDECEA;
-  --red-fg: #C62828;
+  --red-bg: #fdeaea;
+  --red-fg: #9a2020;
   --amber: #f0a030;
+  --amber-bg: #fff4e0;
+  --amber-fg: #7a5010;
   --blue: #6478dc;
   --blue-bg: #E8F0FB;
   --blue-fg: #154A7A;
+
+  /* legacy — not in Reip DS, retained for existing pages, do not extend */
   --yellow-bg: #FFFBEA;
   --yellow-fg: #7A6200;
   --purple-bg: #F0EBF8;
@@ -36,30 +44,72 @@
   --orange-bg: #FDF1E3;
   --orange-fg: #B5650A;
 
+  /* Typography families */
   --font: 'Jost', 'Segoe UI', sans-serif;
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-mono: 'DM Mono', 'Fira Mono', monospace;
 
-  --heading: #0a1f44;
-  --on-gold: #0a1f44;
+  /* Type scale */
+  --text-display: 28px;
+  --text-hero: 64px;
+  --text-specimen: 30px;
+  --text-kpi: 22px;
+  --text-topbar-title: 16px;
+  --text-body: 13px;
+  --text-small: 11px;
+  --text-label: 9px;
 
+  /* Spacing scale — steps 4/6/8/10/12/14/16/18/20/24 (base unit 2px) */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-9: 18px;
+  --space-10: 20px;
+  --space-11: 24px;
+
+  /* Radius scale — named by purpose per component */
+  --radius-badge: 4px;
+  --radius-button: 7px;
+  --radius-card: 10px;
+  --radius-pill: 12px;
+  --radius-bubble: 14px;
+  --radius-panel: 18px;
+  --radius-sidebar: 20px;
+  --radius-round: 50%;
+
+  /* Surfaces / elevation */
   --workspace: #f6f8fb;
   --workspace-soft: #eef3f8;
   --panel: rgba(255,255,255,.86);
   --panel-solid: #ffffff;
   --panel-raised: rgba(255,255,255,.94);
+  --card: var(--panel-solid);
   --glass-border: rgba(131,145,169,.26);
   --glass-border-strong: rgba(201,168,76,.42);
 
+  /* Spotlight background accent (tokens only — not yet applied as a workspace background) */
+  --spotlight-gold: rgba(201,168,76,.16);
+  --spotlight-warm: rgba(252,247,236,.55);
+  --spotlight-center: 50% 45%;
+
+  /* Shadows */
   --shadow-soft: 0 10px 26px rgba(10,31,68,.07);
   --shadow-float: 0 18px 44px rgba(10,31,68,.11);
   --shadow-hover: 0 22px 50px rgba(10,31,68,.14);
+  --shadow-micro: 0 1px 4px rgba(10,31,68,.06);
 
+  /* Card / input gold accents */
   --card-border-gold: rgba(201,168,76,.14);
   --input-gold-border: rgba(201,168,76,.55);
   --input-gold-ring: rgba(201,168,76,.16);
   --input-gold-ring-focus: rgba(201,168,76,.3);
 
+  /* Chat (pre-wired, not yet consumed) */
   --chat-navy: #0a1f44;
   --chat-navy-hover: #0d2b5e;
   --chat-heading: #0a1f44;
@@ -69,6 +119,59 @@
   --chat-surface-accent: rgba(201,168,76,.10);
   --chat-focus-ring: rgba(10,31,68,.08);
 
+  /* Layout */
   --nav-width-expanded: 220px;
-  --nav-width-collapsed: 56px;
+  --nav-width-collapsed: 80px;
+}
+
+html.dark {
+  --heading: #ffffff;
+  /* --white intentionally unchanged — it's consumed throughout the app as a literal
+     white foreground/surface paired directly with colors that stay constant in dark
+     mode (--navy, --red, etc; e.g. Badge's navy tone, Button's danger variant, page-level
+     KanbanCard/Form/Toast). Darkening it here breaks all of those pairings. */
+  --lt: #0f141d;
+  --surface: #161e2c;
+  --border: #2a3548;
+  --text: #e4e9f2;
+  --muted: #8b99b8;
+
+  --green: #3dd99a;
+  --red: #f07070;
+  --amber: #ffb84d;
+  --blue: #8b9ef0;
+
+  /* legacy tones have no Reip DS dark-mode reference — lightness-inverted by the same pattern as the real semantics */
+  --yellow-bg: #3a3418;
+  --yellow-fg: #ffe08a;
+  --purple-bg: #2a2038;
+  --purple-fg: #d8b8f5;
+  --gray-bg: #232a38;
+  --gray-fg: #b6c0d6;
+  --orange-bg: #3a2712;
+  --orange-fg: #ffb066;
+
+  --workspace: #0c1018;
+  --workspace-soft: #121a26;
+  --panel: rgba(22,30,44,.88);
+  --panel-solid: #161e2c;
+  --panel-raised: rgba(28,38,54,.94);
+  --card: var(--panel-solid);
+  --glass-border: rgba(120,140,175,.28);
+  --glass-border-strong: rgba(201,168,76,.45);
+
+  --spotlight-gold: rgba(201,168,76,.12);
+  --spotlight-warm: rgba(201,168,76,.08);
+
+  --shadow-soft: 0 10px 28px rgba(0,0,0,.35);
+  --shadow-float: 0 18px 48px rgba(0,0,0,.45);
+  --shadow-hover: 0 22px 52px rgba(0,0,0,.5);
+  --shadow-micro: 0 1px 4px rgba(0,0,0,.3);
+
+  --card-border-gold: rgba(201,168,76,.12);
+  --input-gold-border: var(--glass-border);
+  --input-gold-ring: transparent;
+  --input-gold-ring-focus: rgba(201,168,76,.22);
+
+  /* --gold, --navy, --navy2, --on-gold intentionally unchanged — gold accent is identical in both modes */
 }

@@ -1,0 +1,23 @@
+.tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--radius-badge);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.default {
+  background: var(--lt);
+  color: var(--muted);
+}
+
+.gold {
+  background: var(--gold-light);
+  color: var(--on-gold);
+}
+
+.red {
+  background: var(--red-bg);
+  color: var(--red-fg);
+}

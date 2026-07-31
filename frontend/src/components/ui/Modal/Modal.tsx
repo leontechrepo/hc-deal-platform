@@ -24,12 +24,8 @@ export function Modal({ open, onClose, title, children }: Props) {
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.panel} onClick={e => e.stopPropagation()}>
-        {title && (
-          <div className={styles.header}>
-            <span className={styles.title}>{title}</span>
-            <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
-          </div>
-        )}
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
+        {title && <div className={styles.title}>{title}</div>}
         <div className={styles.body}>{children}</div>
       </div>
     </div>,

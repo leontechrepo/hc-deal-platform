@@ -1,7 +1,18 @@
 .card {
-  background: var(--panel-solid);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-soft);
-  padding: 16px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-micro);
+  padding: var(--space-8);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.gold  { border-left: 4px solid var(--gold); }
+.navy  { border-left: 4px solid var(--navy); }
+.green { border-left: 4px solid var(--green); }
+.red   { border-left: 4px solid var(--red); }
+
+.hoverable:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
 }

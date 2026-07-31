@@ -34,7 +34,7 @@ function Layout() {
         flex: 1,
         minHeight: '100vh',
         overflowY: 'auto',
-        transition: 'margin-left 0.22s ease',
+        transition: 'margin-left 0.28s cubic-bezier(.4,0,.2,1)',
       }}>
         <Routes>
           <Route path="/" element={<Navigate to="/pipeline" replace />} />
