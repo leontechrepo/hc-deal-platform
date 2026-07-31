@@ -13,6 +13,8 @@ import { InboxPage } from './pages/InboxPage/InboxPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
 import { DealDetailPage } from './pages/DealDetailPage/DealDetailPage'
 import { OverviewTab } from './pages/DealDetailPage/tabs/OverviewTab'
+import { UnderwritingTab } from './pages/DealDetailPage/tabs/UnderwritingTab'
+import { FormulasTab } from './pages/DealDetailPage/tabs/FormulasTab'
 import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
 import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
 import { registerTokenGetter } from './api/client'
@@ -52,6 +54,8 @@ function Layout() {
           <Route path="/deals/:dealId" element={<DealDetailPage />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<OverviewTab />} />
+            <Route path="underwriting" element={<UnderwritingTab />} />
+            <Route path="formulas" element={<FormulasTab />} />
             <Route path="activity" element={<ActivityTab />} />
             <Route path="notes" element={<NotesTab />} />
           </Route>

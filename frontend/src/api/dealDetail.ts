@@ -1,5 +1,5 @@
 import type { DealActivity, DealNote } from '../types'
-import { apiFetch } from './client'
+import { apiFetch, apiFetchBlob } from './client'
 
 export function listDealActivity(dealId: number): Promise<DealActivity[]> {
   return apiFetch(`/api/deals/${dealId}/activity`)
@@ -25,4 +25,8 @@ export function updateDealNote(noteId: number, body: string): Promise<DealNote> 
 
 export function deleteDealNote(noteId: number): Promise<{ ok: boolean; note_id: number }> {
   return apiFetch(`/api/notes/${noteId}`, { method: 'DELETE' })
+}
+
+export function exportDealUnderwriting(dealId: number): Promise<Blob> {
+  return apiFetchBlob(`/api/deals/${dealId}/underwriting/export`)
 }

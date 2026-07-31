@@ -1,7 +1,11 @@
+import re
 from datetime import date, datetime, timezone
+from io import BytesIO
 from typing import Optional
 
+import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select, text, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -218,6 +222,39 @@ async def get_deal(deal_id: int, db: AsyncSession = Depends(get_db)):
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     return _deal_to_dict(deal)
+
+
+@router.get("/deals/{deal_id}/underwriting/export")
+async def export_underwriting(deal_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Underwriting"
+
+    ws["A1"], ws["B1"] = "Deal Size ($M)", float(deal.deal_size_m) if deal.deal_size_m is not None else None
+    ws["A2"], ws["B2"] = "LTM EBITDA ($M)", float(deal.ltm_ebitda_m) if deal.ltm_ebitda_m is not None else None
+    ws["A3"], ws["B3"] = "SOFR Rate (%)", float(deal.sofr_rate) if deal.sofr_rate is not None else None
+    ws["A4"], ws["B4"] = "Spread (bps)", deal.spread_bps
+    # Formula cells — mirrors create_deal's derivation exactly, but as a live
+    # Excel formula so the workbook stays an auditable model, not a snapshot.
+    ws["A5"], ws["B5"] = "Total Leverage (x)", "=B1/B2"
+    ws["A6"], ws["B6"] = "All-In Rate (%)", "=B3+B4/100"
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", deal.company_name).strip("_") or "deal"
+    filename = f"{safe_name}_Underwriting.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 class CreateDealRequest(BaseModel):

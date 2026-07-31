@@ -178,24 +178,71 @@ and the existing app keeps working throughout.
   via Clerk SSO (table + kanban entry points, all three tabs, field/select/
   date edits with toast confirmation, note add/edit/delete, both light and
   dark mode).
-- **Deliberately deferred** (see Next steps): Underwriting tab (+ new
-  `utils/creditFormulas.ts`), Documents tab (blocked — Railway bucket still
-  unprovisioned, uploads/downloads 503), Timeline tab (hand-rolled Gantt),
-  Formulas tab.
+- **Deliberately deferred** (see Next steps): Underwriting tab, Formulas tab
+  (both shipped in Phase 3b below), Documents tab (blocked — Railway bucket
+  still unprovisioned, uploads/downloads 503), Timeline tab (hand-rolled
+  Gantt, still deferred).
+
+### Frontend — Phase 3b (Deal Detail: underwriting + formulas) complete
+
+- New **Underwriting tab**: covers the full `UNDERWRITING_FIELDS` set (27
+  fields — Deal Terms/Financials/Covenants sections) with lock-aware editing —
+  a `LockAwareText`/`LockAwareDate` pair (file-local, mirroring Overview's
+  `EditableSelect`/`EditableDate`) renders `InlineEditText`/a date input when
+  `!deal.underwriting_locked`, plain read-only text otherwise. No client-side
+  lock recomputation — `deal.underwriting_locked` is already server-computed
+  and read directly. A `LockedBanner` appears once the deal reaches
+  `loi_signed` or later.
+- New `frontend/src/utils/creditFormulas.ts` — deliberately scoped to only
+  `computeAllInRate`/`computeTotalLeverage`, the two formulas the backend
+  itself already derives deterministically on deal creation. `dscr`/`fccr`/
+  `interest_coverage` stay plain manually-entered fields — the backend never
+  derives them and no formula for them exists anywhere in this repo's plans,
+  so none was invented for a lending platform where that would read as
+  house methodology.
+- **Sensitivity Simulator** (`components/dealDetail/SensitivitySimulator.tsx`,
+  4× `ui/Slider` — previously built in Phase 0 with zero consumers until now)
+  + **Scenario Table** (`components/dealDetail/ScenarioTable.tsx`): two rows,
+  "Current (Saved)" (the deal's actual stored values, never recomputed) vs.
+  "Simulated" (whatever the 4 sliders are dialed to, computed via
+  `creditFormulas.ts`) — deliberately not labeled "Downside/Upside" to avoid
+  presenting an invented stress-magnitude as a calibrated risk view; the user
+  drives the simulation.
+- **Excel export — architecture deviation from the original plan.** The
+  master plan called for a client-side `xlsx` (SheetJS) npm dependency with
+  live formula cells. `xlsx@0.18.5` (the only version on the npm registry)
+  carries two unpatched high-severity advisories (prototype pollution, ReDoS)
+  that SheetJS only fixes via their own CDN, not npm. Since this backend
+  already depends on `openpyxl` (used by the Excel deal-importer), the export
+  moved server-side instead: new `GET /api/deals/{id}/underwriting/export`
+  (`app/api/deals.py`) builds the workbook with `openpyxl`, with **live
+  formula cells** (`=B1/B2`, `=B3+B4/100`, not baked values) matching the
+  plan's actual requirement, returned via `StreamingResponse`. The frontend's
+  `ExcelExportButton` fetches it as a `Blob` (new `apiFetchBlob` in
+  `api/client.ts`, since the existing `apiFetch` always parses JSON) and
+  triggers a browser download — no `xlsx` npm dependency was ever added.
+- New **Formulas tab**: reference cards for the two backend-confirmed
+  formulas only (plugged-in inputs, computed value, actual stored value side
+  by side — surfaces drift on old Excel-imported deals without trying to
+  "fix" it). DSCR/FCCR/Interest Coverage are explicitly called out as
+  no-formula-enforced, pointing back to the Underwriting tab.
+- Verified: `tsc --noEmit` clean, production build succeeds, backend imports
+  cleanly under the project's `.venv` (confirms `openpyxl`/`python-multipart`
+  resolve correctly), backend/frontend boot locally against the real
+  `hc_deal` Postgres DB.
 
 ## Next steps
 
-Frontend phases 3b–5 (backend is a fixed, already-shipped contract for all of
+Frontend phases 3c–5 (backend is a fixed, already-shipped contract for all of
 these — no backend work required):
 
-1. **Phase 3b — Deal Detail: Underwriting, Documents, Timeline, Formulas.**
-   Underwriting tab (writes `utils/creditFormulas.ts`, shared with the
-   Formulas tab — the New Deal modal shipped in Phase 2 without it, since the
-   backend already derives `all_in_rate`/`total_leverage` server-side on
-   create; needs lock-aware edit UX for the `UNDERWRITING_FIELDS` set), then
-   the Documents tab (blocked until the Railway S3 bucket is provisioned),
-   then the hand-rolled Gantt timeline tab (highest-effort, sequenced last),
-   then Formulas.
+1. **Phase 3c — Deal Detail: Documents, Timeline.** Documents tab (blocked
+   until the Railway S3 bucket is provisioned — `storage_configured` still
+   gates uploads/downloads with a 503; re-check via the Railway MCP/CLI once
+   its session auth is refreshed), then the hand-rolled Gantt timeline tab
+   (`GanttChart`/`WorkstreamRow`/`TaskBar`/`MilestoneMarker`, backed by the
+   already-built `app/api/deal_timeline.py` + 2 templates — highest-effort
+   remaining piece, sequenced last for exactly that reason).
 2. **Phase 4 — Executive Summary + Chat.** Exec Summary needs Deal Detail as
    a click target; Chat has no dependencies and can slot in once convenient.
 3. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL
