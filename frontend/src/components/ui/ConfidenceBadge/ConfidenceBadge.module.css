@@ -7,16 +7,16 @@
 }
 
 .high {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--green-bg);
+  color: var(--green-fg);
 }
 
 .med {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--amber-bg);
+  color: var(--amber-fg);
 }
 
 .low {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--red-bg);
+  color: var(--red-fg);
 }

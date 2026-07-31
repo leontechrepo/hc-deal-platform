@@ -9,17 +9,17 @@
 }
 
 .display:hover {
-  background: var(--gray-100);
+  background: var(--lt);
 }
 
 .placeholder {
-  color: var(--gray-400);
+  color: var(--muted);
   font-style: italic;
 }
 
 .input {
   width: 100%;
-  border: 1px solid var(--gold);
+  border: 1px solid var(--input-gold-border);
   border-radius: 3px;
   padding: 3px 6px;
   font-size: 13px;
@@ -27,4 +27,9 @@
   background: var(--white);
   outline: none;
   resize: vertical;
+  box-shadow: 0 0 0 3px var(--input-gold-ring);
+}
+
+.input:focus {
+  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
 }

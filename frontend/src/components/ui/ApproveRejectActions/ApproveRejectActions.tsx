@@ -1,3 +1,4 @@
+import { Button } from '../Button/Button'
 import styles from './ApproveRejectActions.module.css'
 
 interface Props {
@@ -17,12 +18,12 @@ export function ApproveRejectActions({
 }: Props) {
   return (
     <div className={styles.actions}>
-      <button className={styles.approveBtn} disabled={busy} onClick={onApprove}>
+      <Button variant="primary" size="sm" disabled={busy} onClick={onApprove}>
         {approveLabel}
-      </button>
-      <button className={styles.rejectBtn} disabled={busy} onClick={onReject}>
+      </Button>
+      <Button variant="ghost" size="sm" disabled={busy} onClick={onReject}>
         {rejectLabel}
-      </button>
+      </Button>
     </div>
   )
 }

@@ -5,23 +5,23 @@
 }
 
 .table th {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gray-400);
+  color: var(--muted);
   padding: 6px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--gray-200);
-  background: var(--gray-100);
+  border-bottom: 1px solid var(--border);
+  background: var(--lt);
   white-space: nowrap;
 }
 
 .table td {
   padding: 9px 10px;
   vertical-align: top;
-  border-bottom: 1px solid var(--gray-100);
-  color: var(--navy);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 .table tbody tr:last-child td {
@@ -29,12 +29,12 @@
 }
 
 .table tbody tr:hover td {
-  background: var(--gray-100);
+  background: rgba(201,168,76,.04);
 }
 
 .empty {
   text-align: center;
-  color: var(--gray-400);
+  color: var(--muted);
   font-style: italic;
   padding: 24px;
 }

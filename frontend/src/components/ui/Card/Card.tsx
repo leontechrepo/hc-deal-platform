@@ -1,5 +1,24 @@
 import styles from './Card.module.css'
 
-export function Card({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={[styles.card, className].filter(Boolean).join(' ')} {...rest} />
+type Accent = 'gold' | 'navy' | 'green' | 'red'
+
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
+  accent?: Accent
+  hoverable?: boolean
+}
+
+export function Card({ accent, hoverable, className, ...rest }: Props) {
+  return (
+    <div
+      className={[
+        styles.card,
+        accent ? styles[accent] : '',
+        hoverable ? styles.hoverable : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      {...rest}
+    />
+  )
 }
