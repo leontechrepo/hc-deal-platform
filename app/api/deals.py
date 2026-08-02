@@ -98,13 +98,22 @@ async def patch_deal(
     if body.field == "status" and body.value not in STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status: {body.value!r}")
 
-    old_value = str(getattr(deal, body.field)) if getattr(deal, body.field) is not None else None
+    old_value_raw = getattr(deal, body.field)
 
     try:
         coerced = _coerce_field_value(body.field, body.value)
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=f"Invalid value for '{body.field}': {exc}")
 
+    # Compare numerically (not by string) so an unchanged numeric field isn't
+    # spuriously flagged as "changed" just because SQLAlchemy round-trips it
+    # as e.g. Decimal("20.00") while the coerced input is float 20.0.
+    if body.field in _NUMERIC_FIELDS:
+        value_changed = (float(old_value_raw) if old_value_raw is not None else None) != coerced
+    else:
+        value_changed = old_value_raw != coerced
+
+    old_value = str(old_value_raw) if old_value_raw is not None else None
     new_value = str(coerced) if coerced is not None else None
 
     setattr(deal, body.field, coerced)
@@ -117,7 +126,7 @@ async def patch_deal(
     # Skip the log/activity entries when the "edit" didn't actually change the value
     # (e.g. re-saving a field unchanged) — otherwise the Logs page shows a colored
     # diff between two identical values, which reads as a change that never happened.
-    if new_value != old_value:
+    if value_changed:
         log = DealUpdateLog(
             deal_id=deal_id,
             field_changed=body.field,

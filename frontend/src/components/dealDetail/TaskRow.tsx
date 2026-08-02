@@ -66,13 +66,27 @@ export function TaskRow({ dealId, task, rangeStart, pxPerDay, trackWidth }: Prop
           type="date"
           className={formStyles.input}
           value={task.start_date ?? ''}
-          onChange={e => saveField({ start_date: e.target.value || null })}
+          onChange={e => {
+            const value = e.target.value || null
+            if (value && task.end_date && value > task.end_date) {
+              showToast("Start date can't be after the end date", true)
+              return
+            }
+            saveField({ start_date: value })
+          }}
         />
         <input
           type="date"
           className={formStyles.input}
           value={task.end_date ?? ''}
-          onChange={e => saveField({ end_date: e.target.value || null })}
+          onChange={e => {
+            const value = e.target.value || null
+            if (value && task.start_date && value < task.start_date) {
+              showToast("End date can't be before the start date", true)
+              return
+            }
+            saveField({ end_date: value })
+          }}
         />
         <select
           className={formStyles.select}

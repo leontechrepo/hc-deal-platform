@@ -30,8 +30,10 @@ export function AddTaskForm({ dealId, workstreamId, open, onClose }: Props) {
     setIsMilestone(false)
   }
 
+  const hasReversedDates = !isMilestone && !!startDate && !!endDate && endDate < startDate
+
   async function handleSubmit() {
-    if (!name.trim()) return
+    if (!name.trim() || hasReversedDates) return
     try {
       await createTask.mutateAsync({
         workstreamId,
@@ -74,13 +76,16 @@ export function AddTaskForm({ dealId, workstreamId, open, onClose }: Props) {
             </div>
           )}
         </div>
+        {hasReversedDates && (
+          <div className={formStyles.error}>End date can't be before the start date.</div>
+        )}
         <label className={styles.checkboxRow}>
           <input type="checkbox" checked={isMilestone} onChange={e => setIsMilestone(e.target.checked)} />
           <span className={formStyles.label}>Milestone</span>
         </label>
         <div className={formStyles.actions}>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!name.trim() || createTask.isPending}>
+          <Button variant="primary" onClick={handleSubmit} disabled={!name.trim() || hasReversedDates || createTask.isPending}>
             Add Task
           </Button>
         </div>

@@ -193,12 +193,18 @@ def _duration(start_date: date | None, end_date: date | None) -> int | None:
     return None
 
 
+def _validate_date_range(start_date: date | None, end_date: date | None) -> None:
+    if start_date and end_date and end_date < start_date:
+        raise HTTPException(status_code=400, detail="end_date cannot be before start_date")
+
+
 @router.post("/timeline/workstreams/{workstream_id}/tasks")
 async def create_task(workstream_id: int, body: TaskRequest, db: AsyncSession = Depends(get_db)):
     ws_result = await db.execute(select(DealTimelineWorkstream).where(DealTimelineWorkstream.id == workstream_id))
     if not ws_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Workstream not found")
     _validate_status(body.status)
+    _validate_date_range(body.start_date, body.end_date)
     task = DealTimelineTask(
         workstream_id=workstream_id,
         name=body.name,
@@ -237,6 +243,7 @@ async def patch_task(task_id: int, body: TaskPatchRequest, db: AsyncSession = De
     for field, value in updates.items():
         setattr(task, field, value)
     if "start_date" in updates or "end_date" in updates:
+        _validate_date_range(task.start_date, task.end_date)
         task.duration_days = _duration(task.start_date, task.end_date)
     task.updated_at = datetime.now(timezone.utc)
     return _task_to_dict(task)
