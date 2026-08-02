@@ -323,21 +323,47 @@ and the existing app keeps working throughout.
   phase) — recommend a manual pass over both new pages, light and dark mode,
   before leaning on this in production.
 
+### Frontend — Phase 5 (nav section cutover) complete
+
+- `NavBar` restructured from a flat 9-item list into three named sections
+  via a new `NavSection.tsx` wrapper: **Pipeline** (Pipeline, Executive
+  Summary), **Deal Management** (Inbox, Sponsors, Funds, Portfolio),
+  **Tools** (Credit Co-Pilot, Logs, Analytics — Analytics' placement here
+  was an open call in the master plan, decided this pass). Section labels
+  copy Reip's real `.sidebar-section-label` styling exactly. Nav-item
+  shape/active-state CSS was left untouched — confirmed by reading Reip's
+  real sidebar CSS that this app's existing `.navItem.active` (translucent
+  gold fill + gold border, from the original Phase A token pull) already
+  matches it near-identically, so there was nothing to correct there.
+- Inbox now shows a live unread-count badge (`useInbox()`'s pending-item
+  count) styled as Reip's real gold `.sidebar-badge` pill — no new query,
+  shares the same `['review-queue']` cache key already used by
+  `InboxPage`/`ReviewBanner`.
+- Standalone "Sign Out" item replaced with a new `UserFooter.tsx`: an
+  avatar-initials circle + real signed-in name (via the existing
+  `useCurrentActor()`), the whole footer acting as the sign-out button —
+  mirrors Reip's real `.fluid-sidebar-footer` pattern.
+- Icons centralized into a new `NavBar/icons.tsx` re-export, per the master
+  plan.
+- Deleted confirmed-dead `api/analytics.ts`/`hooks/useAnalytics.ts` (grepped
+  the whole frontend tree — imported nowhere, not even by `AnalyticsPage`
+  itself, which gets its data from `useDeals()` directly). `AnalyticsPage`
+  and its `/analytics` route are unaffected — that page is real and stays.
+- Verified: `tsc --noEmit` clean, production build succeeds. **Not done**:
+  interactive authenticated click-through via Clerk SSO (same standing
+  limitation as every prior phase) — recommend confirming the badge,
+  sign-out footer, and section collapse/expand animation manually, both
+  light and dark mode.
+
 ## Next steps
 
-Deal Detail's only remaining piece, plus frontend phase 5 (backend is a
-fixed, already-shipped contract for this — no backend work required):
+This closes out the frontend restructure's phased plan. One piece remains,
+blocked on external infrastructure rather than any frontend/backend code:
 
 1. **Documents tab** (blocked until the Railway S3 bucket is provisioned —
    `storage_configured` still gates uploads/downloads with a 503; re-check
    via the Railway MCP/CLI once its session auth is refreshed with
    `railway login` — still unauthorized as of this pass).
-2. **Phase 5 — Nav cutover.** Restructure `NavBar` into PIPELINE / DEAL
-   MANAGEMENT / TOOLS sections (folding in the Sponsors/Funds/Portfolio/Inbox
-   items added flat in Phase 1, Pipeline added flat in Phase 2, and
-   Executive Summary/Credit Co-Pilot added flat in Phase 4), decide
-   `/analytics` placement, delete `api/analytics.ts`/`useAnalytics.ts` if
-   still confirmed dead.
 
 Also open, not blocking frontend work:
 - Provision the Railway S3-compatible bucket + set `STORAGE_*` env vars so
