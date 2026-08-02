@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useUser } from '@clerk/react'
 import { sendChatMessage } from '../api/chat'
 import { ApiError } from '../api/client'
 import type { ChatMessage } from '../types'
 
-const STORAGE_KEY = 'credit-copilot-session'
+const STORAGE_PREFIX = 'credit-copilot-session:'
 
 interface StoredSession {
   sessionId: string | null
   messages: ChatMessage[]
 }
 
-function loadStoredSession(): StoredSession {
+function loadStoredSession(storageKey: string): StoredSession {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const raw = sessionStorage.getItem(storageKey)
     if (!raw) return { sessionId: null, messages: [] }
     const parsed = JSON.parse(raw)
     return { sessionId: parsed.sessionId ?? null, messages: Array.isArray(parsed.messages) ? parsed.messages : [] }
@@ -32,14 +33,31 @@ function errorReply(err: unknown): string {
 }
 
 export function useChat() {
-  const initial = useRef(loadStoredSession())
-  const [messages, setMessages] = useState<ChatMessage[]>(initial.current.messages)
-  const [sessionId, setSessionId] = useState<string | null>(initial.current.sessionId)
+  // Keyed per signed-in user so a browser-tab account switch never leaks the
+  // previous user's messages/sessionId to the next signed-in user.
+  const { user } = useUser()
+  const storageKey = user?.id ? `${STORAGE_PREFIX}${user.id}` : null
+
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const lastUserMessage = useRef<string | null>(null)
 
   useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ sessionId, messages }))
-  }, [sessionId, messages])
+    if (!storageKey) {
+      setMessages([])
+      setSessionId(null)
+      return
+    }
+    const stored = loadStoredSession(storageKey)
+    setMessages(stored.messages)
+    setSessionId(stored.sessionId)
+    lastUserMessage.current = null
+  }, [storageKey])
+
+  useEffect(() => {
+    if (!storageKey) return
+    sessionStorage.setItem(storageKey, JSON.stringify({ sessionId, messages }))
+  }, [storageKey, sessionId, messages])
 
   const mutation = useMutation({
     mutationFn: (message: string) => sendChatMessage({ sessionId, message }),

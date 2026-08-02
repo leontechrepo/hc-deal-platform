@@ -126,10 +126,12 @@ status() {
 cmd="${1:-start}"
 case "$cmd" in
   start)
-    start_backend
-    start_frontend
+    ok=1
+    start_backend || ok=0
+    start_frontend || ok=0
     echo
     status
+    [ "$ok" -eq 1 ] || exit 1
     ;;
   stop)
     # Postgres is intentionally left running — it's shared with other projects.
