@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { usePortfolio } from '../../hooks/usePortfolio'
+import { Button } from '../../components/ui/Button/Button'
 import { DataTable, type Column } from '../../components/ui/DataTable/DataTable'
 import { Modal } from '../../components/ui/Modal/Modal'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
+import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
 import { PaymentStatusBadge, RiskBadge } from '../../components/portfolio/PortfolioBadges'
 import { MonitoringTestDrawer } from '../../components/portfolio/MonitoringTestDrawer'
 import type { PortfolioPosition } from '../../types'
@@ -72,7 +74,7 @@ export function PortfolioPage() {
       key: 'actions',
       header: '',
       render: p => (
-        <button className={styles.viewTestsBtn} onClick={() => setSelectedDealId(p.deal_id)}>View Tests</button>
+        <Button variant="ghost" size="sm" onClick={() => setSelectedDealId(p.deal_id)}>View Tests</Button>
       ),
     },
   ]
@@ -82,10 +84,7 @@ export function PortfolioPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Portfolio</h1>
-      </header>
+      <PageHeader title="Portfolio" />
 
       <KPIGrid items={kpiItems} />
 

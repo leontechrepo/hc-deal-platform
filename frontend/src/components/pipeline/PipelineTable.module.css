@@ -25,6 +25,13 @@
   font-weight: 500;
   font-size: 13px;
   display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.companyName:hover {
+  color: var(--heading);
+  text-decoration: underline;
 }
 
 .companyMeta {

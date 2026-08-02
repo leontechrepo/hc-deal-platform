@@ -1,0 +1,68 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.addNote {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.addNote textarea {
+  width: 100%;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.note {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 14px 18px;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.noteAuthor {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.noteDate {
+  font-size: 11px;
+  color: var(--muted);
+  flex: 1;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.deleteBtn:hover {
+  color: var(--red);
+}
+
+.state {
+  padding: 40px;
+  font-size: 13px;
+  color: var(--gray-400);
+}

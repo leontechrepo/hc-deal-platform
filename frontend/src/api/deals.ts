@@ -5,10 +5,14 @@ export function listDeals(): Promise<Deal[]> {
   return apiFetch('/api/deals')
 }
 
-export function patchDeal(dealId: number, field: string, value: string | null): Promise<unknown> {
+export function getDeal(dealId: number): Promise<Deal> {
+  return apiFetch(`/api/deals/${dealId}`)
+}
+
+export function patchDeal(dealId: number, field: string, value: string | null, actor?: string): Promise<unknown> {
   return apiFetch(`/api/deals/${dealId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ field, value }),
+    body: JSON.stringify({ field, value, actor }),
   })
 }
 

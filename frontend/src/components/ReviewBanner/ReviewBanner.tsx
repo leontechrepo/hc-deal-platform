@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { PendingSuggestion } from '../../types'
 import { useReviewQueue, useApproveSuggestion, useRejectSuggestion } from '../../hooks/useReviewQueue'
+import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { PipelineStageBadge } from '../shared/PipelineStageBadge'
 import { useToast } from '../Toast/Toast'
 import { ConfidenceBadge } from '../ui/ConfidenceBadge/ConfidenceBadge'
@@ -24,6 +25,7 @@ export function ReviewBanner() {
   const { data: suggestions = [] } = useReviewQueue()
   const approve = useApproveSuggestion()
   const reject = useRejectSuggestion()
+  const actor = useCurrentActor()
   const { showToast } = useToast()
 
   if (suggestions.length === 0) return null
@@ -55,7 +57,7 @@ export function ReviewBanner() {
                 suggestion={s}
                 showDealHeader={group.suggestions.length === 1}
                 onApprove={async (value) => {
-                  await approve.mutateAsync({ id: s.id, value })
+                  await approve.mutateAsync({ id: s.id, value, reviewer: actor })
                   if (s.suggested_field === 'new_deal') {
                     showToast(`New deal added: ${s.company_name}`)
                   } else {
@@ -63,7 +65,7 @@ export function ReviewBanner() {
                   }
                 }}
                 onReject={async () => {
-                  await reject.mutateAsync(s.id)
+                  await reject.mutateAsync({ id: s.id, reviewer: actor })
                   showToast(`Rejected suggestion for ${s.company_name}`)
                 }}
                 busy={approve.isPending || reject.isPending}

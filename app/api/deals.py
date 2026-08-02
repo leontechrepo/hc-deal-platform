@@ -1,12 +1,16 @@
+import re
 from datetime import date, datetime, timezone
+from io import BytesIO
 from typing import Optional
 
+import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select, text, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import require_auth
+from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal, DealUpdateLog, EmailScanLog
 from app.db.portfolio import ensure_portfolio_position
@@ -71,6 +75,7 @@ async def patch_deal(
     deal_id: int,
     body: PatchRequest,
     db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
 ):
     if body.field not in EDITABLE_FIELDS:
         raise HTTPException(status_code=400, detail=f"Field '{body.field}' is not editable")
@@ -93,35 +98,50 @@ async def patch_deal(
     if body.field == "status" and body.value not in STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status: {body.value!r}")
 
-    old_value = str(getattr(deal, body.field)) if getattr(deal, body.field) is not None else None
+    old_value_raw = getattr(deal, body.field)
 
     try:
         coerced = _coerce_field_value(body.field, body.value)
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=f"Invalid value for '{body.field}': {exc}")
 
+    # Compare numerically (not by string) so an unchanged numeric field isn't
+    # spuriously flagged as "changed" just because SQLAlchemy round-trips it
+    # as e.g. Decimal("20.00") while the coerced input is float 20.0.
+    if body.field in _NUMERIC_FIELDS:
+        value_changed = (float(old_value_raw) if old_value_raw is not None else None) != coerced
+    else:
+        value_changed = old_value_raw != coerced
+
+    old_value = str(old_value_raw) if old_value_raw is not None else None
+    new_value = str(coerced) if coerced is not None else None
+
     setattr(deal, body.field, coerced)
     deal.updated_by = "manual_edit"
     deal.updated_at = datetime.now(timezone.utc)
 
-    log = DealUpdateLog(
-        deal_id=deal_id,
-        field_changed=body.field,
-        old_value=old_value,
-        new_value=str(coerced) if coerced is not None else None,
-        source="manual_edit",
-    )
-    db.add(log)
-
     if body.field == "pipeline_stage" and coerced == "portfolio_monitoring":
         await ensure_portfolio_position(deal, db)
 
-    activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
-        "status_change" if body.field == "status" else "system"
-    await log_activity(
-        db, deal_id, "user", activity_type,
-        f"{body.field} changed from {old_value!r} to {coerced!r}",
-    )
+    # Skip the log/activity entries when the "edit" didn't actually change the value
+    # (e.g. re-saving a field unchanged) — otherwise the Logs page shows a colored
+    # diff between two identical values, which reads as a change that never happened.
+    if value_changed:
+        log = DealUpdateLog(
+            deal_id=deal_id,
+            field_changed=body.field,
+            old_value=old_value,
+            new_value=new_value,
+            source="manual_edit",
+        )
+        db.add(log)
+
+        activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
+            "status_change" if body.field == "status" else "system"
+        await log_activity(
+            db, deal_id, get_actor_name(auth), activity_type,
+            f"{body.field} changed from {old_value!r} to {coerced!r}",
+        )
 
     return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
 
@@ -213,6 +233,42 @@ async def get_deal(deal_id: int, db: AsyncSession = Depends(get_db)):
     return _deal_to_dict(deal)
 
 
+@router.get("/deals/{deal_id}/underwriting/export")
+async def export_underwriting(deal_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Underwriting"
+
+    ws["A1"], ws["B1"] = "Deal Size ($M)", float(deal.deal_size_m) if deal.deal_size_m is not None else None
+    ws["A2"], ws["B2"] = "LTM EBITDA ($M)", float(deal.ltm_ebitda_m) if deal.ltm_ebitda_m is not None else None
+    ws["A3"], ws["B3"] = "SOFR Rate (%)", float(deal.sofr_rate) if deal.sofr_rate is not None else None
+    ws["A4"], ws["B4"] = "Spread (bps)", deal.spread_bps
+    # Formula cells — mirrors create_deal's derivation exactly (including its
+    # None/zero guards, since incomplete underwriting fields are common), but
+    # as a live Excel formula so the workbook stays an auditable model, not a
+    # snapshot. IF-guards keep an incomplete input blank instead of #DIV/0!
+    # or silently treating a blank cell as zero.
+    ws["A5"], ws["B5"] = "Total Leverage (x)", '=IF(OR(B2="",B2=0),"",B1/B2)'
+    ws["A6"], ws["B6"] = "All-In Rate (%)", '=IF(OR(B3="",B4=""),"",B3+B4/100)'
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", deal.company_name).strip("_") or "deal"
+    filename = f"{safe_name}_Underwriting.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 class CreateDealRequest(BaseModel):
     company_name: str
     location: Optional[str] = None
@@ -249,7 +305,11 @@ class CreateDealRequest(BaseModel):
 
 
 @router.post("/deals")
-async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db)):
+async def create_deal(
+    body: CreateDealRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     if body.pipeline_stage not in PIPELINE_STAGES:
         raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {body.pipeline_stage!r}")
     if body.status not in STATUSES:
@@ -316,7 +376,7 @@ async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db
         new_value=deal.pipeline_stage,
         source="manual_edit",
     ))
-    await log_activity(db, deal.id, "user", "system", "Deal created — entered via New Deal form")
+    await log_activity(db, deal.id, get_actor_name(auth), "system", "Deal created — entered via New Deal form")
 
     return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
 

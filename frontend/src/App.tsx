@@ -10,7 +10,16 @@ import { SponsorsPage } from './pages/SponsorsPage/SponsorsPage'
 import { FundsPage } from './pages/FundsPage/FundsPage'
 import { PortfolioPage } from './pages/PortfolioPage/PortfolioPage'
 import { InboxPage } from './pages/InboxPage/InboxPage'
+import { ExecutiveSummaryPage } from './pages/ExecutiveSummaryPage/ExecutiveSummaryPage'
+import { ChatPage } from './pages/ChatPage/ChatPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
+import { DealDetailPage } from './pages/DealDetailPage/DealDetailPage'
+import { OverviewTab } from './pages/DealDetailPage/tabs/OverviewTab'
+import { UnderwritingTab } from './pages/DealDetailPage/tabs/UnderwritingTab'
+import { TimelineTab } from './pages/DealDetailPage/tabs/TimelineTab'
+import { FormulasTab } from './pages/DealDetailPage/tabs/FormulasTab'
+import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
+import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -39,12 +48,23 @@ function Layout() {
         <Routes>
           <Route path="/" element={<Navigate to="/pipeline" replace />} />
           <Route path="/pipeline" element={<PipelinePage />} />
+          <Route path="/executive-summary" element={<ExecutiveSummaryPage />} />
           <Route path="/logs" element={<LogsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/sponsors" element={<SponsorsPage />} />
           <Route path="/funds" element={<FundsPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/deals/:dealId" element={<DealDetailPage />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<OverviewTab />} />
+            <Route path="underwriting" element={<UnderwritingTab />} />
+            <Route path="timeline" element={<TimelineTab />} />
+            <Route path="formulas" element={<FormulasTab />} />
+            <Route path="activity" element={<ActivityTab />} />
+            <Route path="notes" element={<NotesTab />} />
+          </Route>
         </Routes>
       </main>
     </div>

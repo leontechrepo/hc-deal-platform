@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import require_auth
+from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal, DealNote, DealUpdateLog, PendingSuggestion
 from app.db.portfolio import ensure_portfolio_position
@@ -86,7 +86,6 @@ async def _get_pending_or_404(suggestion_id: int, db: AsyncSession) -> PendingSu
 
 
 class ApproveRequest(BaseModel):
-    reviewer: str = "user"
     value: str | None = None  # optional edited value; falls back to suggestion.suggested_value
 
 
@@ -96,7 +95,9 @@ async def approve_suggestion(
     suggestion_id: int,
     body: ApproveRequest = ApproveRequest(),
     db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
 ):
+    reviewer = get_actor_name(auth)
     suggestion = await _get_pending_or_404(suggestion_id, db)
 
     # New deal creation
@@ -120,7 +121,7 @@ async def approve_suggestion(
         await db.flush()
         suggestion.status = "approved"
         suggestion.reviewed_at = datetime.now(timezone.utc)
-        suggestion.reviewed_by = body.reviewer
+        suggestion.reviewed_by = reviewer
         await log_activity(db, new_deal.id, "Email Scanner", "system", f"Deal accepted from inbox — {suggestion.email_subject or ''}".strip())
         return {"ok": True, "deal_id": new_deal.id, "company_name": new_deal.company_name, "created": True}
 
@@ -140,6 +141,7 @@ async def approve_suggestion(
         final_value = new_line
 
     old_value = str(getattr(deal, suggestion.suggested_field) or "")
+    new_value = str(final_value) if final_value is not None else ""
     setattr(deal, suggestion.suggested_field, final_value)
     deal.last_updated = datetime.now(timezone.utc).date()
     deal.updated_by = "email_scan"
@@ -147,36 +149,45 @@ async def approve_suggestion(
     if suggestion.suggested_field == "pipeline_stage" and final_value == "portfolio_monitoring":
         await ensure_portfolio_position(deal, db)
 
-    db.add(DealUpdateLog(
-        deal_id=deal.id,
-        field_changed=suggestion.suggested_field,
-        old_value=old_value[:500] if old_value else None,
-        new_value=str(final_value)[:500] if final_value is not None else None,
-        source="email_scan",
-        email_subject=suggestion.email_subject,
-    ))
+    # Skip the log/activity entries when the suggestion didn't actually change the value
+    # (e.g. approving a suggestion that matches what's already on the deal) — otherwise
+    # the Logs page shows a colored diff between two identical values.
+    if new_value != old_value:
+        db.add(DealUpdateLog(
+            deal_id=deal.id,
+            field_changed=suggestion.suggested_field,
+            old_value=old_value[:500] if old_value else None,
+            new_value=new_value[:500] if new_value else None,
+            source="email_scan",
+            email_subject=suggestion.email_subject,
+        ))
 
-    activity_type = "stage_change" if suggestion.suggested_field == "pipeline_stage" else "email"
-    await log_activity(
-        db, deal.id, "Email Scanner", activity_type,
-        f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
-    )
+        activity_type = "stage_change" if suggestion.suggested_field == "pipeline_stage" else "email"
+        await log_activity(
+            db, deal.id, "Email Scanner", activity_type,
+            f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
+        )
 
     suggestion.status = "approved"
     suggestion.reviewed_at = datetime.now(timezone.utc)
-    suggestion.reviewed_by = body.reviewer
+    suggestion.reviewed_by = reviewer
 
     return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
 
 
 class AssignRequest(BaseModel):
     deal_id: int
-    reviewer: str = "user"
 
 
 @router.post("/inbox/{suggestion_id}/assign")
-async def assign_suggestion(suggestion_id: int, body: AssignRequest, db: AsyncSession = Depends(get_db)):
+async def assign_suggestion(
+    suggestion_id: int,
+    body: AssignRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     """Link a detected new-deal signal to an EXISTING deal instead of creating one."""
+    reviewer = get_actor_name(auth)
     suggestion = await _get_pending_or_404(suggestion_id, db)
     if suggestion.suggested_field != "new_deal":
         raise HTTPException(status_code=400, detail="Only new_deal suggestions can be assigned to an existing deal")
@@ -189,7 +200,7 @@ async def assign_suggestion(suggestion_id: int, body: AssignRequest, db: AsyncSe
     suggestion.deal_id = body.deal_id
     suggestion.status = "approved"
     suggestion.reviewed_at = datetime.now(timezone.utc)
-    suggestion.reviewed_by = body.reviewer
+    suggestion.reviewed_by = reviewer
 
     note_body = f"Inbox linked: {suggestion.email_subject or suggestion.claude_summary or 'auto-detected signal'}"
     db.add(DealNote(deal_id=body.deal_id, author="Email Scanner", body=note_body))
@@ -200,11 +211,15 @@ async def assign_suggestion(suggestion_id: int, body: AssignRequest, db: AsyncSe
 
 @router.post("/inbox/{suggestion_id}/reject")
 @router.post("/review-queue/{suggestion_id}/reject")  # temporary alias for the not-yet-migrated frontend
-async def reject_suggestion(suggestion_id: int, reviewer: str = "user", db: AsyncSession = Depends(get_db)):
+async def reject_suggestion(
+    suggestion_id: int,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     suggestion = await _get_pending_or_404(suggestion_id, db)
     suggestion.status = "rejected"
     suggestion.reviewed_at = datetime.now(timezone.utc)
-    suggestion.reviewed_by = reviewer
+    suggestion.reviewed_by = get_actor_name(auth)
     return {"ok": True, "suggestion_id": suggestion_id}
 
 

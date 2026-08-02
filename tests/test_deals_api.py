@@ -15,9 +15,11 @@ from app.api.deals import (
 from app.db.models.portfolio import PortfolioPosition
 from app.domain.pipeline_stage import PIPELINE_STAGES, STATUSES
 
+TEST_AUTH = {"sub": "test-user"}
+
 
 async def test_list_deals_always_has_pipeline_stage_and_status(db_session):
-    await create_deal(CreateDealRequest(company_name="Smoke Test Co"), db_session)
+    await create_deal(CreateDealRequest(company_name="Smoke Test Co"), db_session, auth=TEST_AUTH)
 
     deals = await list_deals(db_session)
     assert len(deals) >= 1
@@ -31,6 +33,7 @@ async def test_create_deal_computes_derived_fields(db_session):
         CreateDealRequest(company_name="Derived Fields Co", deal_size_m=20.0, ltm_ebitda_m=5.0,
                            spread_bps=525, sofr_rate=4.57),
         db_session,
+        auth=TEST_AUTH,
     )
     deals = await list_deals(db_session)
     deal = next(d for d in deals if d["id"] == result["deal_id"])
@@ -42,6 +45,7 @@ async def test_creating_deal_at_portfolio_monitoring_creates_position(db_session
     result = await create_deal(
         CreateDealRequest(company_name="Born Funded Co", pipeline_stage="portfolio_monitoring", deal_size_m=15.0),
         db_session,
+        auth=TEST_AUTH,
     )
     deal_id = result["deal_id"]
 
@@ -53,11 +57,11 @@ async def test_creating_deal_at_portfolio_monitoring_creates_position(db_session
 
 
 async def test_underwriting_fields_lock_after_loi_signed(db_session):
-    result = await create_deal(CreateDealRequest(company_name="Lock Test Co", deal_size_m=10.0), db_session)
+    result = await create_deal(CreateDealRequest(company_name="Lock Test Co", deal_size_m=10.0), db_session, auth=TEST_AUTH)
     deal_id = result["deal_id"]
 
-    await patch_deal(deal_id, PatchRequest(field="pipeline_stage", value="loi_signed"), db_session)
+    await patch_deal(deal_id, PatchRequest(field="pipeline_stage", value="loi_signed"), db_session, auth=TEST_AUTH)
 
     with pytest.raises(Exception) as exc_info:
-        await patch_deal(deal_id, PatchRequest(field="deal_size_m", value=99), db_session)
+        await patch_deal(deal_id, PatchRequest(field="deal_size_m", value=99), db_session, auth=TEST_AUTH)
     assert getattr(exc_info.value, "status_code", None) == 409

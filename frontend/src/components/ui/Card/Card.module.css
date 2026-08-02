@@ -1,10 +1,9 @@
 .card {
   background: var(--card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-micro);
   padding: var(--space-8);
-  transition: border-color 0.15s, transform 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .gold  { border-left: 4px solid var(--gold); }
@@ -12,7 +11,13 @@
 .green { border-left: 4px solid var(--green); }
 .red   { border-left: 4px solid var(--red); }
 
+.hoverable {
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+}
+
 .hoverable:hover {
   border-color: var(--gold);
+  box-shadow: 0 6px 20px rgba(10,31,68,.1);
   transform: translateY(-2px);
 }

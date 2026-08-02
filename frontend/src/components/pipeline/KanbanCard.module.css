@@ -20,6 +20,12 @@
   font-weight: 500;
   font-size: 13px;
   color: var(--navy);
+  display: block;
+  text-decoration: none;
+}
+
+.company:hover {
+  text-decoration: underline;
 }
 
 .meta {

@@ -1,0 +1,97 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: var(--white);
+  padding-right: 8px;
+  cursor: text;
+}
+
+.trigger:focus-within {
+  border-color: var(--input-gold-border);
+  box-shadow: 0 0 0 2px var(--input-gold-ring-focus);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--navy);
+  padding: 7px 10px;
+}
+
+.input::placeholder {
+  color: var(--muted);
+}
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.clearBtn:hover {
+  color: var(--navy);
+}
+
+.chevron {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.list {
+  z-index: 1200;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--panel-solid);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-float);
+  max-height: 228px;
+  overflow-y: auto;
+}
+
+.option {
+  font-size: 13px;
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: var(--radius-badge);
+  cursor: pointer;
+}
+
+.option:hover,
+.option.highlighted {
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.noneOption {
+  color: var(--muted);
+  font-style: italic;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 7px 10px;
+}

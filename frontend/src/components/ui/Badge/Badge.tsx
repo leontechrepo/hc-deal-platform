@@ -1,6 +1,6 @@
 import styles from './Badge.module.css'
 
-export type BadgeTone = 'navy' | 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'purple' | 'yellow' | 'gray' | 'orange'
+export type BadgeTone = 'navy' | 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'gray'
 
 interface Props {
   tone?: BadgeTone

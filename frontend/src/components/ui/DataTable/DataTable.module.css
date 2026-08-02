@@ -6,11 +6,11 @@
 
 .table th {
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
-  padding: 6px 10px;
+  padding: var(--space-5) var(--space-6);
   text-align: left;
   border-bottom: 1px solid var(--border);
   background: var(--lt);
@@ -18,14 +18,11 @@
 }
 
 .table td {
-  padding: 9px 10px;
-  vertical-align: top;
-  border-bottom: 1px solid var(--border);
+  padding: 9px var(--space-6);
+  font-size: 11px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--lt);
   color: var(--text);
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
 }
 
 .table tbody tr:hover td {

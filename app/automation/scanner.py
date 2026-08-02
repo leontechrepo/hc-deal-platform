@@ -246,7 +246,10 @@ async def run_scan(db: AsyncSession) -> int:
                 db.add(scan_log)
                 await db.flush()
 
-                email_snippet = body[:200] if body else None
+                # Prefer Graph's own plain-text bodyPreview for the snippet — body.content
+                # is normally HTML, and truncating it directly leaves raw markup on screen.
+                body_preview = msg.get("bodyPreview") or ""
+                email_snippet = body_preview[:200] if body_preview else (body[:200] if body else None)
 
                 if result_cls.get("matched") and confidence >= 0.65:
                     deal_id = result_cls.get("deal_id")

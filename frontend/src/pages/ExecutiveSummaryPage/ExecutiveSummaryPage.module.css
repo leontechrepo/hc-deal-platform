@@ -1,0 +1,38 @@
+.page {
+  padding: 32px 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.companyLink {
+  font-weight: 600;
+  color: var(--heading);
+  text-decoration: none;
+}
+
+.companyLink:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.dim {
+  color: var(--muted);
+}
+
+.riskLow {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.state {
+  padding: 48px 40px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 24px 20px 40px;
+  }
+}

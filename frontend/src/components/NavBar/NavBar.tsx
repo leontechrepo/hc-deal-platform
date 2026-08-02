@@ -1,31 +1,34 @@
 import { NavLink } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useClerk } from '@clerk/react'
+import { triggerScan } from '../../api/admin'
+import { useNav } from '../../NavContext'
+import { useInbox } from '../../hooks/useInbox'
+import { useToast } from '../Toast/Toast'
+import { ThemeToggle } from '../ui/ThemeToggle/ThemeToggle'
+import { NavIcon } from './NavIcon'
+import { NavSection } from './NavSection'
+import { UserFooter } from './UserFooter'
 import {
   Kanban,
+  FileText,
   ScrollText,
   BarChart3,
-  Inbox as InboxIcon,
+  InboxIcon,
   Users,
   Landmark,
   Building2,
   RefreshCw,
   PanelLeftClose,
   PanelLeftOpen,
-  LogOut,
-} from 'lucide-react'
-import { triggerScan } from '../../api/admin'
-import { useNav } from '../../NavContext'
-import { useToast } from '../Toast/Toast'
-import { ThemeToggle } from '../ui/ThemeToggle/ThemeToggle'
-import { NavIcon } from './NavIcon'
+  AiStarIcon,
+} from './icons'
 import leonLogo from '../../assets/leon-logo.png'
 import styles from './NavBar.module.css'
 
 export function NavBar() {
   const { collapsed, toggle } = useNav()
   const { showToast } = useToast()
-  const { signOut } = useClerk()
+  const { data: inboxItems = [] } = useInbox()
 
   const qc = useQueryClient()
 
@@ -42,6 +45,8 @@ export function NavBar() {
   })
 
   const cls = [styles.nav, collapsed ? styles.collapsed : styles.expanded].join(' ')
+  const navItemClass = ({ isActive }: { isActive: boolean }) =>
+    [styles.navItem, isActive ? styles.active : ''].join(' ')
 
   return (
     <nav className={cls}>
@@ -58,82 +63,59 @@ export function NavBar() {
       </div>
 
       <div className={styles.navItems}>
-        <NavLink
-          to="/pipeline"
-          title="Pipeline"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={Kanban} />
-          <span className={styles.navLabel}>Pipeline</span>
-        </NavLink>
+        <NavSection title="Pipeline">
+          <NavLink to="/pipeline" title="Pipeline" className={navItemClass}>
+            <NavIcon icon={Kanban} />
+            <span className={styles.navLabel}>Pipeline</span>
+          </NavLink>
 
-        <NavLink
-          to="/logs"
-          title="Logs"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={ScrollText} />
-          <span className={styles.navLabel}>Logs</span>
-        </NavLink>
+          <NavLink to="/executive-summary" title="Executive Summary" className={navItemClass}>
+            <NavIcon icon={FileText} />
+            <span className={styles.navLabel}>Executive Summary</span>
+          </NavLink>
+        </NavSection>
 
-        <NavLink
-          to="/analytics"
-          title="Analytics"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={BarChart3} />
-          <span className={styles.navLabel}>Analytics</span>
-        </NavLink>
+        <NavSection title="Deal Management">
+          <NavLink to="/inbox" title="Inbox" className={navItemClass}>
+            <NavIcon icon={InboxIcon} />
+            <span className={styles.navLabel}>Inbox</span>
+            {inboxItems.length > 0 && <span className={styles.navBadge}>{inboxItems.length}</span>}
+          </NavLink>
 
-        <NavLink
-          to="/inbox"
-          title="Inbox"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={InboxIcon} />
-          <span className={styles.navLabel}>Inbox</span>
-        </NavLink>
+          <NavLink to="/sponsors" title="Sponsors" className={navItemClass}>
+            <NavIcon icon={Users} />
+            <span className={styles.navLabel}>Sponsors</span>
+          </NavLink>
 
-        <NavLink
-          to="/sponsors"
-          title="Sponsors"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={Users} />
-          <span className={styles.navLabel}>Sponsors</span>
-        </NavLink>
+          <NavLink to="/funds" title="Funds" className={navItemClass}>
+            <NavIcon icon={Landmark} />
+            <span className={styles.navLabel}>Funds</span>
+          </NavLink>
 
-        <NavLink
-          to="/funds"
-          title="Funds"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={Landmark} />
-          <span className={styles.navLabel}>Funds</span>
-        </NavLink>
+          <NavLink to="/portfolio" title="Portfolio" className={navItemClass}>
+            <NavIcon icon={Building2} />
+            <span className={styles.navLabel}>Portfolio</span>
+          </NavLink>
+        </NavSection>
 
-        <NavLink
-          to="/portfolio"
-          title="Portfolio"
-          className={({ isActive }) =>
-            [styles.navItem, isActive ? styles.active : ''].join(' ')
-          }
-        >
-          <NavIcon icon={Building2} />
-          <span className={styles.navLabel}>Portfolio</span>
-        </NavLink>
+        <NavSection title="Tools">
+          <NavLink to="/chat" title="Credit Co-Pilot" className={navItemClass}>
+            <span className={styles.navIcon}>
+              <AiStarIcon size={21} />
+            </span>
+            <span className={styles.navLabel}>Credit Co-Pilot</span>
+          </NavLink>
+
+          <NavLink to="/logs" title="Logs" className={navItemClass}>
+            <NavIcon icon={ScrollText} />
+            <span className={styles.navLabel}>Logs</span>
+          </NavLink>
+
+          <NavLink to="/analytics" title="Analytics" className={navItemClass}>
+            <NavIcon icon={BarChart3} />
+            <span className={styles.navLabel}>Analytics</span>
+          </NavLink>
+        </NavSection>
 
         <div className={styles.divider} />
 
@@ -155,14 +137,7 @@ export function NavBar() {
 
         <ThemeToggle collapsed={collapsed} />
 
-        <button
-          className={[styles.navItem, styles.signOutItem].join(' ')}
-          onClick={() => signOut({ redirectUrl: '/' })}
-          title="Sign out"
-        >
-          <NavIcon icon={LogOut} />
-          <span className={styles.navLabel}>Sign Out</span>
-        </button>
+        <UserFooter />
       </div>
 
       <button className={styles.collapseBtn} onClick={toggle} title={collapsed ? 'Expand' : 'Collapse'}>

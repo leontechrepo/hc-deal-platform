@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import require_auth
+from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal
 from app.db.models.activity import ACTIVITY_TYPES, DealActivity, DealNote
@@ -45,18 +45,22 @@ async def list_activity(deal_id: int, db: AsyncSession = Depends(get_db)):
 
 
 class ActivityRequest(BaseModel):
-    actor: str = "user"
     activity_type: str
     description: str
     metadata: Optional[dict] = None
 
 
 @router.post("/deals/{deal_id}/activity")
-async def create_activity(deal_id: int, body: ActivityRequest, db: AsyncSession = Depends(get_db)):
+async def create_activity(
+    deal_id: int,
+    body: ActivityRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     await _get_deal_or_404(deal_id, db)
     if body.activity_type not in ACTIVITY_TYPES:
         raise HTTPException(status_code=400, detail=f"Invalid activity_type: {body.activity_type!r}")
-    entry = await log_activity(db, deal_id, body.actor, body.activity_type, body.description, body.metadata)
+    entry = await log_activity(db, deal_id, get_actor_name(auth), body.activity_type, body.description, body.metadata)
     return _activity_to_dict(entry)
 
 
@@ -79,17 +83,22 @@ async def list_notes(deal_id: int, db: AsyncSession = Depends(get_db)):
 
 
 class NoteRequest(BaseModel):
-    author: str = "user"
     body: str
 
 
 @router.post("/deals/{deal_id}/notes")
-async def create_note(deal_id: int, body: NoteRequest, db: AsyncSession = Depends(get_db)):
+async def create_note(
+    deal_id: int,
+    body: NoteRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     await _get_deal_or_404(deal_id, db)
-    note = DealNote(deal_id=deal_id, author=body.author, body=body.body)
+    author = get_actor_name(auth)
+    note = DealNote(deal_id=deal_id, author=author, body=body.body)
     db.add(note)
     await db.flush()
-    await log_activity(db, deal_id, body.author, "note", f"Note added: {body.body[:120]}")
+    await log_activity(db, deal_id, author, "note", f"Note added: {body.body[:120]}")
     return _note_to_dict(note)
 
 

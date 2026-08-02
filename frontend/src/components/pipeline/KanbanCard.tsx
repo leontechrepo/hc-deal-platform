@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Deal } from '../../types'
 import { StatusBadge } from '../shared/StatusBadge'
 import styles from './KanbanCard.module.css'
@@ -19,7 +20,7 @@ export function KanbanCard({ deal, onDragStart, onDragEnd }: Props) {
       }}
       onDragEnd={onDragEnd}
     >
-      <div className={styles.company}>{deal.company_name}</div>
+      <Link to={`/deals/${deal.id}`} className={styles.company}>{deal.company_name}</Link>
       <div className={styles.meta}>
         {[deal.sector_primary, deal.location].filter(Boolean).join(' · ') || '—'}
       </div>

@@ -2,13 +2,13 @@ import { Badge, type BadgeTone } from '../ui/Badge/Badge'
 
 const PAYMENT_STATUS_TONE: Record<string, BadgeTone> = {
   Current: 'green',
-  Late: 'yellow',
+  Late: 'amber',
   Default: 'red',
 }
 
 const RISK_TONE: Record<string, BadgeTone> = {
   Pass: 'green',
-  Watch: 'orange',
+  Watch: 'amber',
 }
 
 export function PaymentStatusBadge({ status }: { status: string | null }) {

@@ -1,0 +1,16 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.state {
+  padding: 40px;
+  font-size: 13px;
+  color: var(--gray-400);
+}

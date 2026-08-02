@@ -100,6 +100,7 @@ export interface CreateDealInput {
   pipeline_stage?: string
   status?: string
   base_rate?: string | null
+  actor?: string
 }
 
 export interface KPIs {
@@ -242,6 +243,56 @@ export interface PortfolioMonitoringTest {
 
 export type PortfolioTestInput = Omit<PortfolioMonitoringTest, 'id' | 'portfolio_position_id' | 'created_at'>
 
+export interface DealActivity {
+  id: number
+  deal_id: number
+  actor: string | null
+  activity_type: string
+  description: string
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface DealNote {
+  id: number
+  deal_id: number
+  author: string | null
+  body: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DealTimelineTask {
+  id: number
+  workstream_id: number
+  name: string
+  owner: string | null
+  start_date: string | null
+  end_date: string | null
+  duration_days: number | null
+  status: string
+  is_milestone: boolean
+  sort_order: number
+}
+
+export interface DealTimelineWorkstream {
+  id: number
+  name: string
+  sort_order: number
+  tasks: DealTimelineTask[]
+}
+
+export interface DealTimeline {
+  deal_id: number
+  workstreams: DealTimelineWorkstream[]
+}
+
+export interface TimelineTemplate {
+  key: string
+  label: string
+  description: string
+}
+
 export interface DealUpdateLogEntry {
   id: number
   deal_id: number
@@ -264,4 +315,16 @@ export interface EmailScanLogEntry {
   company_name: string | null
   claude_summary: string | null
   action_taken: string | null
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  error?: boolean
+}
+
+export interface ChatSendResponse {
+  session_id: string
+  reply: string
+  created_at: string
 }

@@ -1,8 +1,10 @@
 import { useMemo } from 'react'
 import { useApproveInboxItem, useInbox, useRejectInboxItem } from '../../hooks/useInbox'
+import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { InboxCard } from '../../components/inbox/InboxCard'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
+import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
 import { useToast } from '../../components/Toast/Toast'
 import styles from './InboxPage.module.css'
 
@@ -10,6 +12,7 @@ export function InboxPage() {
   const { data: suggestions = [], isLoading, isError } = useInbox()
   const approve = useApproveInboxItem()
   const reject = useRejectInboxItem()
+  const actor = useCurrentActor()
   const { showToast } = useToast()
 
   const kpiItems = useMemo(() => [
@@ -23,10 +26,7 @@ export function InboxPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Inbox</h1>
-      </header>
+      <PageHeader title="Inbox" />
 
       <KPIGrid items={kpiItems} />
 
@@ -43,11 +43,11 @@ export function InboxPage() {
               suggestion={s}
               busy={approve.isPending || reject.isPending}
               onApprove={async (value) => {
-                await approve.mutateAsync({ id: s.id, value })
+                await approve.mutateAsync({ id: s.id, value, reviewer: actor })
                 showToast(s.suggested_field === 'new_deal' ? `New deal added: ${s.company_name}` : `Approved — ${s.company_name} updated`)
               }}
               onReject={async () => {
-                await reject.mutateAsync(s.id)
+                await reject.mutateAsync({ id: s.id, reviewer: actor })
                 showToast(`Rejected suggestion for ${s.company_name}`)
               }}
             />

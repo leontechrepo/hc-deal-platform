@@ -51,3 +51,6 @@ pgdata/
 # ── Frontend ──────────────────────────────────────────────────────────────────
 frontend/node_modules/
 frontend/dist/
+
+# ── Design system reference (untracked, local-only sync cache) ────────────────
+/Reip Design System/

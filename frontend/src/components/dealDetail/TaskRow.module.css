@@ -1,0 +1,84 @@
+.row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 620px;
+  padding: 6px 8px;
+}
+
+.details input[type='date'] {
+  width: 128px;
+}
+
+.details select {
+  width: 116px;
+}
+
+.name {
+  width: 160px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.owner {
+  width: 100px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.deleteBtn:hover {
+  color: var(--red);
+}
+
+.barTrack {
+  position: relative;
+  flex-shrink: 0;
+  height: 32px;
+}
+
+.bar {
+  position: absolute;
+  top: 8px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--gray-400);
+}
+
+.gray {
+  background: var(--gray-400);
+}
+
+.blue {
+  background: var(--blue);
+}
+
+.green {
+  background: var(--green);
+}
+
+.red {
+  background: var(--red);
+}

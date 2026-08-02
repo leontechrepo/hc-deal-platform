@@ -13,6 +13,8 @@ from app.api.sponsors import SponsorRequest, create_sponsor
 from app.db.models import EmailScanLog, PendingSuggestion
 from app.db.models.portfolio import PortfolioPosition
 
+TEST_AUTH = {"sub": "test-user"}
+
 
 async def _make_suggestion(db_session, deal_id, suggested_field, suggested_value):
     scan_log = EmailScanLog(
@@ -41,20 +43,20 @@ async def _make_suggestion(db_session, deal_id, suggested_field, suggested_value
 
 
 async def test_approving_sponsor_id_suggestion_does_not_crash(db_session):
-    deal_result = await create_deal(CreateDealRequest(company_name="Sponsor Match Co"), db_session)
+    deal_result = await create_deal(CreateDealRequest(company_name="Sponsor Match Co"), db_session, auth=TEST_AUTH)
     sponsor = await create_sponsor(
         SponsorRequest(name="Meridian Health Partners", email_domain="meridianhealth.com"), db_session
     )
 
     suggestion = await _make_suggestion(db_session, deal_result["deal_id"], "sponsor_id", str(sponsor["id"]))
 
-    result = await approve_suggestion(suggestion.id, ApproveRequest(), db_session)
+    result = await approve_suggestion(suggestion.id, ApproveRequest(), db_session, auth=TEST_AUTH)
     assert result["ok"] is True
     assert result["deal_id"] == deal_result["deal_id"]
 
 
 async def test_list_inbox_includes_legacy_stage_key(db_session):
-    deal_result = await create_deal(CreateDealRequest(company_name="Legacy Stage Co"), db_session)
+    deal_result = await create_deal(CreateDealRequest(company_name="Legacy Stage Co"), db_session, auth=TEST_AUTH)
     await _make_suggestion(db_session, deal_result["deal_id"], "commentary", "some note")
 
     items = await list_inbox(db_session)
@@ -64,11 +66,11 @@ async def test_list_inbox_includes_legacy_stage_key(db_session):
 
 
 async def test_approving_portfolio_monitoring_transition_creates_position(db_session):
-    deal_result = await create_deal(CreateDealRequest(company_name="Funded Via Inbox Co", deal_size_m=8.0), db_session)
+    deal_result = await create_deal(CreateDealRequest(company_name="Funded Via Inbox Co", deal_size_m=8.0), db_session, auth=TEST_AUTH)
     deal_id = deal_result["deal_id"]
 
     suggestion = await _make_suggestion(db_session, deal_id, "pipeline_stage", "portfolio_monitoring")
-    await approve_suggestion(suggestion.id, ApproveRequest(), db_session)
+    await approve_suggestion(suggestion.id, ApproveRequest(), db_session, auth=TEST_AUTH)
 
     position = (
         await db_session.execute(select(PortfolioPosition).where(PortfolioPosition.deal_id == deal_id))

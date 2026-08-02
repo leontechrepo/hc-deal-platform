@@ -21,11 +21,11 @@
 }
 
 .option:hover {
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .option.active {
-  color: var(--navy);
+  color: var(--heading);
   background: rgba(201, 168, 76, 0.15);
   font-weight: 600;
 }

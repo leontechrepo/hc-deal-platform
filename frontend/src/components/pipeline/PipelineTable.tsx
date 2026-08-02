@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Deal } from '../../types'
 import { DataTable, type Column } from '../ui/DataTable/DataTable'
 import { PipelineStageBadge, PIPELINE_STAGES } from '../shared/PipelineStageBadge'
@@ -15,7 +16,7 @@ const columns: Column<Deal>[] = [
     header: 'Company / Location',
     render: (deal) => (
       <>
-        <span className={styles.companyName}>{deal.company_name}</span>
+        <Link to={`/deals/${deal.id}`} className={styles.companyName}>{deal.company_name}</Link>
         <span className={styles.companyMeta}>
           {[deal.sector_primary, deal.location].filter(Boolean).join(' · ')}
           {deal.last_updated && (

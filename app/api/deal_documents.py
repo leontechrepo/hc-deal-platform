@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import require_auth
+from app.core.auth import get_actor_name, require_auth
 from app.core.config import settings
 from app.db.activity import log_activity
 from app.db.models import Deal, DealDocument
@@ -56,8 +56,8 @@ async def upload_document(
     deal_id: int,
     file: UploadFile = File(...),
     category: str = Form(...),
-    uploaded_by: str = Form("user"),
     db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
 ):
     await _get_deal_or_404(deal_id, db)
     if category not in DOCUMENT_CATEGORIES:
@@ -65,6 +65,7 @@ async def upload_document(
     if not settings.storage_configured:
         raise HTTPException(status_code=503, detail="Document storage is not configured yet")
 
+    uploaded_by = get_actor_name(auth)
     body = await file.read()
     storage_key = storage.make_storage_key(deal_id, file.filename or "document")
     storage.put_object(storage_key, body, file.content_type)
@@ -122,12 +123,16 @@ async def patch_document(document_id: int, body: DocumentPatchRequest, db: Async
 
 
 @router.delete("/documents/{document_id}")
-async def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_document(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     result = await db.execute(select(DealDocument).where(DealDocument.id == document_id))
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     doc.status = "deleted"
     doc.updated_at = datetime.now(timezone.utc)
-    await log_activity(db, doc.deal_id, "user", "document", f"Deleted document: {doc.name}")
+    await log_activity(db, doc.deal_id, get_actor_name(auth), "document", f"Deleted document: {doc.name}")
     return {"ok": True, "document_id": document_id}

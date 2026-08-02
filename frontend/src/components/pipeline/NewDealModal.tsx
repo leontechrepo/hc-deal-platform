@@ -4,6 +4,7 @@ import { Button } from '../ui/Button/Button'
 import { PIPELINE_STAGES, formatPipelineStage } from '../shared/PipelineStageBadge'
 import { STATUSES } from '../shared/StatusBadge'
 import { useCreateDeal } from '../../hooks/useDeals'
+import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../../components/Toast/Toast'
 import type { CreateDealInput } from '../../types'
 import formStyles from '../shared/Form.module.css'
@@ -57,6 +58,7 @@ export function NewDealModal({ open, onClose }: Props) {
   const [form, setForm] = useState<CreateDealInput>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const createDeal = useCreateDeal()
+  const actor = useCurrentActor()
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export function NewDealModal({ open, onClose }: Props) {
     }
     setError(null)
     try {
-      await createDeal.mutateAsync(form)
+      await createDeal.mutateAsync({ ...form, actor })
       showToast(`New deal added: ${form.company_name}`)
       onClose()
     } catch {
