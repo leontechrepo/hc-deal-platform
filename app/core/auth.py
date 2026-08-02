@@ -49,3 +49,14 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return payload
+
+
+def get_actor_name(auth: dict) -> str:
+    """Derive an audit-trail actor label from the verified auth payload only —
+    never from client-supplied input, which a caller could set to any value.
+
+    Clerk's default session token only carries `sub` (a user id). If this
+    instance's session token has been customized (Clerk Dashboard → Sessions)
+    to include a name/email claim, prefer that for a friendlier label.
+    """
+    return auth.get("name") or auth.get("email") or auth.get("sub", "unknown")

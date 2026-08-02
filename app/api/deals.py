@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, text, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import require_auth
+from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
 from app.db.models import Deal, DealUpdateLog, EmailScanLog
 from app.db.portfolio import ensure_portfolio_position
@@ -68,7 +68,6 @@ def _coerce_field_value(field: str, value):
 class PatchRequest(BaseModel):
     field: str
     value: str | float | int | None = None
-    actor: str | None = None
 
 
 @router.patch("/deals/{deal_id}")
@@ -76,6 +75,7 @@ async def patch_deal(
     deal_id: int,
     body: PatchRequest,
     db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
 ):
     if body.field not in EDITABLE_FIELDS:
         raise HTTPException(status_code=400, detail=f"Field '{body.field}' is not editable")
@@ -130,7 +130,7 @@ async def patch_deal(
         activity_type = "stage_change" if body.field in ("pipeline_stage", "stage", "bucket") else \
             "status_change" if body.field == "status" else "system"
         await log_activity(
-            db, deal_id, body.actor or "user", activity_type,
+            db, deal_id, get_actor_name(auth), activity_type,
             f"{body.field} changed from {old_value!r} to {coerced!r}",
         )
 
@@ -239,10 +239,13 @@ async def export_underwriting(deal_id: int, db: AsyncSession = Depends(get_db)):
     ws["A2"], ws["B2"] = "LTM EBITDA ($M)", float(deal.ltm_ebitda_m) if deal.ltm_ebitda_m is not None else None
     ws["A3"], ws["B3"] = "SOFR Rate (%)", float(deal.sofr_rate) if deal.sofr_rate is not None else None
     ws["A4"], ws["B4"] = "Spread (bps)", deal.spread_bps
-    # Formula cells — mirrors create_deal's derivation exactly, but as a live
-    # Excel formula so the workbook stays an auditable model, not a snapshot.
-    ws["A5"], ws["B5"] = "Total Leverage (x)", "=B1/B2"
-    ws["A6"], ws["B6"] = "All-In Rate (%)", "=B3+B4/100"
+    # Formula cells — mirrors create_deal's derivation exactly (including its
+    # None/zero guards, since incomplete underwriting fields are common), but
+    # as a live Excel formula so the workbook stays an auditable model, not a
+    # snapshot. IF-guards keep an incomplete input blank instead of #DIV/0!
+    # or silently treating a blank cell as zero.
+    ws["A5"], ws["B5"] = "Total Leverage (x)", '=IF(OR(B2="",B2=0),"",B1/B2)'
+    ws["A6"], ws["B6"] = "All-In Rate (%)", '=IF(OR(B3="",B4=""),"",B3+B4/100)'
 
     buf = BytesIO()
     wb.save(buf)
@@ -290,11 +293,14 @@ class CreateDealRequest(BaseModel):
     max_leverage_covenant: Optional[float] = None
     min_fccr_covenant: Optional[float] = None
     capex_limit_covenant_m: Optional[float] = None
-    actor: Optional[str] = None
 
 
 @router.post("/deals")
-async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db)):
+async def create_deal(
+    body: CreateDealRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
     if body.pipeline_stage not in PIPELINE_STAGES:
         raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {body.pipeline_stage!r}")
     if body.status not in STATUSES:
@@ -361,7 +367,7 @@ async def create_deal(body: CreateDealRequest, db: AsyncSession = Depends(get_db
         new_value=deal.pipeline_stage,
         source="manual_edit",
     ))
-    await log_activity(db, deal.id, body.actor or "user", "system", "Deal created — entered via New Deal form")
+    await log_activity(db, deal.id, get_actor_name(auth), "system", "Deal created — entered via New Deal form")
 
     return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
 
