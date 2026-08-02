@@ -4,7 +4,7 @@ export const STATUSES = ['Active', 'On Hold', 'Passed', 'Dead', 'Closed'] as con
 
 export const STATUS_TONE: Record<string, BadgeTone> = {
   Active: 'blue',
-  'On Hold': 'yellow',
+  'On Hold': 'amber',
   Passed: 'red',
   Dead: 'red',
   Closed: 'green',

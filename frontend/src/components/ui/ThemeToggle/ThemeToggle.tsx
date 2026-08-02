@@ -18,7 +18,7 @@ export function ThemeToggle({ collapsed }: ThemeToggleProps) {
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <span className={styles.icon}>
-        {isDark ? <Sun size={18} strokeWidth={2} aria-hidden="true" /> : <Moon size={18} strokeWidth={2} aria-hidden="true" />}
+        {isDark ? <Sun size={17} strokeWidth={2} aria-hidden="true" /> : <Moon size={17} strokeWidth={2} aria-hidden="true" />}
       </span>
       {!collapsed && <span className={styles.label}>{isDark ? 'Light mode' : 'Dark mode'}</span>}
     </button>

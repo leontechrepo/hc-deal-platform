@@ -355,6 +355,87 @@ and the existing app keeps working throughout.
   sign-out footer, and section collapse/expand animation manually, both
   light and dark mode.
 
+### Frontend — Design system migration (adopt Reip's real components) complete
+
+- **Scope correction from you, mid-planning**: Phases 4/5 had matched Reip's
+  visual *values* independently; you corrected that — where Reip has real
+  component *source*, adopt the same component, not a recreated
+  approximation. That source turned out to be available locally at
+  `../reip-frontend` (the actual `leontechrepo/reip-frontend` working app),
+  not just the compiled `_ds_bundle.js`/`Reip Design System/` reference used
+  by earlier phases.
+- **Architecture added**: Tailwind **v4** (`tailwindcss`, `@tailwindcss/vite`
+  — no config file needed) + `class-variance-authority`/`clsx`/
+  `tailwind-merge` (`src/lib/utils.ts`'s `cn()`) + a handful of Radix
+  packages (`@radix-ui/react-separator`, `@radix-ui/react-slot`, the
+  `radix-ui` umbrella for Avatar). `@import "tailwindcss";` loads first in
+  `src/index.css`, ahead of this app's own tokens/reset, so our overrides
+  still win. Confirmed via Explore passes into the real repo that its actual
+  pages barely use Tailwind utility classes at all — they render plain
+  hand-written CSS classes (`.kpi-card`, `.btn-primary`, `.badge`, etc.),
+  the same shape as this app's CSS Modules — so this did **not** turn into
+  an app-wide utility-class rewrite; Tailwind/Radix stay scoped to the small
+  set of components ported below.
+- **Ported real component source verbatim** (adapted only for this app's
+  relative-import convention, and to reference our real CSS tokens instead
+  of unmapped Tailwind semantic classes like `bg-muted`/`bg-primary`, which
+  aren't defined in Reip's own Tailwind theme either): `ui/Separator`
+  (real Radix `Separator`), new `ui/Avatar` (`Avatar`/`AvatarImage`/
+  `AvatarFallback`/`AvatarBadge`/`AvatarGroup`/`AvatarGroupCount` — `NavBar`'s
+  `UserFooter` now uses `Avatar`+`AvatarFallback` instead of a hand-rolled
+  span), `ui/SearchableSelect` (kept our richer existing behavior — arrow-key
+  nav, clear button, ARIA roles — and added the one real behavior it was
+  missing: a `position:fixed` dropdown with scroll/resize rect-tracking, so
+  it won't clip inside a scrollable Modal/drawer).
+- **`ThemeToggle`**: real `.theme-toggle` is a compact 34px topbar icon
+  button (light glass chrome) — a genuine context mismatch with this app's
+  navy sidebar row usage (`NavBar`'s `collapsed`-aware toggle sits inline
+  among other nav rows, always with a label when expanded). Kept our
+  sidebar-row structure and existing `ThemeContext` (already more complete
+  than Reip's own — its dark mode isn't actually implemented, no `.dark` CSS
+  exists in its real app), only aligned the literal icon size (18→17px).
+- **`Button`**: did **not** swap in Reip's real shadcn/`cva` `Button`
+  component — confirmed by grep that Reip's own real pages barely use it
+  (~4 files, no pages); real pages hand-write `className="btn btn-primary
+  btn-sm"` everywhere instead. Copied that real, actually-rendered CSS
+  (`.btn`/`.btn-primary`/`.btn-secondary`/`.btn-gold`/`.btn-ghost`/
+  `.btn-danger`) verbatim into `Button.module.css` onto our existing
+  variant-prop API, avoiding a rename at every Button call site in the app
+  for a component Reip's real UI doesn't actually use.
+- **`Card`/`KPICard`/`KPIGrid`/`DataTable`/`TableCard`/`Tabs`/`Modal`/
+  `Badge`/`Tag`**: no React component exists in Reip for any of these
+  (confirmed exhaustively) — copied the real CSS values verbatim (padding,
+  font-size/weight, border treatment, hover states) into each `.module.css`,
+  keeping our own reusable React wrappers, since Reip's own real pages
+  re-implement these ad hoc every time rather than sharing a component.
+  `KPIGrid`'s navy-strip variant stays as this app's own invention — no Reip
+  equivalent of a single-strip KPI bar exists anywhere in the real source.
+- **Legacy badge tones retired**: `yellow`/`orange` → `amber`, `purple` →
+  `navy`, across every call site found by an exhaustive grep (`StatusBadge`'s
+  On Hold, `PortfolioBadges`' Late/Watch, `PipelineStageBadge`'s LOI stages,
+  `ActivityTab`'s stage_change, `LogsPage`'s email_scan source pill — three
+  of these were missed by an earlier, narrower grep and only surfaced this
+  pass). `gray` kept as a tone name (it's `Badge`'s own default, used in ~8
+  places) but now built from real neutral tokens (`--muted`/`--lt`/
+  `--border`) instead of an invented legacy pair. Deleted the now-dead
+  `--yellow-*`/`--purple-*`/`--orange-*`/`--gray-bg`/`--gray-fg` tokens from
+  `tokens.css` entirely.
+- `ChatComposer.module.css` now consumes the `--chat-surface`/`--chat-navy`/
+  `--chat-gold` tokens `tokens.css` had pre-wired since Phase 4 but left
+  unconsumed.
+- **Deferred, not in this pass**: Reip's real `Field`/`FieldGroup`/`FieldSet`
+  form-composition kit — this app has no current "Field" abstraction to
+  replace, and adopting one would be a new form architecture decision
+  bigger than aligning existing components.
+- Verified: `tsc --noEmit` clean, production build succeeds, grepped for
+  every deleted legacy token — zero remaining references, dev server logs
+  clean, all routes still serve. **Not done**: the Tailwind Preflight
+  regression check needs a real browser click-through across every page in
+  both light and dark mode (Preflight resets margins/font-inheritance
+  globally the moment it's imported) — I can't render a browser myself, so
+  this is the one verification step from this pass that still needs your
+  pass before trusting it in production.
+
 ## Next steps
 
 This closes out the frontend restructure's phased plan. One piece remains,
@@ -369,3 +450,8 @@ Also open, not blocking frontend work:
 - Provision the Railway S3-compatible bucket + set `STORAGE_*` env vars so
   document upload/download stops 503ing.
 - Add `STORAGE_*` vars to `.env.example`.
+- Manual browser click-through for the Tailwind Preflight regression check
+  (see above) — every page, both light and dark mode.
+- Reip's `Field`/`FieldGroup`/`FieldSet` form-composition kit was
+  deliberately deferred (see above) — worth a separate decision if this
+  app's forms warrant a shared composition primitive later.

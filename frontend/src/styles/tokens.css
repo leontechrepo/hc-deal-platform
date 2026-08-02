@@ -34,16 +34,6 @@
   --blue-bg: #E8F0FB;
   --blue-fg: #154A7A;
 
-  /* legacy — not in Reip DS, retained for existing pages, do not extend */
-  --yellow-bg: #FFFBEA;
-  --yellow-fg: #7A6200;
-  --purple-bg: #F0EBF8;
-  --purple-fg: #4A1A7A;
-  --gray-bg: #F2F1EE;
-  --gray-fg: #6b7a9b;
-  --orange-bg: #FDF1E3;
-  --orange-fg: #B5650A;
-
   /* Typography families */
   --font: 'Jost', 'Segoe UI', sans-serif;
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -140,16 +130,6 @@ html.dark {
   --red: #f07070;
   --amber: #ffb84d;
   --blue: #8b9ef0;
-
-  /* legacy tones have no Reip DS dark-mode reference — lightness-inverted by the same pattern as the real semantics */
-  --yellow-bg: #3a3418;
-  --yellow-fg: #ffe08a;
-  --purple-bg: #2a2038;
-  --purple-fg: #d8b8f5;
-  --gray-bg: #232a38;
-  --gray-fg: #b6c0d6;
-  --orange-bg: #3a2712;
-  --orange-fg: #ffb066;
 
   --workspace: #0c1018;
   --workspace-soft: #121a26;

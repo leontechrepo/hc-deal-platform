@@ -19,6 +19,7 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [highlighted, setHighlighted] = useState(0)
+  const [rect, setRect] = useState<DOMRect | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -37,6 +38,22 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Fixed-position dropdown, tracked while open — so it isn't clipped when this
+  // control sits inside a scrollable Modal/drawer body (position:absolute would be).
+  useEffect(() => {
+    if (!open) return
+    function updateRect() {
+      setRect(containerRef.current?.getBoundingClientRect() ?? null)
+    }
+    updateRect()
+    window.addEventListener('scroll', updateRect, true)
+    window.addEventListener('resize', updateRect)
+    return () => {
+      window.removeEventListener('scroll', updateRect, true)
+      window.removeEventListener('resize', updateRect)
+    }
+  }, [open])
 
   function openList() {
     setOpen(true)
@@ -113,8 +130,12 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
         )}
         <ChevronDown size={16} className={styles.chevron} />
       </div>
-      {open && (
-        <ul className={styles.list} role="listbox">
+      {open && rect && (
+        <ul
+          className={styles.list}
+          role="listbox"
+          style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: rect.width }}
+        >
           <li
             className={`${styles.option} ${styles.noneOption}`}
             onMouseDown={e => {

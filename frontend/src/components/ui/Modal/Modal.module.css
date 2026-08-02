@@ -15,9 +15,10 @@ html.dark .overlay {
 .panel {
   position: relative;
   background: var(--panel-solid);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-bubble);
   box-shadow: var(--shadow-float);
-  max-width: 90vw;
+  max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
   min-width: 360px;

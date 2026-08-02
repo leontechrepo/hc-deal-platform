@@ -252,20 +252,6 @@
   padding: 10px 0;
 }
 
-.userAvatar {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--on-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-}
-
 .userName {
   overflow: hidden;
   white-space: nowrap;

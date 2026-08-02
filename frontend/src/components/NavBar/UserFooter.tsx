@@ -1,5 +1,6 @@
 import { useClerk } from '@clerk/react'
 import { useCurrentActor } from '../../hooks/useCurrentActor'
+import { Avatar, AvatarFallback } from '../ui/Avatar/Avatar'
 import styles from './NavBar.module.css'
 
 function initialsFor(name: string): string {
@@ -19,7 +20,9 @@ export function UserFooter() {
       onClick={() => signOut({ redirectUrl: '/' })}
       title={`Sign out — ${actor}`}
     >
-      <span className={styles.userAvatar}>{initialsFor(actor)}</span>
+      <Avatar size="sm">
+        <AvatarFallback>{initialsFor(actor)}</AvatarFallback>
+      </Avatar>
       <span className={styles.userName}>{actor}</span>
     </button>
   )

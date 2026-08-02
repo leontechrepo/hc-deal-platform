@@ -84,8 +84,8 @@
 }
 
 .source.email_scan {
-  background: var(--purple-bg);
-  color: var(--purple-fg);
+  background: var(--navy);
+  color: var(--white);
 }
 
 .source.excel_import {

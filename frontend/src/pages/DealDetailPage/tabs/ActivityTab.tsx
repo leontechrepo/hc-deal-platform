@@ -7,7 +7,7 @@ import type { Deal, DealActivity } from '../../../types'
 import styles from './ActivityTab.module.css'
 
 const ACTIVITY_TONE: Record<string, BadgeTone> = {
-  stage_change: 'purple',
+  stage_change: 'navy',
   document: 'blue',
   note: 'gray',
   approval: 'green',

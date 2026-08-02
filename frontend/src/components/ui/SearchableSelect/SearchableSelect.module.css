@@ -56,11 +56,7 @@
 }
 
 .list {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
+  z-index: 1200;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -68,7 +64,7 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-float);
-  max-height: 240px;
+  max-height: 228px;
   overflow-y: auto;
 }
 

@@ -19,7 +19,7 @@
 }
 
 .composer {
-  background: var(--panel-solid);
+  background: var(--chat-surface);
   border-radius: 16px;
   padding: 8px 8px 8px 16px;
   display: flex;
@@ -62,7 +62,7 @@
 }
 
 .sendBtn.active {
-  background: var(--navy);
-  color: var(--gold);
+  background: var(--chat-navy);
+  color: var(--chat-gold);
   cursor: pointer;
 }
