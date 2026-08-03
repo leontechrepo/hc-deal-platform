@@ -1,0 +1,50 @@
+.group + .group {
+  border-top: 1px solid var(--glass-border);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6, 10px);
+  width: 100%;
+  padding: var(--space-5, 8px) var(--space-8, 16px);
+  background: rgba(239, 243, 249, .5);
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+:global(html.dark) .header {
+  background: rgba(20, 28, 40, .5);
+}
+
+.header:hover {
+  background: rgba(201, 168, 76, .1);
+}
+
+.chevron {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 10px;
+  transition: transform 0.14s ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.summary {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.body {
+  overflow-x: auto;
+}
