@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy import delete
 
 import app.api.deal_documents as docs_mod
 from app.api.deal_documents import (
@@ -17,6 +18,7 @@ from app.api.deal_documents import (
     upload_document,
 )
 from app.api.deals import CreateDealRequest, create_deal
+from app.db.models.deals import Deal
 from app.db.models.documents import DealDocument
 
 TEST_AUTH = {"sub": "test-user"}
@@ -44,6 +46,15 @@ def _fake_upload(filename="term_sheet.pdf", content=b"hello world", content_type
 async def _make_deal(db_session):
     result = await create_deal(CreateDealRequest(company_name="Doc Test Co"), db_session, auth=TEST_AUTH)
     return result["deal_id"]
+
+
+async def _cleanup_deal(db_session, deal_id):
+    # delete_document commits explicitly (see its docstring/comment), so any
+    # test that calls it durably writes to the DB — the db_session fixture's
+    # rollback-on-teardown can no longer undo that. Clean up explicitly;
+    # deleting the deal cascades to its documents (FK ON DELETE CASCADE).
+    await db_session.execute(delete(Deal).where(Deal.id == deal_id))
+    await db_session.commit()
 
 
 async def test_upload_creates_document_and_calls_put_object(db_session, monkeypatch):
@@ -115,6 +126,8 @@ async def test_list_documents_excludes_deleted(db_session, monkeypatch):
     assert kept["id"] in ids
     assert removed["id"] not in ids
 
+    await _cleanup_deal(db_session, deal_id)
+
 
 async def test_download_redirects_to_presigned_url(db_session, monkeypatch):
     _configure_storage(monkeypatch)
@@ -151,6 +164,36 @@ async def test_delete_calls_storage_delete_object_and_soft_deletes(db_session, m
 
     stored = await db_session.get(DealDocument, doc["id"])
     assert stored.status == "deleted"
+
+    await _cleanup_deal(db_session, deal_id)
+
+
+async def test_delete_503_when_storage_key_set_but_storage_not_configured(db_session, monkeypatch):
+    _configure_storage(monkeypatch)
+    deal_id = await _make_deal(db_session)
+
+    with patch.object(docs_mod.storage, "put_object"):
+        doc = await upload_document(
+            deal_id, file=_fake_upload(), category="NDA", db=db_session, auth=TEST_AUTH,
+        )
+
+    # Storage becomes unconfigured after upload (e.g. credentials rotated out).
+    monkeypatch.setattr(docs_mod.settings, "STORAGE_BUCKET_NAME", "")
+    monkeypatch.setattr(docs_mod.settings, "STORAGE_ENDPOINT_URL", "")
+    monkeypatch.setattr(docs_mod.settings, "STORAGE_ACCESS_KEY_ID", "")
+    monkeypatch.setattr(docs_mod.settings, "STORAGE_SECRET_ACCESS_KEY", "")
+
+    with patch.object(docs_mod.storage, "delete_object") as mock_delete:
+        with pytest.raises(HTTPException) as exc_info:
+            await delete_document(doc["id"], db=db_session, auth=TEST_AUTH)
+
+    assert exc_info.value.status_code == 503
+    mock_delete.assert_not_called()
+
+    # Rejected before any commit, so the document is still active — no
+    # explicit cleanup needed here (nothing was durably written).
+    stored = await db_session.get(DealDocument, doc["id"])
+    assert stored.status == "active"
 
 
 async def test_delete_404_for_missing_document(db_session):

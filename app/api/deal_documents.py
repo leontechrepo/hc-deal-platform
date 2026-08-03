@@ -132,9 +132,21 @@ async def delete_document(
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
-    if doc.storage_key and settings.storage_configured:
-        storage.delete_object(doc.storage_key)
+    if doc.storage_key and not settings.storage_configured:
+        raise HTTPException(status_code=503, detail="Document storage is not configured yet")
+
     doc.status = "deleted"
     doc.updated_at = datetime.now(timezone.utc)
     await log_activity(db, doc.deal_id, get_actor_name(auth), "document", f"Deleted document: {doc.name}")
+
+    # Commit the soft-delete + activity log before touching storage: if the
+    # object delete succeeded but the commit afterward failed/rolled back,
+    # the document would show as active again with its only copy already
+    # gone. Committing first means a failed storage delete only leaves a
+    # harmless orphaned object, never a dangling reference to a deleted one.
+    await db.commit()
+
+    if doc.storage_key:
+        storage.delete_object(doc.storage_key)
+
     return {"ok": True, "document_id": document_id}
