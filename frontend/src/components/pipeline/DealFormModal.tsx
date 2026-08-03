@@ -65,6 +65,48 @@ function toNullableNumber(v: string): number | null {
   return Number.isNaN(n) ? null : n
 }
 
+// Explicit pick rather than spreading Deal into CreateDealInput — Deal has
+// far more fields than this form renders, and a couple (pipeline_stage,
+// status) are typed nullable on Deal but non-nullable-optional here, so a
+// plain spread doesn't type-check and would silently carry over unrelated
+// Deal-only fields (id, bucket, ...) into form state.
+function dealToFormInput(deal: Deal): CreateDealInput {
+  return {
+    company_name: deal.company_name,
+    location: deal.location,
+    sector_primary: deal.sector_primary,
+    sector_full: deal.sector_full,
+    subsector: deal.subsector,
+    security: deal.security,
+    uop: deal.uop,
+    source: deal.source,
+    state: deal.state,
+    contact_name: deal.contact_name,
+    contact_role: deal.contact_role,
+    employees: deal.employees,
+    locations_count: deal.locations_count,
+    year_founded: deal.year_founded,
+    deal_size_m: deal.deal_size_m,
+    hold_amount_m: deal.hold_amount_m,
+    tenor_months: deal.tenor_months,
+    oid_pct: deal.oid_pct,
+    spread_bps: deal.spread_bps,
+    sofr_rate: deal.sofr_rate,
+    sofr_floor_pct: deal.sofr_floor_pct,
+    ltm_revenue_m: deal.ltm_revenue_m,
+    ltm_ebitda_m: deal.ltm_ebitda_m,
+    capex_m: deal.capex_m,
+    ebitda_margin: deal.ebitda_margin,
+    revenue_growth_pct: deal.revenue_growth_pct,
+    max_leverage_covenant: deal.max_leverage_covenant,
+    min_fccr_covenant: deal.min_fccr_covenant,
+    capex_limit_covenant_m: deal.capex_limit_covenant_m,
+    base_rate: deal.base_rate,
+    pipeline_stage: deal.pipeline_stage ?? 'sourcing',
+    status: deal.status ?? 'Active',
+  }
+}
+
 export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
   const [form, setForm] = useState<CreateDealInput>(EMPTY)
   const [saving, setSaving] = useState(false)
@@ -76,7 +118,7 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
 
   useEffect(() => {
     if (open) {
-      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
+      setForm(initial ? dealToFormInput(initial) : EMPTY)
       setError(null)
     }
   }, [open, initial])
