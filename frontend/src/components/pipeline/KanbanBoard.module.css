@@ -1,6 +1,12 @@
+/* Fills the remaining height of the page panel so columns cap and scroll internally
+   (they used to be sized off `calc(100vh - …)`, which no longer holds — the panel,
+   not the viewport, is the scroll container now). */
 .board {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 12px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
 }

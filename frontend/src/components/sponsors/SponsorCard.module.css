@@ -74,12 +74,12 @@
   flex-direction: column;
   gap: 4px;
   padding-top: 8px;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--glass-border);
 }
 
 .dealsSection {
   padding-top: 8px;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--glass-border);
 }
 
 .dealsSectionTitle {

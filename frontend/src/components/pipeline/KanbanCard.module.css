@@ -1,15 +1,18 @@
 .card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
   padding: 10px 12px;
   margin-bottom: 8px;
   cursor: grab;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  transition: box-shadow 0.16s, border-color 0.16s, transform 0.16s;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-float);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
 }
 
 .card:active {
@@ -19,7 +22,7 @@
 .company {
   font-weight: 500;
   font-size: 13px;
-  color: var(--navy);
+  color: var(--heading);
   display: block;
   text-decoration: none;
 }
@@ -45,7 +48,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .dim {

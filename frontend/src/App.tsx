@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Show, AuthenticateWithRedirectCallback, useAuth } from '@clerk/react'
-import { NavProvider, useNav } from './NavContext'
+import { NavProvider } from './NavContext'
 import { NavBar } from './components/NavBar/NavBar'
+import shell from './components/AppShell/AppShell.module.css'
 import { PipelinePage } from './pages/PipelinePage/PipelinePage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
 import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
@@ -32,19 +33,10 @@ function AuthBridge() {
 }
 
 function Layout() {
-  const { collapsed } = useNav()
-  const navWidth = collapsed ? 'var(--nav-width-collapsed)' : 'var(--nav-width-expanded)'
-
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
+    <div className={shell.appShell}>
       <NavBar />
-      <main style={{
-        marginLeft: navWidth,
-        flex: 1,
-        minHeight: '100vh',
-        overflowY: 'auto',
-        transition: 'margin-left 0.28s cubic-bezier(.4,0,.2,1)',
-      }}>
+      <main className={shell.mainArea}>
         <Routes>
           <Route path="/" element={<Navigate to="/pipeline" replace />} />
           <Route path="/pipeline" element={<PipelinePage />} />

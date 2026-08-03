@@ -82,7 +82,7 @@
   --glass-border: rgba(131,145,169,.26);
   --glass-border-strong: rgba(201,168,76,.42);
 
-  /* Spotlight background accent (tokens only — not yet applied as a workspace background) */
+  /* Spotlight background accent — consumed by the workspace gradient in base.css */
   --spotlight-gold: rgba(201,168,76,.16);
   --spotlight-warm: rgba(252,247,236,.55);
   --spotlight-center: 50% 45%;
@@ -99,7 +99,7 @@
   --input-gold-ring: rgba(201,168,76,.16);
   --input-gold-ring-focus: rgba(201,168,76,.3);
 
-  /* Chat (pre-wired, not yet consumed) */
+  /* Chat */
   --chat-navy: #0a1f44;
   --chat-navy-hover: #0d2b5e;
   --chat-heading: #0a1f44;

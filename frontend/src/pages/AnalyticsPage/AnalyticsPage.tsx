@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useDeals } from '../../hooks/useDeals'
 import type { Deal } from '../../types'
 import styles from './AnalyticsPage.module.css'
@@ -41,6 +42,8 @@ function SectorFilter({ value, onChange, sectors }: {
     </select>
   )
 }
+
+const SHELL = { title: 'Pipeline Analytics', sub: 'LHP Private Credit — Deal Platform' }
 
 export function AnalyticsPage() {
   const { data: deals = [], isLoading, isError } = useDeals()
@@ -93,16 +96,11 @@ export function AnalyticsPage() {
       .map(r => ({ quarter: r.key, count: r.count }))
   }, [deals, quarterSector])
 
-  if (isLoading) return <div className={styles.state}>Loading analytics…</div>
-  if (isError) return <div className={styles.state}>Failed to load analytics.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading analytics…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load analytics.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Pipeline Analytics</h1>
-      </header>
-
+    <PageShell {...SHELL}>
       <div className={styles.grid}>
         <div className={styles.card}>
           <div className={styles.cardHeader}>
@@ -198,6 +196,6 @@ export function AnalyticsPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

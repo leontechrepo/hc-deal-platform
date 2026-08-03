@@ -5,10 +5,12 @@ import { FundFormModal } from '../../components/funds/FundFormModal'
 import { Button } from '../../components/ui/Button/Button'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useToast } from '../../components/Toast/Toast'
 import type { Fund, FundInput } from '../../types'
 import styles from './FundsPage.module.css'
+
+const SHELL = { title: 'Funds', sub: 'Fund vehicles and limited partners' }
 
 export function FundsPage() {
   const { data: funds = [], isLoading, isError } = useFunds()
@@ -72,13 +74,11 @@ export function FundsPage() {
     }
   }
 
-  if (isLoading) return <div className={styles.state}>Loading funds…</div>
-  if (isError) return <div className={styles.state}>Failed to load funds.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading funds…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load funds.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Funds" />
-
+    <PageShell {...SHELL} actions={<Button variant="primary" onClick={openCreate}>New Fund</Button>}>
       <KPIGrid items={kpiItems} />
 
       <div className={styles.toolbar}>
@@ -88,7 +88,6 @@ export function FundsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        <Button variant="primary" onClick={openCreate}>New Fund</Button>
       </div>
 
       {filtered.length === 0 ? (
@@ -116,6 +115,6 @@ export function FundsPage() {
         initial={editing}
         onSubmit={handleSubmit}
       />
-    </div>
+    </PageShell>
   )
 }

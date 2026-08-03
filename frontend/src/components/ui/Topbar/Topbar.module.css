@@ -1,0 +1,72 @@
+/* Floating glass topbar band. Sits above the page panel inside .mainArea, detached
+   by its own margin so the workspace gradient reads in the gutters. */
+.topbar {
+  height: 52px;
+  min-height: 52px;
+  box-sizing: border-box;
+  margin: 0 0 0 0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30;
+  overflow: visible;
+  background: var(--panel);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-topbar-title);
+  font-weight: 700;
+  color: var(--heading);
+  letter-spacing: .01em;
+  line-height: 1.15;
+}
+
+.sub {
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.pill {
+  background: rgba(201,168,76,.14);
+  color: #6f520d;
+  border: 1px solid rgba(201,168,76,.34);
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:global(html.dark) .pill {
+  background: rgba(201,168,76,.18);
+  border-color: rgba(201,168,76,.4);
+  color: #e8d49a;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .pill {
+    display: none;
+  }
+}

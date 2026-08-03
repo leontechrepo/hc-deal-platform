@@ -4,9 +4,11 @@ import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { InboxCard } from '../../components/inbox/InboxCard'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useToast } from '../../components/Toast/Toast'
 import styles from './InboxPage.module.css'
+
+const SHELL = { title: 'Inbox', sub: 'Proposed updates awaiting your review' }
 
 export function InboxPage() {
   const { data: suggestions = [], isLoading, isError } = useInbox()
@@ -21,13 +23,11 @@ export function InboxPage() {
     { label: 'High Confidence', value: suggestions.filter(s => (s.confidence ?? 0) >= 0.85).length },
   ], [suggestions])
 
-  if (isLoading) return <div className={styles.state}>Loading inbox…</div>
-  if (isError) return <div className={styles.state}>Failed to load inbox.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading inbox…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load inbox.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Inbox" />
-
+    <PageShell {...SHELL}>
       <KPIGrid items={kpiItems} />
 
       {suggestions.length === 0 ? (
@@ -54,6 +54,6 @@ export function InboxPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   )
 }

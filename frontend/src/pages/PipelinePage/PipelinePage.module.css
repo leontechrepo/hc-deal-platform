@@ -1,40 +1,9 @@
-.page {
-  padding: 24px;
-}
-
-.masthead {
-  margin-bottom: 20px;
-}
-
-.mastheadTitle {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--heading);
-}
-
-.mastheadSub {
-  font-size: 11px;
-  color: var(--gray-400);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
 }
 
 .loading {

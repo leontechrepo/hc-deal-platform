@@ -4,7 +4,7 @@ import { AiStarIcon } from '../../components/shared/AiStarIcon'
 import { ChatBubble } from '../../components/chat/ChatBubble'
 import { ChatComposer } from '../../components/chat/ChatComposer'
 import { ThinkingIndicator } from '../../components/chat/ThinkingIndicator'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import styles from './ChatPage.module.css'
 
 const SUGGESTED_QUESTIONS = [
@@ -23,9 +23,7 @@ export function ChatPage() {
   }, [messages, isPending])
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Credit Co-Pilot" />
-
+    <PageShell title="Credit Co-Pilot" sub="Grounded in the unified data layer">
       <div className={styles.panel}>
         <div className={styles.scrollArea} ref={scrollRef}>
           {messages.length === 0 ? (
@@ -62,6 +60,6 @@ export function ChatPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

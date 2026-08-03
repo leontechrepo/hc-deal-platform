@@ -5,10 +5,12 @@ import { SponsorFormModal } from '../../components/sponsors/SponsorFormModal'
 import { Button } from '../../components/ui/Button/Button'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useToast } from '../../components/Toast/Toast'
 import type { Sponsor, SponsorInput } from '../../types'
 import styles from './SponsorsPage.module.css'
+
+const SHELL = { title: 'Sponsors', sub: 'Sponsor relationships and deal history' }
 
 export function SponsorsPage() {
   const { data: sponsors = [], isLoading, isError } = useSponsors()
@@ -66,13 +68,11 @@ export function SponsorsPage() {
     }
   }
 
-  if (isLoading) return <div className={styles.state}>Loading sponsors…</div>
-  if (isError) return <div className={styles.state}>Failed to load sponsors.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading sponsors…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load sponsors.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Sponsors" />
-
+    <PageShell {...SHELL} actions={<Button variant="primary" onClick={openCreate}>New Sponsor</Button>}>
       <KPIGrid items={kpiItems} />
 
       <div className={styles.toolbar}>
@@ -82,7 +82,6 @@ export function SponsorsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        <Button variant="primary" onClick={openCreate}>New Sponsor</Button>
       </div>
 
       {filtered.length === 0 ? (
@@ -113,6 +112,6 @@ export function SponsorsPage() {
         initial={editing}
         onSubmit={handleSubmit}
       />
-    </div>
+    </PageShell>
   )
 }

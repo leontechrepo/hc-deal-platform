@@ -1,7 +1,7 @@
 .toggle {
   display: flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-button);
   overflow: hidden;
 }
 
@@ -9,15 +9,19 @@
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--gray-400);
-  background: var(--white);
+  color: var(--muted);
+  background: rgba(255,255,255,.55);
   border: none;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
+:global(html.dark) .option {
+  background: rgba(255,255,255,.06);
+}
+
 .option + .option {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--glass-border);
 }
 
 .option:hover {

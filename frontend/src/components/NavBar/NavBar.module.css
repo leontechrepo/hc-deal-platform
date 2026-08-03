@@ -1,15 +1,26 @@
+/* Floating glass rail. It is a flex child of .appShell (not fixed), detached on all
+   four sides by its margin, so the workspace gradient shows around it.
+   Dark-mode rules must use :global(html.dark) — a bare `html.dark` gets hashed. */
+
 .nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  background: var(--navy);
+  height: calc(100vh - 24px);
+  margin: 12px 0 12px 12px;
+  position: relative;
+  z-index: 40;
   display: flex;
   flex-direction: column;
-  z-index: 100;
-  transition: width 0.28s cubic-bezier(.4,0,.2,1);
-  overflow: hidden;
   flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sidebar);
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(246,248,251,.78));
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(18px);
+  transition: width 0.28s cubic-bezier(.4,0,.2,1);
+}
+
+:global(html.dark) .nav {
+  background: linear-gradient(180deg, rgba(28,38,54,.92), rgba(20,28,40,.85));
 }
 
 .nav.expanded {
@@ -20,9 +31,20 @@
   width: var(--nav-width-collapsed);
 }
 
+/* Sidebar scrollbar is gold rather than navy (DESIGN_GUIDE §3). */
+.nav:hover,
+.nav:focus-within {
+  scrollbar-color: rgba(201,168,76,.45) transparent;
+}
+
+.nav:hover::-webkit-scrollbar-thumb,
+.nav:focus-within::-webkit-scrollbar-thumb {
+  background-color: rgba(201,168,76,.42);
+}
+
 .logo {
-  padding: 18px 14px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 12px 12px;
+  border-bottom: 1px solid var(--glass-border);
   white-space: nowrap;
   overflow: hidden;
   display: flex;
@@ -31,20 +53,21 @@
 }
 
 .nav.collapsed .logo {
-  padding: 18px 10px 14px;
+  padding: 14px 10px 12px;
   justify-content: center;
 }
 
 .logoMark {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: var(--gold);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 8px 20px rgba(201,168,76,.22);
 }
 
 .logoImg {
@@ -61,41 +84,57 @@
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--heading);
   display: block;
   line-height: 1.2;
 }
 
 .logoSub {
   font-size: 10px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(10,31,68,.55);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   display: block;
   margin-top: 2px;
 }
 
+:global(html.dark) .logoSub {
+  color: rgba(255,255,255,.55);
+}
+
 .navItems {
   flex: 1;
-  padding: 12px 0;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.nav.collapsed .navItems {
+  padding: 12px 0;
+  align-items: center;
 }
 
 .navSection {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  width: 100%;
+}
+
+.nav.collapsed .navSection {
+  align-items: center;
 }
 
 .navSectionLabel {
-  padding: 10px 16px 3px;
+  padding: 10px 12px 3px;
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
+  color: var(--muted);
   overflow: hidden;
   max-height: 20px;
   opacity: 1;
@@ -109,39 +148,61 @@
   padding-bottom: 0;
 }
 
+/* Pill nav items — 999px radius, centered at 56px collapsed, full-width expanded. */
 .navItem {
   position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 16px;
-  color: rgba(255,255,255,0.65);
-  font-size: 13px;
-  font-weight: 400;
-  white-space: nowrap;
-  border-radius: 0;
-  background: none;
-  border: 1px solid transparent;
+  height: 44px;
   width: 100%;
+  padding: 0 12px;
+  color: rgba(10,31,68,.7);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  transition: background 0.16s, color 0.16s, box-shadow 0.16s;
   text-decoration: none;
 }
 
+:global(html.dark) .navItem {
+  color: rgba(220,228,242,.55);
+}
+
 .navItem:hover {
-  background: rgba(255,255,255,0.07);
-  color: var(--white);
+  background: rgba(10,31,68,.07);
+  color: var(--heading);
+}
+
+:global(html.dark) .navItem:hover {
+  background: rgba(255,255,255,.07);
+  color: var(--heading);
 }
 
 .navItem.active {
-  background: rgba(201,168,76,0.15);
-  border: 1px solid rgba(201,168,76,0.4);
+  background: rgba(201,168,76,.14);
+  border-color: rgba(201,168,76,.4);
+  color: var(--heading);
+}
+
+:global(html.dark) .navItem.active {
   color: var(--gold);
 }
 
+.navItem:focus-visible {
+  outline: 2px solid rgba(201,168,76,.82);
+  outline-offset: 3px;
+}
+
 .nav.collapsed .navItem {
-  padding: 9px 0;
+  width: 56px;
+  padding: 0;
   justify-content: center;
 }
 
@@ -161,6 +222,7 @@
 
 .nav.collapsed .navLabel {
   opacity: 0;
+  width: 0;
   pointer-events: none;
 }
 
@@ -180,36 +242,47 @@
 
 .nav.collapsed .navBadge {
   position: absolute;
-  top: 4px;
-  right: 8px;
+  top: 3px;
+  right: 3px;
   margin-left: 0;
 }
 
 .divider {
   height: 1px;
-  background: rgba(255,255,255,0.08);
-  margin: 8px 0;
+  background: var(--border);
+  opacity: 0.5;
+  margin: 6px 2px;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .scanBtn {
-  margin: 0 12px 4px;
+  margin: 0 2px 4px;
   padding: 8px 12px;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 5px;
-  color: var(--gold);
+  background: rgba(201,168,76,.12);
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: var(--radius-button);
+  color: #7a5c10;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+:global(html.dark) .scanBtn {
+  color: #e8d49a;
+  background: rgba(201,168,76,.18);
+  border-color: rgba(201,168,76,.4);
 }
 
 .scanBtn:hover:not(:disabled) {
-  background: rgba(201,168,76,0.22);
+  background: rgba(201,168,76,.22);
+  border-color: rgba(201,168,76,.5);
 }
 
 .scanBtn:disabled {
@@ -218,7 +291,8 @@
 }
 
 .nav.collapsed .scanBtn {
-  margin: 0 8px 4px;
+  width: 44px;
+  margin: 0 0 4px;
   padding: 8px;
   justify-content: center;
 }
@@ -231,20 +305,29 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
+  padding: 10px 12px;
   background: none;
   border: none;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.65);
+  border-top: 1px solid var(--glass-border);
+  color: rgba(10,31,68,.7);
   cursor: pointer;
   width: 100%;
   text-align: left;
+  flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
 }
 
+:global(html.dark) .userFooter {
+  color: rgba(255,255,255,.75);
+}
+
 .userFooter:hover {
-  background: rgba(220, 80, 80, 0.1);
-  color: rgba(255, 110, 110, 0.9);
+  background: rgba(224,92,92,.1);
+  color: var(--red-fg);
+}
+
+:global(html.dark) .userFooter:hover {
+  color: var(--red);
 }
 
 .nav.collapsed .userFooter {
@@ -256,7 +339,8 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
   transition: opacity 0.15s;
 }
 
@@ -268,18 +352,23 @@
 
 .collapseBtn {
   padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--glass-border);
   background: none;
   border-left: none;
   border-right: none;
   border-bottom: none;
-  color: rgba(255,255,255,0.4);
+  color: rgba(10,31,68,.4);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-shrink: 0;
   transition: color 0.15s;
   white-space: nowrap;
+}
+
+:global(html.dark) .collapseBtn {
+  color: rgba(255,255,255,.4);
 }
 
 .nav.collapsed .collapseBtn {
@@ -287,5 +376,5 @@
 }
 
 .collapseBtn:hover {
-  color: rgba(255,255,255,0.7);
+  color: var(--heading);
 }

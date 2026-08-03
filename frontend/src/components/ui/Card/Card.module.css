@@ -1,23 +1,30 @@
+/* Floating card. The `accent` prop renders as a 3px TOP border (Reip's floating
+   refresh moved accents off the left edge). */
 .card {
-  background: var(--card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-micro);
-  padding: var(--space-8);
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(10px);
+  padding: 18px;
+  transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s;
 }
 
-.gold  { border-left: 4px solid var(--gold); }
-.navy  { border-left: 4px solid var(--navy); }
-.green { border-left: 4px solid var(--green); }
-.red   { border-left: 4px solid var(--red); }
+.card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.gold  { border-top: 3px solid var(--gold); }
+.navy  { border-top: 3px solid #6d7892; }
+.green { border-top: 3px solid var(--green); }
+.red   { border-top: 3px solid var(--red); }
 
 .hoverable {
-  border: 1.5px solid var(--border);
   cursor: pointer;
 }
 
 .hoverable:hover {
-  border-color: var(--gold);
-  box-shadow: 0 6px 20px rgba(10,31,68,.1);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-hover);
   transform: translateY(-2px);
 }

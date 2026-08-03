@@ -1,7 +1,11 @@
+/* Navy KPI strip — this app's own pattern, but lifted into the floating plane so it
+   sits alongside the glass cards rather than looking pasted on. */
 .strip {
   display: flex;
   background: var(--navy);
-  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
   overflow: hidden;
 }
 
