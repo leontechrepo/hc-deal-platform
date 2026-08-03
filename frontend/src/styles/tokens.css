@@ -109,6 +109,18 @@
   --chat-surface-accent: rgba(201,168,76,.10);
   --chat-focus-ring: rgba(10,31,68,.08);
 
+  /* Charts (Recharts).
+     Recharts takes colours as props, not classes, so chart marks get no dark-mode
+     override for free — they must be routed through tokens that flip. Grid stays
+     recessive; axis labels wear text ink, never a series colour. Series steps are
+     chosen per mode for >= 3:1 against the card surface, not flipped automatically. */
+  --chart-grid: var(--border);
+  --chart-axis: var(--muted);
+  --chart-1: var(--navy);
+  --chart-2: var(--gold);
+  --chart-3: var(--blue);
+  --chart-4: var(--navy-light);
+
   /* Layout */
   --nav-width-expanded: 220px;
   --nav-width-collapsed: 80px;
@@ -154,4 +166,12 @@ html.dark {
   --input-gold-ring-focus: rgba(201,168,76,.22);
 
   /* --gold, --navy, --navy2, --on-gold intentionally unchanged — gold accent is identical in both modes */
+
+  /* Chart series lifted out of the navy family for the dark card (--panel-solid
+     #161e2c), where --navy measures 1.03:1 against it and --navy-light 1.21:1 —
+     effectively invisible. These steps validate at >= 3:1. --chart-2 (gold) and
+     --chart-3 (--blue) need no override: gold is identical in both modes and
+     --blue already flips above. */
+  --chart-1: #8ba3d4;
+  --chart-4: #6d86bb;
 }
