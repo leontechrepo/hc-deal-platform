@@ -30,6 +30,12 @@
   color: var(--gold);
 }
 
+/* In dark mode navy-on-navy loses its edge, so give the signature a gold hairline
+   rather than recoloring the fill. */
+:global(html.dark) .primary {
+  border-color: rgba(201,168,76,.45);
+}
+
 .secondary {
   background: var(--lt);
   color: var(--heading);

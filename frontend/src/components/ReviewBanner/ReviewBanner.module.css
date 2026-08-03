@@ -1,9 +1,11 @@
+/* Gold alert band. Deliberately stays a light surface in both themes (--gold-light and
+   --gray-100 are not redefined for dark) — it reads as an inserted notice, not a panel. */
 .banner {
   background: var(--gold-light);
   border: 1px solid var(--gold);
-  border-radius: 8px;
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
   padding: 16px 20px;
-  margin-bottom: 20px;
 }
 
 .header {

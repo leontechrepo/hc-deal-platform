@@ -1,6 +1,7 @@
 import { Link, Outlet, useParams } from 'react-router-dom'
 import { useDeal } from '../../hooks/useDeals'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { Tabs } from '../../components/ui/Tabs/Tabs'
 import { PipelineStageBadge } from '../../components/shared/PipelineStageBadge'
 import { StatusBadge } from '../../components/shared/StatusBadge'
@@ -21,8 +22,12 @@ export function DealDetailPage() {
   const id = Number(dealId)
   const { data: deal, isLoading, isError } = useDeal(Number.isFinite(id) ? id : null)
 
-  if (isLoading) return <div className={styles.state}>Loading deal…</div>
-  if (isError || !deal) return <div className={styles.state}>Failed to load deal.</div>
+  if (isLoading) {
+    return <PageShell title="Deal"><div className={styles.state}>Loading deal…</div></PageShell>
+  }
+  if (isError || !deal) {
+    return <PageShell title="Deal"><div className={styles.state}>Failed to load deal.</div></PageShell>
+  }
 
   const kpiItems = [
     { label: 'Deal Size', value: fmtM(deal.deal_size_m) },
@@ -32,16 +37,17 @@ export function DealDetailPage() {
   ]
 
   return (
-    <div className={styles.page}>
-      <Link to="/pipeline" className={styles.backLink}>← Pipeline</Link>
-
-      <div className={styles.topbar}>
-        <h1 className={styles.title}>{deal.company_name}</h1>
-        <div className={styles.badges}>
+    <PageShell
+      title={deal.company_name}
+      sub={deal.sector_primary ?? 'LHP Private Credit — Deal Detail'}
+      actions={
+        <>
           <PipelineStageBadge stage={deal.pipeline_stage} />
           <StatusBadge status={deal.status} />
-        </div>
-      </div>
+        </>
+      }
+    >
+      <Link to="/pipeline" className={styles.backLink}>← Pipeline</Link>
 
       <KPIGrid items={kpiItems} />
 
@@ -61,6 +67,6 @@ export function DealDetailPage() {
       <div className={styles.tabContent}>
         <Outlet context={{ deal } satisfies { deal: Deal }} />
       </div>
-    </div>
+    </PageShell>
   )
 }

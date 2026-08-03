@@ -24,7 +24,8 @@
   padding: 3px 6px;
   font-size: 13px;
   font-family: inherit;
-  background: var(--white);
+  color: var(--text);
+  background: var(--panel-raised);
   outline: none;
   resize: vertical;
   box-shadow: 0 0 0 3px var(--input-gold-ring);

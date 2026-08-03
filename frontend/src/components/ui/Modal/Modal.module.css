@@ -8,7 +8,8 @@
   z-index: 1000;
 }
 
-html.dark .overlay {
+/* NB: must be :global(html.dark) — a bare `html.dark` gets hashed by CSS Modules. */
+:global(html.dark) .overlay {
   background: rgba(0,0,0,.62);
 }
 

@@ -4,7 +4,6 @@ import { triggerScan } from '../../api/admin'
 import { useNav } from '../../NavContext'
 import { useInbox } from '../../hooks/useInbox'
 import { useToast } from '../Toast/Toast'
-import { ThemeToggle } from '../ui/ThemeToggle/ThemeToggle'
 import { NavIcon } from './NavIcon'
 import { NavSection } from './NavSection'
 import { UserFooter } from './UserFooter'
@@ -130,15 +129,9 @@ export function NavBar() {
             {scanMutation.isPending ? 'Scanning…' : 'Scan Now'}
           </span>
         </button>
-
-        <div style={{ flex: 1 }} />
-
-        <div className={styles.divider} />
-
-        <ThemeToggle collapsed={collapsed} />
-
-        <UserFooter />
       </div>
+
+      <UserFooter />
 
       <button className={styles.collapseBtn} onClick={toggle} title={collapsed ? 'Expand' : 'Collapse'}>
         {collapsed ? <PanelLeftOpen size={18} strokeWidth={2} aria-hidden="true" /> : <PanelLeftClose size={18} strokeWidth={2} aria-hidden="true" />}

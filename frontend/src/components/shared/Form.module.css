@@ -40,24 +40,28 @@
   color: var(--gray-400);
 }
 
+/* Gold-ringed glass input. `--panel-raised` rather than a literal white so it holds
+   up in dark mode (Reip hardcodes white here, but its dark mode is unimplemented). */
 .input,
 .select,
 .textarea {
   font-family: inherit;
   font-size: 13px;
-  color: var(--navy);
-  background: var(--white);
-  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--panel-raised);
+  border: 1px solid var(--input-gold-border);
   border-radius: var(--radius-button);
+  box-shadow: 0 0 0 1px var(--input-gold-ring);
   padding: 7px 10px;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: var(--input-gold-border);
-  box-shadow: 0 0 0 2px var(--input-gold-ring-focus);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
 }
 
 .textarea {

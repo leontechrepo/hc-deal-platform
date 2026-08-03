@@ -1,39 +1,40 @@
+/* Compact 34px glass icon button — lives in the floating Topbar. */
 .themeToggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 16px;
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.65);
-  font-size: 13px;
-  font-weight: 400;
-  white-space: nowrap;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,.55);
+  color: var(--heading);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  text-align: left;
+  font-family: var(--font);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+:global(html.dark) .themeToggle {
+  background: rgba(255,255,255,.06);
 }
 
 .themeToggle:hover {
-  background: rgba(255,255,255,0.07);
-  color: var(--white);
+  background: rgba(201,168,76,.14);
+  border-color: rgba(201,168,76,.38);
+  box-shadow: 0 2px 8px rgba(10,31,68,.06);
 }
 
-.collapsed {
-  padding: 9px 0;
-  justify-content: center;
+.themeToggle:focus-visible {
+  outline: 2px solid rgba(201,168,76,.82);
+  outline-offset: 2px;
 }
 
 .icon {
-  flex-shrink: 0;
-  width: 21px;
-  height: 21px;
+  width: 17px;
+  height: 17px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.label {
-  overflow: hidden;
 }

@@ -436,6 +436,112 @@ and the existing app keeps working throughout.
   this is the one verification step from this pass that still needs your
   pass before trusting it in production.
 
+### Frontend — Floating UI migration (Reip's "Floating Light UI Refresh")
+
+The design-system pass above ported Reip's **base** CSS layer. It did not port
+Reip's **override** layer — the `/* Floating Light UI Refresh */` block at
+`reip-frontend/app/src/index.css:1263–1900` — which is what actually produces the
+product's floating look. `tokens.css` had shipped every token it needs since
+Phase 4 but left them unconsumed (its own comments said so:
+*"tokens only — not yet applied as a workspace background"*). This pass wires
+them up. It's a consumption pass, not a token pass.
+
+- **Workspace atmosphere** (`styles/base.css`): the flat `body { background:
+  var(--surface) }` becomes Reip's two-layer gold-spotlight-over-gradient
+  workspace, light and dark. Added the thin-scrollbar system (transparent at
+  rest → navy on hover → gold on thumb hover; gold inside the sidebar).
+  Deleted the two now-stale "not yet applied / not yet consumed" token comments.
+- **Floating shell** (new `components/AppShell/AppShell.module.css`): `.appShell`
+  / `.mainArea` / `.pageContent`. `App.tsx`'s `Layout` drops the
+  `position: fixed` sidebar + `marginLeft` main and becomes a flex shell, so
+  **scrolling now lives in the glass page panel, not the viewport** — that single
+  change is what lets the chrome float. The panel is a translucent 18px-radius
+  card with a warm-spotlight wash; the topbar and rail sit outside it in a 10–12px
+  gutter that shows the workspace through.
+- **NavBar** is no longer a docked navy slab: it's a floating light-glass rail
+  (`margin: 12px`, radius 20, `blur(18px)`, `shadow-float`,
+  `height: calc(100vh - 24px)`) with 999px pill nav items — 56px centred when
+  collapsed, full-width when expanded. Every white-on-navy color inverted to
+  navy-on-glass with a `:global(html.dark)` counterpart.
+- **New `ui/Topbar` + `ui/PageShell`.** Reip's pages each render their own
+  `Topbar` above `page-content`; `PageShell` packages that as one wrapper
+  (serif title · sub · `As of {date}` gold pill · theme toggle · `actions` slot).
+  This retired **four** competing in-page header idioms — `PipelinePage`'s
+  masthead, `LogsPage`'s `pageTitle`/`pageSub`, `AnalyticsPage`'s
+  `header`/`eyebrow`/`title`, `DealDetailPage`'s own `.topbar` — and
+  `components/ui/PageHeader/` is **deleted** (zero call sites). Page actions
+  (`+ New Deal`, `New Fund`, `New Sponsor`, `ViewToggle`, deal stage/status
+  badges) moved into the topbar. `ThemeToggle` moved out of the sidebar into the
+  topbar and shrank to Reip's real 34px glass icon button (its `collapsed` prop
+  and label branch are gone).
+- **Surfaces** floated per Reip: `--panel-solid` + `--card-border-gold` hairline
+  + radius 14 + `--shadow-float` + `blur(10px)`, hover → `--glass-border-strong`
+  + `--shadow-hover` + `translateY(-2px)`. Applied to `Card`, `KPICard`,
+  `TableCard`, `Tabs` (glass strip, 2px gold underline), `KPIGrid` (navy strip
+  kept — this app's own pattern — just lifted into the same plane), `KanbanCard`,
+  `KanbanColumn` (translucent), `PipelineTable` (one floating panel per stage),
+  `LogsPage` sections, `AnalyticsPage` chart cards, `GanttChart`, the chat panel,
+  and all four `DealDetailPage` tab sections. `DataTable` + `LogsPage` tables
+  gained Reip's row-hover treatment: gold tint **plus** an
+  `inset 3px 0 0 rgba(201,168,76,.5)` leading rail.
+- **KPI/Card accents flipped** from a 4px left border to Reip's **3px gold top**
+  border (radius 10→14, `shadow-micro`→`shadow-float`), per your call.
+- **Inputs** got the gold-ring treatment (`--input-gold-border` +
+  `--input-gold-ring`, focus → gold border + 3px `--input-gold-ring-focus`)
+  across `Form`, `SearchableSelect`, `InlineEditText`, the Funds/Sponsors search
+  fields and the Analytics sector filter. Deliberate deviation: Reip hardcodes
+  `rgba(255,255,255,.92)` as the input fill; we use `--panel-raised` so it holds
+  up in dark mode (Reip's own dark mode is unimplemented).
+- **`Button.primary` deliberately NOT recolored.** Reip's floating layer
+  overrides it to gold-bg/navy-ink; we keep navy-bg/gold-label because
+  `DESIGN_GUIDE.md` §3 calls that the signature move and `Button.module.css`
+  already documents the choice. hc's separate `gold` variant covers gold-bg
+  needs. Dark mode adds a gold hairline (`rgba(201,168,76,.45)`) so navy-on-navy
+  keeps an edge instead of recoloring the fill.
+- **Viewport-height fallout.** With the panel (not the viewport) scrolling, the
+  old `calc(100vh - N)` math was wrong: `ChatPage` (`-160px`), `AnalyticsPage`
+  (`-140px`) and `KanbanColumn` (`-260px`) now size off the panel via
+  `flex: 1` / `max-height: 100%`, with `KanbanBoard` filling the remainder so
+  columns still scroll internally. `LoginPage` keeps `min-height: 100vh` and its
+  full-bleed navy — explicitly guide-sanctioned (`DESIGN_GUIDE.md` §3:
+  full-bleed dark is reserved for sign-in).
+
+**Two bugs found and fixed along the way:**
+
+1. **`html.dark` inside a CSS Module gets hashed.** The previous pass wrote
+   `html.dark .overlay` in `Modal.module.css`; Vite compiled it to
+   `html._dark_1w5hf_11 ._overlay_1w5hf_1`, so Modal's dark overlay had **never**
+   worked. Dark rules in modules must be `:global(html.dark)`. Fixed in `Modal`
+   and used correctly in all 31 dark selectors added this pass (verified against
+   the built CSS: zero `html._dark_*` remain).
+2. **A flex-column scroll panel crushes its children.** Moving the pages' shared
+   `display:flex; gap:20px` onto `.pageContent` made overflowing children shrink
+   instead of scrolling — the navy KPI strip, tab strip, pipeline tables and
+   TableCard all collapsed to slivers. Guarded with
+   `:where(.pageContent) > * { flex-shrink: 0 }` — `:where()` gives it zero
+   specificity so the two children that *should* fill (chat panel, kanban board)
+   still win with a plain `flex: 1`.
+
+- Verified: `tsc --noEmit` clean; production build succeeds; zero new lint
+  findings (all 14 are pre-existing, in files this pass didn't touch); zero
+  dangling CSS-module class references (checked by resolving every
+  `import styles from './X.module.css'` against its stylesheet); dev server logs
+  clean. **Rendered and screenshot-reviewed in headless Chromium, light and dark,**
+  via a harness built from the real source CSS modules (machine-namespaced to
+  avoid collisions) — confirmed the floating rail/topbar/panel with visible
+  workspace gutters, gold top accents, gold row-hover rail, glass tabs,
+  translucent kanban, gold-ring inputs, scroll staying inside the panel, and the
+  collapsed 80px rail with centred pills + corner badge. Zero console errors.
+- **Still needs your pass in the real signed-in app** (Clerk SSO can't be driven
+  headlessly here): a click-through of all 10 routes in both themes. That also
+  covers the Tailwind-Preflight check still outstanding from the previous pass.
+- **Note — `KPICard` is dead code.** Nothing imports it; every KPI in the app
+  renders through `KPIGrid`'s navy strip. Its gold-top-accent restyle is
+  therefore dormant, as is `Card`'s `accent` prop (no call site passes it). So
+  the gold-topped KPI cards from Reip's reference screenshot don't appear in this
+  app — converting the navy strip into gold-topped cards would be a design
+  change beyond this migration's scope. Worth a separate decision.
+
 ## Next steps
 
 This closes out the frontend restructure's phased plan. One piece remains,

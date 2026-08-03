@@ -1,3 +1,4 @@
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useDealUpdateLogs, useEmailScanLogs } from '../../hooks/useLogs'
 import styles from './LogsPage.module.css'
 
@@ -18,10 +19,7 @@ export function LogsPage() {
   const { data: emailLogs = [], isLoading: loadingEmail } = useEmailScanLogs()
 
   return (
-    <div className={styles.page}>
-      <div className={styles.pageTitle}>Activity Logs</div>
-      <div className={styles.pageSub}>Deal updates · Email scan history</div>
-
+    <PageShell title="Activity Logs" sub="Deal updates · Email scan history">
       <div className={styles.section}>
         <div className={styles.sectionTitle}>Deal Update Log</div>
         {loadingDeal ? (
@@ -107,6 +105,6 @@ export function LogsPage() {
           </table>
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }

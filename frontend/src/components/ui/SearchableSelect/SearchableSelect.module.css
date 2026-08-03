@@ -7,16 +7,18 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--input-gold-border);
   border-radius: var(--radius-button);
-  background: var(--white);
+  background: var(--panel-raised);
+  box-shadow: 0 0 0 1px var(--input-gold-ring);
   padding-right: 8px;
   cursor: text;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .trigger:focus-within {
-  border-color: var(--input-gold-border);
-  box-shadow: 0 0 0 2px var(--input-gold-ring-focus);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
 }
 
 .input {
@@ -27,7 +29,7 @@
   background: transparent;
   font-family: inherit;
   font-size: 13px;
-  color: var(--navy);
+  color: var(--heading);
   padding: 7px 10px;
 }
 
@@ -47,7 +49,7 @@
 }
 
 .clearBtn:hover {
-  color: var(--navy);
+  color: var(--heading);
 }
 
 .chevron {

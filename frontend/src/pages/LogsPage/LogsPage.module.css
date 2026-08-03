@@ -1,25 +1,11 @@
-.page {
-  padding: 24px;
-}
-
-.pageTitle {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--heading);
-  margin-bottom: 4px;
-}
-
-.pageSub {
-  font-size: 11px;
-  color: var(--gray-400);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 28px;
-}
-
 .section {
-  margin-bottom: 36px;
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(10px);
+  padding: 18px;
+  overflow-x: auto;
 }
 
 .sectionTitle {
@@ -27,9 +13,9 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gray-700);
+  color: var(--heading);
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--glass-border);
   margin-bottom: 12px;
 }
 
@@ -44,28 +30,45 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gray-400);
+  color: #68758f;
   padding: 6px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--gray-200);
-  background: var(--gray-100);
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(239,243,249,.88);
   white-space: nowrap;
+}
+
+:global(html.dark) .table th {
+  color: var(--muted);
+  background: rgba(20,28,40,.85);
 }
 
 .table td {
   padding: 8px 10px;
   vertical-align: top;
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(221,225,233,.68);
   color: var(--text);
   line-height: 1.4;
+}
+
+:global(html.dark) .table td {
+  border-bottom-color: rgba(42,53,72,.85);
 }
 
 .table tbody tr:last-child td {
   border-bottom: none;
 }
 
+.table tbody tr {
+  transition: background 0.14s, box-shadow 0.14s;
+}
+
+.table tbody tr:hover {
+  box-shadow: inset 3px 0 0 rgba(201,168,76,.5);
+}
+
 .table tbody tr:hover td {
-  background: var(--gray-100);
+  background: rgba(201,168,76,.07);
 }
 
 .source {
@@ -137,7 +140,7 @@
 
 .summary {
   font-size: 11px;
-  color: var(--gray-700);
+  color: var(--muted);
   line-height: 1.4;
   max-width: 400px;
 }

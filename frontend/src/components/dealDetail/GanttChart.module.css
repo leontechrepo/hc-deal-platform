@@ -1,8 +1,9 @@
 .wrap {
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--card);
+  border-radius: 14px;
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  box-shadow: var(--shadow-float);
 }
 
 .row {

@@ -5,7 +5,7 @@ import { DataTable, type Column } from '../../components/ui/DataTable/DataTable'
 import { Modal } from '../../components/ui/Modal/Modal'
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { PaymentStatusBadge, RiskBadge } from '../../components/portfolio/PortfolioBadges'
 import { MonitoringTestDrawer } from '../../components/portfolio/MonitoringTestDrawer'
 import type { PortfolioPosition } from '../../types'
@@ -24,6 +24,8 @@ function isPastDueOrSoon(dateStr: string | null): boolean {
   const days = (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   return days <= 30
 }
+
+const SHELL = { title: 'Portfolio', sub: 'Positions in monitoring' }
 
 export function PortfolioPage() {
   const { data: positions = [], isLoading, isError } = usePortfolio()
@@ -79,13 +81,11 @@ export function PortfolioPage() {
     },
   ]
 
-  if (isLoading) return <div className={styles.state}>Loading portfolio…</div>
-  if (isError) return <div className={styles.state}>Failed to load portfolio.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading portfolio…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load portfolio.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Portfolio" />
-
+    <PageShell {...SHELL}>
       <KPIGrid items={kpiItems} />
 
       {positions.length === 0 ? (
@@ -104,6 +104,6 @@ export function PortfolioPage() {
       >
         {selectedPosition && <MonitoringTestDrawer position={selectedPosition} />}
       </Modal>
-    </div>
+    </PageShell>
   )
 }

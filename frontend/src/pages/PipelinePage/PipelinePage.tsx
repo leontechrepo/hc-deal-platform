@@ -7,6 +7,7 @@ import { KanbanBoard } from '../../components/pipeline/KanbanBoard'
 import { ViewToggle, type View } from '../../components/pipeline/ViewToggle'
 import { NewDealModal } from '../../components/pipeline/NewDealModal'
 import { Button } from '../../components/ui/Button/Button'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { Tabs } from '../../components/ui/Tabs/Tabs'
 import { STATUSES } from '../../components/shared/StatusBadge'
 import { useKPIs } from '../../hooks/useKPIs'
@@ -47,12 +48,16 @@ export function PipelinePage() {
   const visibleDeals = activeStatus === 'All' ? deals : deals.filter(d => d.status === activeStatus)
 
   return (
-    <div className={styles.page}>
-      <div className={styles.masthead}>
-        <div className={styles.mastheadTitle}>LHP Private Credit</div>
-        <div className={styles.mastheadSub}>Deal Pipeline · Confidential</div>
-      </div>
-
+    <PageShell
+      title="Pipeline"
+      sub="LHP Private Credit — Deal Pipeline · Confidential"
+      actions={
+        <>
+          <ViewToggle view={view} onChange={setView} />
+          <Button variant="primary" onClick={openNewDeal}>+ New Deal</Button>
+        </>
+      }
+    >
       {kpis && <KPIStrip kpis={kpis} />}
 
       <ReviewBanner />
@@ -63,10 +68,6 @@ export function PipelinePage() {
           activeKey={activeStatus}
           onChange={key => setActiveStatus(key as StatusTab)}
         />
-        <div className={styles.actions}>
-          <ViewToggle view={view} onChange={setView} />
-          <Button variant="primary" onClick={openNewDeal}>+ New Deal</Button>
-        </div>
       </div>
 
       {isLoading ? (
@@ -78,6 +79,6 @@ export function PipelinePage() {
       )}
 
       <NewDealModal open={newDealOpen} onClose={closeNewDeal} />
-    </div>
+    </PageShell>
   )
 }

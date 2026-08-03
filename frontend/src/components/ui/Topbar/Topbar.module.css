@@ -1,0 +1,121 @@
+/* Floating glass topbar band. Sits above the page panel inside .mainArea, detached
+   by its own margin so the workspace gradient reads in the gutters. */
+.topbar {
+  height: 52px;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30;
+  overflow: visible;
+  background: var(--panel);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+/* Must be able to shrink: the controls to its right are all flex-shrink: 0, so an
+   arbitrarily long title (a deal's company name) would otherwise push the theme
+   toggle off the edge of the clipped .mainArea. Truncate instead. */
+.titleGroup {
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-topbar-title);
+  font-weight: 700;
+  color: var(--heading);
+  letter-spacing: .01em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  font-size: var(--text-small);
+  color: var(--muted);
+  line-height: 1.2;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.pill {
+  background: rgba(201,168,76,.14);
+  color: #6f520d;
+  border: 1px solid rgba(201,168,76,.34);
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+:global(html.dark) .pill {
+  background: rgba(201,168,76,.18);
+  border-color: rgba(201,168,76,.4);
+  color: #e8d49a;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* As-of pill + theme toggle. Grouped so the narrow-viewport rules can keep them on
+   the title row while the page actions drop to a row of their own. */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Narrow viewports: the bar becomes two rows — title, then controls — instead of a
+   fixed 52px single row. Without this the non-shrinking actions and theme toggle
+   overflow past the clipped .mainArea and become unreachable, and the theme toggle
+   is the only way to change theme now that it no longer lives in the rail. */
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    row-gap: 10px;
+  }
+
+  .spacer,
+  .pill {
+    display: none;
+  }
+
+  /* Row 1: title + theme toggle. Row 2: the page actions, which must be allowed to
+     shrink (flex-shrink stays 0 at desktop, so they'd never wrap) and to wrap
+     internally when even one row can't hold them. */
+  .meta {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .actions {
+    order: 3;
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}

@@ -8,11 +8,24 @@ html, body, #root {
   height: 100%;
 }
 
+/* Workspace atmosphere: a soft gold spotlight over a light gradient — the app's
+   floating panels sit on top of this, so it must never be a flat fill. */
+html, body, #root {
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 42%, var(--spotlight-gold), transparent 72%),
+    linear-gradient(135deg, var(--workspace) 0%, #fbfcff 44%, var(--workspace-soft) 100%);
+}
+
+html.dark, html.dark body, html.dark #root {
+  background:
+    radial-gradient(ellipse 80% 70% at var(--spotlight-center), var(--spotlight-gold), transparent 72%),
+    linear-gradient(135deg, var(--workspace) 0%, #141c2a 44%, var(--workspace-soft) 100%);
+}
+
 body {
   font-family: var(--font);
   font-size: 13px;
   color: var(--text);
-  background: var(--surface);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -34,4 +47,54 @@ a {
 .mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/* Thin scrollbars — transparent at rest, navy on hover, gold on thumb hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover,
+*:focus,
+*:focus-within {
+  scrollbar-color: rgba(10,31,68,.24) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+*:hover::-webkit-scrollbar-thumb,
+*:focus::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb {
+  background-color: rgba(10,31,68,.22);
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(201,168,76,.55);
+}
+
+html.dark *:hover,
+html.dark *:focus,
+html.dark *:focus-within {
+  scrollbar-color: rgba(220,228,242,.24) transparent;
+}
+
+html.dark *:hover::-webkit-scrollbar-thumb,
+html.dark *:focus::-webkit-scrollbar-thumb,
+html.dark *:focus-within::-webkit-scrollbar-thumb {
+  background-color: rgba(220,228,242,.22);
 }

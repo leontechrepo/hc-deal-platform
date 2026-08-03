@@ -5,7 +5,7 @@ import { usePortfolio } from '../../hooks/usePortfolio'
 import { useInbox } from '../../hooks/useInbox'
 import { DataTable, type Column } from '../../components/ui/DataTable/DataTable'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageHeader } from '../../components/ui/PageHeader/PageHeader'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { PipelineStageBadge } from '../../components/shared/PipelineStageBadge'
 import { TableCard } from '../../components/shared/TableCard'
 import type { Deal } from '../../types'
@@ -67,6 +67,8 @@ const columns: Column<Deal>[] = [
   },
 ]
 
+const SHELL = { title: 'Executive Summary', sub: 'LHP Private Credit — Portfolio brief' }
+
 export function ExecutiveSummaryPage() {
   const { data: deals = [], isLoading: dealsLoading, isError: dealsError } = useDeals()
   const { data: positions = [], isLoading: portfolioLoading, isError: portfolioError } = usePortfolio()
@@ -85,18 +87,16 @@ export function ExecutiveSummaryPage() {
   const isLoading = dealsLoading || portfolioLoading || inboxLoading
   const isError = dealsError || portfolioError || inboxError
 
-  if (isLoading) return <div className={styles.state}>Loading executive summary…</div>
-  if (isError) return <div className={styles.state}>Failed to load executive summary.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading executive summary…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load executive summary.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <PageHeader title="Executive Summary" />
-
+    <PageShell {...SHELL}>
       <KPIGrid items={kpiItems} />
 
       <TableCard title="Active Pipeline — One Line Per Deal">
         <DataTable columns={columns} rows={activeDeals} rowKey={(deal) => deal.id} emptyMessage="No active deals." />
       </TableCard>
-    </div>
+    </PageShell>
   )
 }

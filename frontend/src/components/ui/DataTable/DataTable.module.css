@@ -9,24 +9,42 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #68758f;
   padding: var(--space-5) var(--space-6);
   text-align: left;
-  border-bottom: 1px solid var(--border);
-  background: var(--lt);
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(239,243,249,.88);
   white-space: nowrap;
+}
+
+:global(html.dark) .table th {
+  color: var(--muted);
+  background: rgba(20,28,40,.85);
 }
 
 .table td {
   padding: 9px var(--space-6);
   font-size: 11px;
   vertical-align: middle;
-  border-bottom: 1px solid var(--lt);
+  border-bottom: 1px solid rgba(221,225,233,.68);
   color: var(--text);
 }
 
+:global(html.dark) .table td {
+  border-bottom-color: rgba(42,53,72,.85);
+}
+
+.table tbody tr {
+  transition: background 0.14s, box-shadow 0.14s;
+}
+
+/* Gold rail on the row's leading edge — Reip's floating row-hover treatment. */
+.table tbody tr:hover {
+  box-shadow: inset 3px 0 0 rgba(201,168,76,.5);
+}
+
 .table tbody tr:hover td {
-  background: rgba(201,168,76,.04);
+  background: rgba(201,168,76,.07);
 }
 
 .empty {

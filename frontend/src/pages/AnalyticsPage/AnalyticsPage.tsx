@@ -2,9 +2,18 @@ import { useState, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { useDeals } from '../../hooks/useDeals'
 import type { Deal } from '../../types'
 import styles from './AnalyticsPage.module.css'
+
+const TOOLTIP_STYLE = {
+  fontSize: 12,
+  background: 'var(--panel-solid)',
+  border: '1px solid var(--glass-border)',
+  borderRadius: 'var(--radius-card)',
+  color: 'var(--text)',
+} as const
 
 function truncate(str: string, max = 22) {
   return str.length > max ? str.slice(0, max) + '…' : str
@@ -41,6 +50,8 @@ function SectorFilter({ value, onChange, sectors }: {
     </select>
   )
 }
+
+const SHELL = { title: 'Pipeline Analytics', sub: 'LHP Private Credit — Deal Platform' }
 
 export function AnalyticsPage() {
   const { data: deals = [], isLoading, isError } = useDeals()
@@ -93,16 +104,11 @@ export function AnalyticsPage() {
       .map(r => ({ quarter: r.key, count: r.count }))
   }, [deals, quarterSector])
 
-  if (isLoading) return <div className={styles.state}>Loading analytics…</div>
-  if (isError) return <div className={styles.state}>Failed to load analytics.</div>
+  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading analytics…</div></PageShell>
+  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load analytics.</div></PageShell>
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>LHP Private Credit — Deal Platform</div>
-        <h1 className={styles.title}>Pipeline Analytics</h1>
-      </header>
-
+    <PageShell {...SHELL}>
       <div className={styles.grid}>
         <div className={styles.card}>
           <div className={styles.cardHeader}>
@@ -111,11 +117,11 @@ export function AnalyticsPage() {
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={funnelData} layout="vertical" margin={{ left: 8, right: 24, top: 20, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--gray-200)" />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
-              <YAxis type="category" dataKey="stage" width={110} tick={{ fontSize: 11, fill: 'var(--navy)' }} />
-              <Tooltip contentStyle={{ fontSize: 12 }} />
-              <Bar dataKey="count" fill="var(--navy)" radius={[0, 4, 4, 0]} />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} />
+              <YAxis type="category" dataKey="stage" width={110} tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar dataKey="count" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -130,17 +136,17 @@ export function AnalyticsPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={passReasonsData} layout="vertical" margin={{ left: 8, right: 24, top: 20, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--gray-200)" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} />
                 <YAxis
                   type="category"
                   dataKey="reason"
                   width={190}
-                  tick={{ fontSize: 11, fill: 'var(--navy)' }}
+                  tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
                   tickFormatter={(v) => truncate(v, 28)}
                 />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Bar dataKey="count" fill="var(--gold)" radius={[0, 4, 4, 0]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Bar dataKey="count" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -156,17 +162,17 @@ export function AnalyticsPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dealSourcesData} layout="vertical" margin={{ left: 8, right: 24, top: 20, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--gray-200)" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} />
                 <YAxis
                   type="category"
                   dataKey="source"
                   width={160}
-                  tick={{ fontSize: 11, fill: 'var(--navy)' }}
+                  tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
                   tickFormatter={(v) => truncate(v, 22)}
                 />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Bar dataKey="count" fill="var(--blue-fg)" radius={[0, 4, 4, 0]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Bar dataKey="count" fill="var(--chart-3)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -182,22 +188,22 @@ export function AnalyticsPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dealsByQuarterData} margin={{ left: 8, right: 8, top: 8, bottom: 32 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-200)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
                 <XAxis
                   dataKey="quarter"
-                  tick={{ fontSize: 11, fill: 'var(--navy)' }}
+                  tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
                   angle={-30}
                   textAnchor="end"
                   interval={0}
                 />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--gray-700)' }} />
-                <Tooltip contentStyle={{ fontSize: 12 }} />
-                <Bar dataKey="count" fill="var(--navy-light)" radius={[4, 4, 0, 0]} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Bar dataKey="count" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

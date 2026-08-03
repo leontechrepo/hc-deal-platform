@@ -1,8 +1,15 @@
+/* Navy KPI strip — this app's own pattern, but lifted into the floating plane so it
+   sits alongside the glass cards rather than looking pasted on. */
 .strip {
   display: flex;
   background: var(--navy);
-  border-radius: 8px;
-  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  /* Clip children to the radius, but scroll rather than truncate: the KPIs stop
+     shrinking at min-content, so on a narrow viewport the last figures were cut off
+     with no way to reach them. */
+  overflow: auto hidden;
 }
 
 .kpi {

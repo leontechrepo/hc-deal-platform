@@ -93,7 +93,7 @@
 
 .section {
   padding-top: 8px;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--glass-border);
 }
 
 .sectionTitle {

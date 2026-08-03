@@ -1,19 +1,11 @@
-.page {
-  padding: 32px 40px 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  height: calc(100vh - 160px);
-  min-height: 480px;
-}
-
 .panel {
   flex: 1;
   min-height: 0;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-soft);
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
