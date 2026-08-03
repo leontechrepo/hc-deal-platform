@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, X } from 'lucide-react'
 import styles from './SearchableSelect.module.css'
 
@@ -22,6 +23,7 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
   const [rect, setRect] = useState<DOMRect | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   const selected = options.find(o => o.id === value) ?? null
   const filtered = query.trim()
@@ -30,7 +32,12 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      // The dropdown list is portaled to document.body (see below), so it's
+      // no longer a DOM descendant of containerRef — check it separately.
+      const insideContainer = containerRef.current?.contains(target) ?? false
+      const insideList = listRef.current?.contains(target) ?? false
+      if (!insideContainer && !insideList) {
         setOpen(false)
         setQuery('')
       }
@@ -130,8 +137,9 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
         )}
         <ChevronDown size={16} className={styles.chevron} />
       </div>
-      {open && rect && (
+      {open && rect && createPortal(
         <ul
+          ref={listRef}
           className={styles.list}
           role="listbox"
           style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: rect.width }}
@@ -164,7 +172,8 @@ export function SearchableSelect({ options, value, onChange, noneLabel = 'None',
               </li>
             ))
           )}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   )
