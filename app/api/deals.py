@@ -225,19 +225,6 @@ async def update_deal(
     if unknown:
         raise HTTPException(status_code=400, detail=f"Fields not editable: {sorted(unknown)}")
 
-    # Evaluated against the deal's stage BEFORE this request's own changes are
-    # applied, so a single call can't advance pipeline_stage past loi_signed
-    # and edit a locked field in the same request.
-    locked = is_underwriting_locked(deal.pipeline_stage)
-    lock_violations = sorted(f for f in updates if f in UNDERWRITING_FIELDS and locked)
-    if lock_violations:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"Fields locked — underwriting fields become read-only once a deal "
-                f"reaches loi_signed or later: {lock_violations}"
-            ),
-        )
     if "pipeline_stage" in updates and updates["pipeline_stage"] not in PIPELINE_STAGES:
         raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {updates['pipeline_stage']!r}")
     if "status" in updates and updates["status"] not in STATUSES:
@@ -250,16 +237,41 @@ async def update_deal(
         except (TypeError, ValueError) as exc:
             raise HTTPException(status_code=400, detail=f"Invalid value for '{field}': {exc}")
 
-    changed_fields: list[str] = []
+    # Only fields whose coerced value actually differs from the deal's
+    # current one count as "changed" — an edit-modal save that resubmits the
+    # whole record (locked underwriting fields included, unchanged) must be a
+    # no-op for those fields, not a lock violation.
+    changed_fields: dict = {}
     for field, coerced in coerced_updates.items():
         old_value_raw = getattr(deal, field)
         if field in _NUMERIC_FIELDS:
             value_changed = (float(old_value_raw) if old_value_raw is not None else None) != coerced
         else:
             value_changed = old_value_raw != coerced
-        if not value_changed:
-            continue
+        if value_changed:
+            changed_fields[field] = coerced
 
+    if not changed_fields:
+        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+
+    # Locked against the stage this request would leave the deal in
+    # (applying any pipeline_stage change from this same request), not the
+    # stage before it — otherwise a single call could advance pipeline_stage
+    # to loi_signed and edit a locked field in that same request.
+    resulting_stage = changed_fields.get("pipeline_stage", deal.pipeline_stage)
+    locked = is_underwriting_locked(resulting_stage)
+    lock_violations = sorted(f for f in changed_fields if f in UNDERWRITING_FIELDS and locked)
+    if lock_violations:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Fields locked — underwriting fields become read-only once a deal "
+                f"reaches loi_signed or later: {lock_violations}"
+            ),
+        )
+
+    for field, coerced in changed_fields.items():
+        old_value_raw = getattr(deal, field)
         old_value = str(old_value_raw) if old_value_raw is not None else None
         new_value = str(coerced) if coerced is not None else None
         setattr(deal, field, coerced)
@@ -267,10 +279,8 @@ async def update_deal(
             deal_id=deal_id, field_changed=field, old_value=old_value, new_value=new_value,
             source="manual_edit",
         ))
-        changed_fields.append(field)
 
-    if not changed_fields:
-        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+    changed_field_names = list(changed_fields.keys())
 
     deal.updated_by = "manual_edit"
     deal.updated_at = datetime.now(timezone.utc)
@@ -281,19 +291,19 @@ async def update_deal(
     # One combined activity entry (avoids flooding the Activity tab on a
     # multi-field form save), plus a dedicated stage/status entry — matches
     # today's narrative style where transitions get their own line.
-    if any(f in ("pipeline_stage", "stage", "bucket") for f in changed_fields):
+    if any(f in ("pipeline_stage", "stage", "bucket") for f in changed_field_names):
         await log_activity(
             db, deal_id, get_actor_name(auth), "stage_change",
             f"Pipeline stage/bucket updated to {deal.pipeline_stage!r}/{deal.bucket!r}",
         )
-    if "status" in changed_fields:
+    if "status" in changed_field_names:
         await log_activity(db, deal_id, get_actor_name(auth), "status_change", f"Status changed to {deal.status!r}")
-    other_fields = [f for f in changed_fields if f not in ("pipeline_stage", "stage", "bucket", "status")]
+    other_fields = [f for f in changed_field_names if f not in ("pipeline_stage", "stage", "bucket", "status")]
     if other_fields:
         summary = ", ".join(other_fields[:5]) + (f" (+{len(other_fields) - 5} more)" if len(other_fields) > 5 else "")
         await log_activity(db, deal_id, get_actor_name(auth), "system", f"Deal updated — fields changed: {summary}")
 
-    return {"ok": True, "deal_id": deal_id, "updated_fields": changed_fields, "deal": _deal_to_dict(deal)}
+    return {"ok": True, "deal_id": deal_id, "updated_fields": changed_field_names, "deal": _deal_to_dict(deal)}
 
 
 @router.delete("/deals/{deal_id}")
@@ -324,9 +334,16 @@ async def delete_deal(
     # and chat_sessions.deal_id.
     await db.execute(delete(Deal).where(Deal.id == deal_id))
 
+    # Commit the deletion before touching storage: if the object delete
+    # succeeded but the transaction then failed or rolled back, the deal and
+    # document rows would remain while their only stored files are already
+    # gone. Committing first means a failed storage delete only leaves a
+    # harmless orphaned object, never a dangling reference to a deleted one
+    # (same reasoning as delete_document's storage cleanup).
+    await db.commit()
+
     # Best-effort blob cleanup — a storage failure here must never roll back
-    # the deal deletion; an orphaned blob is an acceptable failure mode (same
-    # reasoning as delete_document's storage cleanup).
+    # the deal deletion; an orphaned blob is an acceptable failure mode.
     if storage_keys and settings.storage_configured:
         for key in storage_keys:
             try:

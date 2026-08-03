@@ -113,6 +113,44 @@ async def test_update_deal_rejects_locked_fields_when_underwriting_locked(db_ses
     assert "deal_size_m" in str(exc_info.value.detail)
 
 
+async def test_update_deal_resubmitting_unchanged_locked_field_is_not_a_violation(db_session):
+    result = await create_deal(CreateDealRequest(company_name="Resubmit Co", deal_size_m=10.0), db_session, auth=TEST_AUTH)
+    deal_id = result["deal_id"]
+    await patch_deal(deal_id, PatchRequest(field="pipeline_stage", value="loi_signed"), db_session, auth=TEST_AUTH)
+
+    # A full edit-modal save resubmits every field it renders, including
+    # locked underwriting ones at their existing value — that must be a
+    # no-op for those fields, not a 409, as long as nothing actually changes.
+    updated = await update_deal(
+        deal_id,
+        DealUpdateRequest(deal_size_m=10.0, security=None, location="New City"),
+        db_session,
+        auth=TEST_AUTH,
+    )
+    assert updated["ok"] is True
+    assert updated["updated_fields"] == ["location"]
+    assert updated["deal"]["location"] == "New City"
+    assert updated["deal"]["deal_size_m"] == 10.0
+
+
+async def test_update_deal_rejects_locked_field_changed_in_same_request_as_lock_transition(db_session):
+    result = await create_deal(CreateDealRequest(company_name="Transition Lock Co", deal_size_m=10.0), db_session, auth=TEST_AUTH)
+    deal_id = result["deal_id"]
+
+    # Not yet locked — but this single request both advances the deal to
+    # loi_signed AND changes a locked field. The lock must be evaluated
+    # against the resulting stage, not the stage before the request.
+    with pytest.raises(HTTPException) as exc_info:
+        await update_deal(
+            deal_id,
+            DealUpdateRequest(pipeline_stage="loi_signed", deal_size_m=99),
+            db_session,
+            auth=TEST_AUTH,
+        )
+    assert exc_info.value.status_code == 409
+    assert "deal_size_m" in str(exc_info.value.detail)
+
+
 async def test_update_deal_rejects_invalid_enum(db_session):
     result = await create_deal(CreateDealRequest(company_name="Bulk Enum Co"), db_session, auth=TEST_AUTH)
     deal_id = result["deal_id"]
