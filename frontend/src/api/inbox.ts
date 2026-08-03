@@ -9,10 +9,11 @@ export function approveInboxItem(
   id: number,
   value?: string,
   reviewer?: string,
+  dealId?: number,
 ): Promise<{ ok: boolean; deal_id: number; company_name: string; created?: boolean }> {
   return apiFetch(`/api/inbox/${id}/approve`, {
     method: 'POST',
-    body: JSON.stringify({ reviewer: reviewer || 'user', value: value ?? null }),
+    body: JSON.stringify({ reviewer: reviewer || 'user', value: value ?? null, deal_id: dealId ?? null }),
   })
 }
 

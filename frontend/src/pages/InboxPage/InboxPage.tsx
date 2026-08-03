@@ -42,9 +42,18 @@ export function InboxPage() {
               key={s.id}
               suggestion={s}
               busy={approve.isPending || reject.isPending}
-              onApprove={async (value) => {
-                await approve.mutateAsync({ id: s.id, value, reviewer: actor })
-                showToast(s.suggested_field === 'new_deal' ? `New deal added: ${s.company_name}` : `Approved — ${s.company_name} updated`)
+              onApprove={async (value, dealId) => {
+                const result = await approve.mutateAsync({
+                  id: s.id,
+                  value,
+                  reviewer: actor,
+                  dealId: dealId ? Number(dealId) : undefined,
+                })
+                showToast(
+                  s.suggested_field === 'new_deal'
+                    ? `New deal added: ${s.company_name}`
+                    : `Approved — ${result.company_name} updated`
+                )
               }}
               onReject={async () => {
                 await reject.mutateAsync({ id: s.id, reviewer: actor })

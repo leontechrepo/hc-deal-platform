@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createDeal, getDeal, listDeals, patchDeal } from '../api/deals'
+import { createDeal, deleteDeal, getDeal, listDeals, patchDeal, updateDeal } from '../api/deals'
 import type { CreateDealInput } from '../types'
 
 export function useDeals() {
@@ -30,6 +30,28 @@ export function useCreateDeal() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateDealInput) => createDeal(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['deals'] })
+      qc.invalidateQueries({ queryKey: ['kpis'] })
+    },
+  })
+}
+
+export function useUpdateDeal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dealId, body }: { dealId: number; body: Partial<CreateDealInput> }) => updateDeal(dealId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['deals'] })
+      qc.invalidateQueries({ queryKey: ['kpis'] })
+    },
+  })
+}
+
+export function useDeleteDeal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (dealId: number) => deleteDeal(dealId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })

@@ -1,12 +1,16 @@
-import { Link, Outlet, useParams } from 'react-router-dom'
-import { useDeal } from '../../hooks/useDeals'
+import { useState } from 'react'
+import { Link, Outlet, useNavigate, useParams } from 'react-router-dom'
+import { useDeal, useDeleteDeal, useUpdateDeal } from '../../hooks/useDeals'
 import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
 import { PageShell } from '../../components/ui/PageShell/PageShell'
 import { Tabs } from '../../components/ui/Tabs/Tabs'
+import { Button } from '../../components/ui/Button/Button'
 import { PipelineStageBadge } from '../../components/shared/PipelineStageBadge'
 import { StatusBadge } from '../../components/shared/StatusBadge'
 import { StageTracker } from '../../components/shared/StageTracker'
-import type { Deal } from '../../types'
+import { DealFormModal } from '../../components/pipeline/DealFormModal'
+import { useToast } from '../../components/Toast/Toast'
+import type { CreateDealInput, Deal } from '../../types'
 import styles from './DealDetailPage.module.css'
 
 function fmtM(value: number | null): string {
@@ -21,12 +25,32 @@ export function DealDetailPage() {
   const { dealId } = useParams<{ dealId: string }>()
   const id = Number(dealId)
   const { data: deal, isLoading, isError } = useDeal(Number.isFinite(id) ? id : null)
+  const updateDeal = useUpdateDeal()
+  const deleteDeal = useDeleteDeal()
+  const navigate = useNavigate()
+  const { showToast } = useToast()
+  const [editOpen, setEditOpen] = useState(false)
 
   if (isLoading) {
     return <PageShell title="Deal"><div className={styles.state}>Loading deal…</div></PageShell>
   }
   if (isError || !deal) {
     return <PageShell title="Deal"><div className={styles.state}>Failed to load deal.</div></PageShell>
+  }
+
+  async function handleUpdate(body: Partial<CreateDealInput>) {
+    await updateDeal.mutateAsync({ dealId: deal!.id, body })
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete deal "${deal!.company_name}"? This cannot be undone.`)) return
+    try {
+      await deleteDeal.mutateAsync(deal!.id)
+      showToast('Deal deleted')
+      navigate('/pipeline')
+    } catch {
+      showToast('Delete failed', true)
+    }
   }
 
   const kpiItems = [
@@ -44,6 +68,8 @@ export function DealDetailPage() {
         <>
           <PipelineStageBadge stage={deal.pipeline_stage} />
           <StatusBadge status={deal.status} />
+          <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>Edit</Button>
+          <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
         </>
       }
     >
@@ -68,6 +94,8 @@ export function DealDetailPage() {
       <div className={styles.tabContent}>
         <Outlet context={{ deal } satisfies { deal: Deal }} />
       </div>
+
+      <DealFormModal open={editOpen} onClose={() => setEditOpen(false)} initial={deal} onSubmit={handleUpdate} />
     </PageShell>
   )
 }

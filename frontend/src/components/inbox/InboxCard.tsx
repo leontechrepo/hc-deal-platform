@@ -4,12 +4,14 @@ import { ConfidenceBadge } from '../ui/ConfidenceBadge/ConfidenceBadge'
 import { ApproveRejectActions } from '../ui/ApproveRejectActions/ApproveRejectActions'
 import { PipelineStageBadge } from '../shared/PipelineStageBadge'
 import { AssignToDealControl } from './AssignToDealControl'
+import { SearchableSelect } from '../ui/SearchableSelect/SearchableSelect'
+import { useDeals } from '../../hooks/useDeals'
 import type { PendingSuggestion } from '../../types'
 import styles from './InboxCard.module.css'
 
 interface Props {
   suggestion: PendingSuggestion
-  onApprove: (value: string) => Promise<void>
+  onApprove: (value: string, dealId: string | null) => Promise<void>
   onReject: () => Promise<void>
   busy: boolean
 }
@@ -20,15 +22,28 @@ export function InboxCard({ suggestion: s, onApprove, onReject, busy }: Props) {
 
   const [draft, setDraft] = useState(s.suggested_value ?? s.claude_summary ?? '')
   const [editing, setEditing] = useState(false)
+  const [mappedDealId, setMappedDealId] = useState<string | null>(s.deal_id !== null ? String(s.deal_id) : null)
+  const { data: deals = [] } = useDeals()
 
   useEffect(() => {
     setDraft(s.suggested_value ?? s.claude_summary ?? '')
   }, [s.suggested_value, s.claude_summary])
 
+  useEffect(() => {
+    setMappedDealId(s.deal_id !== null ? String(s.deal_id) : null)
+  }, [s.deal_id])
+
   let newDealData: { company_name?: string; sector?: string; summary?: string } = {}
   if (isNewDeal) {
     try { newDealData = JSON.parse(s.suggested_value ?? '{}') } catch { /* empty */ }
   }
+
+  const originalDealId = s.deal_id !== null ? String(s.deal_id) : null
+  const remapped = !isNewDeal && mappedDealId !== null && mappedDealId !== originalDealId
+  const mappedDeal = remapped ? deals.find(d => String(d.id) === mappedDealId) : undefined
+  const displayedCurrentValue = mappedDeal
+    ? String((mappedDeal as unknown as Record<string, unknown>)[s.suggested_field] ?? '')
+    : s.current_value
 
   return (
     <Card className={`${styles.card} ${isNewDeal ? styles.newDealCard : ''}`}>
@@ -59,7 +74,7 @@ export function InboxCard({ suggestion: s, onApprove, onReject, busy }: Props) {
         <div className={styles.fieldUpdateBody}>
           <div className={styles.fieldLabel}>Field: <span className={styles.fieldName}>{s.suggested_field}</span></div>
           <div className={styles.fieldValues}>
-            <span className={styles.currentVal}>{s.current_value || <em>empty</em>}</span>
+            <span className={styles.currentVal}>{displayedCurrentValue || <em>empty</em>}</span>
             <span className={styles.arrow}>→</span>
             <span className={styles.proposedVal}>{s.suggested_value}</span>
           </div>
@@ -84,10 +99,25 @@ export function InboxCard({ suggestion: s, onApprove, onReject, busy }: Props) {
         </>
       )}
 
+      {!isNewDeal && (
+        <div className={styles.dealMapRow}>
+          <span className={styles.dealMapLabel}>Deal:</span>
+          <div className={styles.dealMapSelect}>
+            <SearchableSelect
+              options={deals.map(d => ({ id: String(d.id), label: d.company_name }))}
+              value={mappedDealId}
+              onChange={setMappedDealId}
+              noneLabel="Select deal…"
+              placeholder="Search deals…"
+            />
+          </div>
+        </div>
+      )}
+
       <ApproveRejectActions
-        busy={busy}
+        busy={busy || (!isNewDeal && mappedDealId === null)}
         approveLabel={isNewDeal ? 'Add Deal' : 'Approve'}
-        onApprove={() => onApprove(isFieldUpdate || isNewDeal ? (s.suggested_value ?? '') : draft)}
+        onApprove={() => onApprove(isFieldUpdate || isNewDeal ? (s.suggested_value ?? '') : draft, isNewDeal ? null : mappedDealId)}
         onReject={onReject}
       />
 

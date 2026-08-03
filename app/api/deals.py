@@ -7,12 +7,13 @@ import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import select, text, desc
+from sqlalchemy import delete, select, text, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_actor_name, require_auth
+from app.core.config import settings
 from app.db.activity import log_activity
-from app.db.models import Deal, DealUpdateLog, EmailScanLog
+from app.db.models import Deal, DealDocument, DealUpdateLog, EmailScanLog
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
 from app.domain.pipeline_stage import (
@@ -21,6 +22,7 @@ from app.domain.pipeline_stage import (
     UNDERWRITING_FIELDS,
     is_underwriting_locked,
 )
+from app.storage import documents as storage
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
@@ -144,6 +146,212 @@ async def patch_deal(
         )
 
     return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
+
+
+class DealUpdateRequest(BaseModel):
+    """Bulk-edit counterpart to PatchRequest — every field in EDITABLE_FIELDS,
+    all optional so a partial "Edit Deal" form save only touches changed fields."""
+
+    company_name: Optional[str] = None
+    location: Optional[str] = None
+    stage: Optional[str] = None
+    sector_primary: Optional[str] = None
+    sector_full: Optional[str] = None
+    subsector: Optional[str] = None
+    deal_size_m: Optional[float] = None
+    security: Optional[str] = None
+    uop: Optional[str] = None
+    source: Optional[str] = None
+    commentary: Optional[str] = None
+    reasons_for_passing: Optional[str] = None
+    bucket: Optional[str] = None
+    pipeline_stage: Optional[str] = None
+    status: Optional[str] = None
+    state: Optional[str] = None
+    next_action: Optional[str] = None
+    sourcing_date: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_role: Optional[str] = None
+    nda_date: Optional[str] = None
+    nda_status: Optional[str] = None
+    tenor_months: Optional[int] = None
+    amortization: Optional[str] = None
+    oid_pct: Optional[float] = None
+    sofr_floor_pct: Optional[float] = None
+    call_protection: Optional[str] = None
+    maturity_date: Optional[str] = None
+    total_leverage: Optional[float] = None
+    spread_bps: Optional[int] = None
+    base_rate: Optional[str] = None
+    sofr_rate: Optional[float] = None
+    all_in_rate: Optional[float] = None
+    hold_amount_m: Optional[float] = None
+    revenue_growth_pct: Optional[float] = None
+    ebitda_growth_pct: Optional[float] = None
+    capex_m: Optional[float] = None
+    fcf_m: Optional[float] = None
+    dscr: Optional[float] = None
+    fccr: Optional[float] = None
+    interest_coverage: Optional[float] = None
+    max_leverage_covenant: Optional[float] = None
+    min_fccr_covenant: Optional[float] = None
+    capex_limit_covenant_m: Optional[float] = None
+    employees: Optional[int] = None
+    locations_count: Optional[int] = None
+    year_founded: Optional[int] = None
+    risk_score: Optional[float] = None
+    ltm_revenue_m: Optional[float] = None
+    ltm_ebitda_m: Optional[float] = None
+    ebitda_margin: Optional[float] = None
+
+
+@router.put("/deals/{deal_id}")
+async def update_deal(
+    deal_id: int,
+    body: DealUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+
+    unknown = set(updates) - EDITABLE_FIELDS
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Fields not editable: {sorted(unknown)}")
+
+    if "pipeline_stage" in updates and updates["pipeline_stage"] not in PIPELINE_STAGES:
+        raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {updates['pipeline_stage']!r}")
+    if "status" in updates and updates["status"] not in STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {updates['status']!r}")
+
+    coerced_updates: dict = {}
+    for field, raw_value in updates.items():
+        try:
+            coerced_updates[field] = _coerce_field_value(field, raw_value)
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid value for '{field}': {exc}")
+
+    # Only fields whose coerced value actually differs from the deal's
+    # current one count as "changed" — an edit-modal save that resubmits the
+    # whole record (locked underwriting fields included, unchanged) must be a
+    # no-op for those fields, not a lock violation.
+    changed_fields: dict = {}
+    for field, coerced in coerced_updates.items():
+        old_value_raw = getattr(deal, field)
+        if field in _NUMERIC_FIELDS:
+            value_changed = (float(old_value_raw) if old_value_raw is not None else None) != coerced
+        else:
+            value_changed = old_value_raw != coerced
+        if value_changed:
+            changed_fields[field] = coerced
+
+    if not changed_fields:
+        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+
+    # Locked against the stage this request would leave the deal in
+    # (applying any pipeline_stage change from this same request), not the
+    # stage before it — otherwise a single call could advance pipeline_stage
+    # to loi_signed and edit a locked field in that same request.
+    resulting_stage = changed_fields.get("pipeline_stage", deal.pipeline_stage)
+    locked = is_underwriting_locked(resulting_stage)
+    lock_violations = sorted(f for f in changed_fields if f in UNDERWRITING_FIELDS and locked)
+    if lock_violations:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Fields locked — underwriting fields become read-only once a deal "
+                f"reaches loi_signed or later: {lock_violations}"
+            ),
+        )
+
+    for field, coerced in changed_fields.items():
+        old_value_raw = getattr(deal, field)
+        old_value = str(old_value_raw) if old_value_raw is not None else None
+        new_value = str(coerced) if coerced is not None else None
+        setattr(deal, field, coerced)
+        db.add(DealUpdateLog(
+            deal_id=deal_id, field_changed=field, old_value=old_value, new_value=new_value,
+            source="manual_edit",
+        ))
+
+    changed_field_names = list(changed_fields.keys())
+
+    deal.updated_by = "manual_edit"
+    deal.updated_at = datetime.now(timezone.utc)
+
+    if "pipeline_stage" in changed_fields and deal.pipeline_stage == "portfolio_monitoring":
+        await ensure_portfolio_position(deal, db)
+
+    # One combined activity entry (avoids flooding the Activity tab on a
+    # multi-field form save), plus a dedicated stage/status entry — matches
+    # today's narrative style where transitions get their own line.
+    if any(f in ("pipeline_stage", "stage", "bucket") for f in changed_field_names):
+        await log_activity(
+            db, deal_id, get_actor_name(auth), "stage_change",
+            f"Pipeline stage/bucket updated to {deal.pipeline_stage!r}/{deal.bucket!r}",
+        )
+    if "status" in changed_field_names:
+        await log_activity(db, deal_id, get_actor_name(auth), "status_change", f"Status changed to {deal.status!r}")
+    other_fields = [f for f in changed_field_names if f not in ("pipeline_stage", "stage", "bucket", "status")]
+    if other_fields:
+        summary = ", ".join(other_fields[:5]) + (f" (+{len(other_fields) - 5} more)" if len(other_fields) > 5 else "")
+        await log_activity(db, deal_id, get_actor_name(auth), "system", f"Deal updated — fields changed: {summary}")
+
+    return {"ok": True, "deal_id": deal_id, "updated_fields": changed_field_names, "deal": _deal_to_dict(deal)}
+
+
+@router.delete("/deals/{deal_id}")
+async def delete_deal(
+    deal_id: int,
+    db: AsyncSession = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    company_name = deal.company_name
+
+    # Blob storage isn't covered by the DB's ON DELETE CASCADE — collect keys
+    # before the row disappears out from under us.
+    doc_rows = await db.execute(
+        select(DealDocument.storage_key).where(
+            DealDocument.deal_id == deal_id, DealDocument.storage_key.is_not(None)
+        )
+    )
+    storage_keys = [k for (k,) in doc_rows.all()]
+
+    # Single statement — Postgres's own ON DELETE CASCADE/SET NULL cascades to
+    # deal_update_log, deal_activity, deal_notes, deal_documents,
+    # deal_timeline_workstreams (+tasks), portfolio_positions (+monitoring
+    # tests), and pending_suggestions; nulls out email_scan_log.matched_deal_id
+    # and chat_sessions.deal_id.
+    await db.execute(delete(Deal).where(Deal.id == deal_id))
+
+    # Commit the deletion before touching storage: if the object delete
+    # succeeded but the transaction then failed or rolled back, the deal and
+    # document rows would remain while their only stored files are already
+    # gone. Committing first means a failed storage delete only leaves a
+    # harmless orphaned object, never a dangling reference to a deleted one
+    # (same reasoning as delete_document's storage cleanup).
+    await db.commit()
+
+    # Best-effort blob cleanup — a storage failure here must never roll back
+    # the deal deletion; an orphaned blob is an acceptable failure mode.
+    if storage_keys and settings.storage_configured:
+        for key in storage_keys:
+            try:
+                storage.delete_object(key)
+            except Exception:
+                pass
+
+    return {"ok": True, "deal_id": deal_id, "company_name": company_name}
 
 
 def _deal_to_dict(d: Deal) -> dict:

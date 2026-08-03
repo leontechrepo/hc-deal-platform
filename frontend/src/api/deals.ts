@@ -22,3 +22,17 @@ export function createDeal(body: CreateDealInput): Promise<{ ok: boolean; deal_i
     body: JSON.stringify(body),
   })
 }
+
+export function updateDeal(
+  dealId: number,
+  body: Partial<CreateDealInput>
+): Promise<{ ok: boolean; deal_id: number; updated_fields: string[]; deal: Deal }> {
+  return apiFetch(`/api/deals/${dealId}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export function deleteDeal(dealId: number): Promise<{ ok: boolean; deal_id: number; company_name: string }> {
+  return apiFetch(`/api/deals/${dealId}`, { method: 'DELETE' })
+}
