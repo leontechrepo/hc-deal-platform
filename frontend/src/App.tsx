@@ -21,6 +21,7 @@ import { TimelineTab } from './pages/DealDetailPage/tabs/TimelineTab'
 import { FormulasTab } from './pages/DealDetailPage/tabs/FormulasTab'
 import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
 import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
+import { DocumentsTab } from './pages/DealDetailPage/tabs/DocumentsTab'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -56,6 +57,7 @@ function Layout() {
             <Route path="formulas" element={<FormulasTab />} />
             <Route path="activity" element={<ActivityTab />} />
             <Route path="notes" element={<NotesTab />} />
+            <Route path="documents" element={<DocumentsTab />} />
           </Route>
         </Routes>
       </main>

@@ -132,6 +132,8 @@ async def delete_document(
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    if doc.storage_key and settings.storage_configured:
+        storage.delete_object(doc.storage_key)
     doc.status = "deleted"
     doc.updated_at = datetime.now(timezone.utc)
     await log_activity(db, doc.deal_id, get_actor_name(auth), "document", f"Deleted document: {doc.name}")

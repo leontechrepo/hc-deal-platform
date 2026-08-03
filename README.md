@@ -90,6 +90,11 @@ Migrations live in `migrations/` and run automatically when the app starts via `
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `SCAN_INTERVAL_MINUTES` | Email scan frequency in minutes (default: 240) |
 | `CLERK_JWKS_URL` | Clerk JWKS endpoint for JWT verification |
+| `STORAGE_BUCKET_NAME` | Railway S3-compatible bucket for deal document uploads |
+| `STORAGE_ENDPOINT_URL` | Bucket's S3-compatible endpoint URL |
+| `STORAGE_ACCESS_KEY_ID` | Bucket access key ID |
+| `STORAGE_SECRET_ACCESS_KEY` | Bucket secret access key |
+| `STORAGE_REGION` | Bucket region (default: `auto`) |
 
 ## Deployment (Railway)
 
