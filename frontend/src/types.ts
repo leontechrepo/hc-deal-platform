@@ -262,6 +262,24 @@ export interface DealNote {
   updated_at: string
 }
 
+export interface DealDocument {
+  id: number
+  deal_id: number
+  name: string
+  category: string | null
+  doc_type: string | null
+  size_bytes: number | null
+  status: string
+  uploaded_by: string | null
+  created_at: string
+}
+
+// Must stay in sync with DOCUMENT_CATEGORIES in app/db/models/documents.py
+export const DOCUMENT_CATEGORIES = [
+  'Sourcing', 'Intake', 'NDA', 'Screening', 'LOI', 'Diligence',
+  'IC Memo', 'Credit Agreement', 'Closing',
+] as const
+
 export interface DealTimelineTask {
   id: number
   workstream_id: number

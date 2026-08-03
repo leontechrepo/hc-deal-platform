@@ -61,6 +61,7 @@ export function DealDetailPage() {
           { key: 'formulas', label: 'Formulas', to: `/deals/${deal.id}/formulas` },
           { key: 'activity', label: 'Activity', to: `/deals/${deal.id}/activity` },
           { key: 'notes', label: 'Notes', to: `/deals/${deal.id}/notes` },
+          { key: 'documents', label: 'Documents', to: `/deals/${deal.id}/documents` },
         ]}
       />
 

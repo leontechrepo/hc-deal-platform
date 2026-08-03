@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createDealNote, deleteDealNote, listDealActivity, listDealNotes, updateDealNote,
 } from '../api/dealDetail'
+import { deleteDealDocument, listDealDocuments, uploadDealDocument } from '../api/dealDocuments'
 
 export function useDealActivity(dealId: number | null) {
   return useQuery({
@@ -41,5 +42,30 @@ export function useDeleteDealNote(dealId: number) {
   return useMutation({
     mutationFn: (noteId: number) => deleteDealNote(noteId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['deals', dealId, 'notes'] }),
+  })
+}
+
+export function useDealDocuments(dealId: number | null) {
+  return useQuery({
+    queryKey: ['deals', dealId, 'documents'],
+    queryFn: () => listDealDocuments(dealId as number),
+    enabled: dealId !== null,
+  })
+}
+
+export function useUploadDealDocument(dealId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ file, category }: { file: File; category: string }) =>
+      uploadDealDocument(dealId, file, category),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['deals', dealId, 'documents'] }),
+  })
+}
+
+export function useDeleteDealDocument(dealId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => deleteDealDocument(documentId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['deals', dealId, 'documents'] }),
   })
 }

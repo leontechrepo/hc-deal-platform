@@ -29,7 +29,12 @@ class Settings(BaseSettings):
 
     @property
     def storage_configured(self) -> bool:
-        return bool(self.STORAGE_BUCKET_NAME and self.STORAGE_ENDPOINT_URL and self.STORAGE_ACCESS_KEY_ID)
+        return bool(
+            self.STORAGE_BUCKET_NAME
+            and self.STORAGE_ENDPOINT_URL
+            and self.STORAGE_ACCESS_KEY_ID
+            and self.STORAGE_SECRET_ACCESS_KEY
+        )
 
     @property
     def monitored_users(self) -> list[str]:

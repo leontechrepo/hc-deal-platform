@@ -37,6 +37,22 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return res.json() as Promise<T>
 }
 
+export async function apiFetchForm<T>(path: string, formData: FormData, method = 'POST'): Promise<T> {
+  const authHeaders: Record<string, string> = {}
+  if (_getToken) {
+    const token = await _getToken()
+    if (token) authHeaders['Authorization'] = `Bearer ${token}`
+  }
+  // No Content-Type here — the browser sets multipart/form-data with the
+  // correct boundary for FormData bodies; setting it manually breaks that.
+  const res = await fetch(path, { method, headers: authHeaders, body: formData })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new ApiError(res.status, `API ${method} ${path} → ${res.status}: ${text}`)
+  }
+  return res.json() as Promise<T>
+}
+
 export async function apiFetchBlob(path: string): Promise<Blob> {
   const authHeaders: Record<string, string> = {}
   if (_getToken) {
