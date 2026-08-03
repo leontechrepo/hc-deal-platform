@@ -1,0 +1,148 @@
+/* Values ported from Reip's `.chat-markdown` (index.css). Reip's tables inherit its
+   global th/td rules; this app has none (DataTable's are module-scoped), so the
+   table styling below is written explicitly to match DataTable's treatment. */
+
+.markdown {
+  line-height: 1.65;
+}
+
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
+
+.markdown p { margin: 0 0 0.65em; }
+
+.markdown ul,
+.markdown ol {
+  margin: 0.35em 0 0.75em;
+  padding-left: 1.35em;
+}
+
+.markdown li { margin: 0.25em 0; }
+.markdown li::marker { color: var(--gold); }
+
+/* Nested lists shouldn't double the vertical rhythm. */
+.markdown li > ul,
+.markdown li > ol { margin: 0.25em 0 0.25em; }
+
+.markdown strong {
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 0.85em 0 0.4em;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.markdown h1:first-child,
+.markdown h2:first-child,
+.markdown h3:first-child,
+.markdown h4:first-child { margin-top: 0; }
+
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-badge);
+  background: rgba(10, 31, 68, 0.06);
+}
+
+:global(html.dark) .markdown code {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.markdown pre {
+  margin: 0 0 0.65em;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: var(--radius-card);
+  background: rgba(10, 31, 68, 0.06);
+}
+
+:global(html.dark) .markdown pre {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+/* `---` — a hairline, not a heavy default rule. */
+.markdown hr {
+  margin: 0.9em 0;
+  border: 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+.markdown a {
+  color: var(--heading);
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 2px;
+}
+
+.markdown blockquote {
+  margin: 0.35em 0 0.75em;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--gold);
+  color: var(--muted);
+}
+
+/* ── Tables (GFM) ── */
+.tableWrap {
+  overflow-x: auto;
+  margin: 0 0 0.65em;
+}
+
+.tableWrap:last-child { margin-bottom: 0; }
+
+.tableWrap table {
+  width: auto;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tableWrap th {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #68758f;
+  text-align: left;
+  white-space: nowrap;
+  padding: 6px 10px;
+  background: rgba(239, 243, 249, 0.88);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+:global(html.dark) .tableWrap th {
+  color: var(--muted);
+  background: rgba(20, 28, 40, 0.85);
+}
+
+.tableWrap td {
+  padding: 6px 10px;
+  white-space: nowrap;
+  color: var(--text);
+  border-bottom: 1px solid rgba(221, 225, 233, 0.68);
+  font-variant-numeric: tabular-nums;
+}
+
+:global(html.dark) .tableWrap td {
+  border-bottom-color: rgba(42, 53, 72, 0.85);
+}
+
+.tableWrap tbody tr:last-child td { border-bottom: none; }
+
+/* Numeric columns read better right-aligned, which is how GFM marks them. */
+.tableWrap th[align='right'],
+.tableWrap td[align='right'] { text-align: right; }
+.tableWrap th[align='center'],
+.tableWrap td[align='center'] { text-align: center; }

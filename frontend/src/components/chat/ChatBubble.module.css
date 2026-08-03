@@ -19,6 +19,14 @@
   word-break: break-word;
 }
 
+/* Once the panel is narrow, the content needs the width more than the speaker
+   gutter does — 72% of a phone-width panel leaves a table barely one column wide. */
+@media (max-width: 900px) {
+  .bubble {
+    max-width: 92%;
+  }
+}
+
 .user {
   background: var(--chat-navy);
   color: #fff;
