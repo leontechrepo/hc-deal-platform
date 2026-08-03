@@ -6,7 +6,10 @@
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   box-shadow: var(--shadow-float);
-  overflow: hidden;
+  /* Clip children to the radius, but scroll rather than truncate: the KPIs stop
+     shrinking at min-content, so on a narrow viewport the last figures were cut off
+     with no way to reach them. */
+  overflow: auto hidden;
 }
 
 .kpi {
