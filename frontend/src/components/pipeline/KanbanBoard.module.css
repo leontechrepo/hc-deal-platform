@@ -1,12 +1,17 @@
 /* Fills the remaining height of the page panel so columns cap and scroll internally
    (they used to be sized off `calc(100vh - …)`, which no longer holds — the panel,
-   not the viewport, is the scroll container now). */
+   not the viewport, is the scroll container now).
+   `flex: 1` is `flex: 1 1 0%`, so the board has a zero basis and *shrinks* too. Its
+   siblings above (KPI strip, review queue, toolbar) can't shrink, so once they exceed
+   the panel the free space goes negative and the board would collapse to its padding
+   — taking the whole pipeline with it. `min-height` is that floor: below it the panel
+   scrolls instead, and the columns still scroll internally via `.cards`. */
 .board {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 12px;
   flex: 1;
-  min-height: 0;
+  min-height: 320px;
   align-items: stretch;
 }
