@@ -65,6 +65,30 @@ async def test_list_inbox_includes_legacy_stage_key(db_session):
     assert "pipeline_stage" in items[0]
 
 
+async def test_approving_with_deal_id_override_retargets_the_update(db_session):
+    original = await create_deal(CreateDealRequest(company_name="Wrong Match Co"), db_session, auth=TEST_AUTH)
+    correct = await create_deal(CreateDealRequest(company_name="Right Match Co"), db_session, auth=TEST_AUTH)
+
+    suggestion = await _make_suggestion(db_session, original["deal_id"], "commentary", "2026/01/01: [Auto] note")
+
+    result = await approve_suggestion(
+        suggestion.id, ApproveRequest(deal_id=correct["deal_id"]), db_session, auth=TEST_AUTH
+    )
+    assert result["ok"] is True
+    assert result["deal_id"] == correct["deal_id"]
+    assert result["company_name"] == "Right Match Co"
+
+    await db_session.refresh(suggestion)
+    assert suggestion.deal_id == correct["deal_id"]
+
+    from app.api.deals import get_deal
+
+    original_deal = await get_deal(original["deal_id"], db_session)
+    correct_deal = await get_deal(correct["deal_id"], db_session)
+    assert original_deal["commentary"] is None
+    assert correct_deal["commentary"] == "2026/01/01: [Auto] note"
+
+
 async def test_approving_portfolio_monitoring_transition_creates_position(db_session):
     deal_result = await create_deal(CreateDealRequest(company_name="Funded Via Inbox Co", deal_size_m=8.0), db_session, auth=TEST_AUTH)
     deal_id = deal_result["deal_id"]

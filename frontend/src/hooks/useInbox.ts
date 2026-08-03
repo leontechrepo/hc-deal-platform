@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { approveInboxItem, assignInboxItem, listInbox, rejectInboxItem } from '../api/inbox'
 
-// Shares the 'review-queue' cache key with useReviewQueue.ts — /api/inbox and
-// /api/review-queue are aliases for the same pending_suggestions data, so both
-// hooks (and NavBar's scan handler) must invalidate the same key to stay in sync.
+// Cache key kept as 'review-queue' since NavBar's scan handler already
+// invalidates that key to refresh the pending-suggestions count.
 export function useInbox() {
   return useQuery({ queryKey: ['review-queue'], queryFn: listInbox })
 }
@@ -11,8 +10,8 @@ export function useInbox() {
 export function useApproveInboxItem() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, value, reviewer }: { id: number; value?: string; reviewer?: string }) =>
-      approveInboxItem(id, value, reviewer),
+    mutationFn: ({ id, value, reviewer, dealId }: { id: number; value?: string; reviewer?: string; dealId?: number }) =>
+      approveInboxItem(id, value, reviewer, dealId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })
       qc.invalidateQueries({ queryKey: ['deals'] })

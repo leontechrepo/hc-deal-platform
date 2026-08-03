@@ -11,9 +11,11 @@ interface Props {
   onDragStart: (dealId: number) => void
   onDragEnd: () => void
   onDrop: (stage: string) => void
+  onEdit: (deal: Deal) => void
+  onDelete: (deal: Deal) => void
 }
 
-export function KanbanColumn({ stage, deals, draggingId, onDragStart, onDragEnd, onDrop }: Props) {
+export function KanbanColumn({ stage, deals, draggingId, onDragStart, onDragEnd, onDrop, onEdit, onDelete }: Props) {
   const [over, setOver] = useState(false)
 
   return (
@@ -41,7 +43,14 @@ export function KanbanColumn({ stage, deals, draggingId, onDragStart, onDragEnd,
           <div className={styles.empty}>No deals</div>
         ) : (
           deals.map(deal => (
-            <KanbanCard key={deal.id} deal={deal} onDragStart={onDragStart} onDragEnd={onDragEnd} />
+            <KanbanCard
+              key={deal.id}
+              deal={deal}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))
         )}
       </div>

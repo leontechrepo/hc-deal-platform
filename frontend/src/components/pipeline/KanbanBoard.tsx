@@ -7,9 +7,11 @@ import styles from './KanbanBoard.module.css'
 
 interface Props {
   deals: Deal[]
+  onEdit: (deal: Deal) => void
+  onDelete: (deal: Deal) => void
 }
 
-export function KanbanBoard({ deals }: Props) {
+export function KanbanBoard({ deals, onEdit, onDelete }: Props) {
   const [draggingId, setDraggingId] = useState<number | null>(null)
   const patchDeal = usePatchDeal()
 
@@ -40,6 +42,8 @@ export function KanbanBoard({ deals }: Props) {
           onDragStart={setDraggingId}
           onDragEnd={() => setDraggingId(null)}
           onDrop={handleDrop}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       ))}
     </div>

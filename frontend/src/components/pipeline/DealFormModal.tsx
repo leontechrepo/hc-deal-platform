@@ -3,10 +3,9 @@ import { Modal } from '../ui/Modal/Modal'
 import { Button } from '../ui/Button/Button'
 import { PIPELINE_STAGES, formatPipelineStage } from '../shared/PipelineStageBadge'
 import { STATUSES } from '../shared/StatusBadge'
-import { useCreateDeal } from '../../hooks/useDeals'
 import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../../components/Toast/Toast'
-import type { CreateDealInput } from '../../types'
+import type { CreateDealInput, Deal } from '../../types'
 import formStyles from '../shared/Form.module.css'
 
 const EMPTY: CreateDealInput = {
@@ -43,9 +42,21 @@ const EMPTY: CreateDealInput = {
   status: 'Active',
 }
 
+// Fields that drive the credit model — read-only once a deal's
+// underwriting_locked flag is true (mirrors app/domain/pipeline_stage.py's
+// UNDERWRITING_FIELDS, restricted to the subset this form actually renders).
+const UNDERWRITING_FIELDS = new Set<keyof CreateDealInput>([
+  'deal_size_m', 'security', 'hold_amount_m', 'tenor_months', 'oid_pct',
+  'spread_bps', 'sofr_rate', 'sofr_floor_pct', 'ltm_revenue_m', 'ltm_ebitda_m',
+  'capex_m', 'ebitda_margin', 'revenue_growth_pct', 'max_leverage_covenant',
+  'min_fccr_covenant', 'capex_limit_covenant_m',
+])
+
 interface Props {
   open: boolean
   onClose: () => void
+  initial?: Deal | null
+  onSubmit: (body: Partial<CreateDealInput>) => Promise<unknown>
 }
 
 function toNullableNumber(v: string): number | null {
@@ -54,22 +65,28 @@ function toNullableNumber(v: string): number | null {
   return Number.isNaN(n) ? null : n
 }
 
-export function NewDealModal({ open, onClose }: Props) {
+export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
   const [form, setForm] = useState<CreateDealInput>(EMPTY)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const createDeal = useCreateDeal()
   const actor = useCurrentActor()
   const { showToast } = useToast()
+  const isEdit = !!initial
+  const locked = initial?.underwriting_locked ?? false
 
   useEffect(() => {
     if (open) {
-      setForm(EMPTY)
+      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
       setError(null)
     }
-  }, [open])
+  }, [open, initial])
 
   function set<K extends keyof CreateDealInput>(key: K, value: CreateDealInput[K]) {
     setForm(f => ({ ...f, [key]: value }))
+  }
+
+  function isLocked(field: keyof CreateDealInput): boolean {
+    return locked && UNDERWRITING_FIELDS.has(field)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,17 +96,20 @@ export function NewDealModal({ open, onClose }: Props) {
       return
     }
     setError(null)
+    setSaving(true)
     try {
-      await createDeal.mutateAsync({ ...form, actor })
-      showToast(`New deal added: ${form.company_name}`)
+      await onSubmit({ ...form, actor })
+      showToast(isEdit ? `Deal updated: ${form.company_name}` : `New deal added: ${form.company_name}`)
       onClose()
     } catch {
       setError('Save failed — please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="New Deal">
+    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Deal' : 'New Deal'}>
       <form className={formStyles.form} onSubmit={handleSubmit}>
         <div className={formStyles.field}>
           <label className={formStyles.label}>Company Name *</label>
@@ -162,7 +182,10 @@ export function NewDealModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        <div className={formStyles.sectionLabel}>Deal Structure</div>
+        <div className={formStyles.sectionLabel}>
+          Deal Structure
+          {locked && <span className={formStyles.lockedNote}> — underwriting fields locked (deal at/past LOI Signed)</span>}
+        </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
@@ -182,7 +205,7 @@ export function NewDealModal({ open, onClose }: Props) {
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Security</label>
-            <input className={formStyles.input} value={form.security ?? ''} onChange={e => set('security', e.target.value)} />
+            <input className={formStyles.input} disabled={isLocked('security')} value={form.security ?? ''} onChange={e => set('security', e.target.value)} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Use of Proceeds</label>
@@ -193,37 +216,37 @@ export function NewDealModal({ open, onClose }: Props) {
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Deal Size ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.deal_size_m ?? ''} onChange={e => set('deal_size_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('deal_size_m')} type="number" step="any" value={form.deal_size_m ?? ''} onChange={e => set('deal_size_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Hold Amount ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.hold_amount_m ?? ''} onChange={e => set('hold_amount_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('hold_amount_m')} type="number" step="any" value={form.hold_amount_m ?? ''} onChange={e => set('hold_amount_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Tenor (Months)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.tenor_months ?? ''} onChange={e => set('tenor_months', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('tenor_months')} type="number" step="any" value={form.tenor_months ?? ''} onChange={e => set('tenor_months', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>OID (%)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.oid_pct ?? ''} onChange={e => set('oid_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('oid_pct')} type="number" step="any" value={form.oid_pct ?? ''} onChange={e => set('oid_pct', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Spread (bps)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.spread_bps ?? ''} onChange={e => set('spread_bps', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('spread_bps')} type="number" step="any" value={form.spread_bps ?? ''} onChange={e => set('spread_bps', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>SOFR Rate (%)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.sofr_rate ?? ''} onChange={e => set('sofr_rate', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('sofr_rate')} type="number" step="any" value={form.sofr_rate ?? ''} onChange={e => set('sofr_rate', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>SOFR Floor (%)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.sofr_floor_pct ?? ''} onChange={e => set('sofr_floor_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('sofr_floor_pct')} type="number" step="any" value={form.sofr_floor_pct ?? ''} onChange={e => set('sofr_floor_pct', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
@@ -232,41 +255,41 @@ export function NewDealModal({ open, onClose }: Props) {
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>LTM Revenue ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.ltm_revenue_m ?? ''} onChange={e => set('ltm_revenue_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('ltm_revenue_m')} type="number" step="any" value={form.ltm_revenue_m ?? ''} onChange={e => set('ltm_revenue_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>LTM EBITDA ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.ltm_ebitda_m ?? ''} onChange={e => set('ltm_ebitda_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('ltm_ebitda_m')} type="number" step="any" value={form.ltm_ebitda_m ?? ''} onChange={e => set('ltm_ebitda_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>EBITDA Margin (%)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.ebitda_margin ?? ''} onChange={e => set('ebitda_margin', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('ebitda_margin')} type="number" step="any" value={form.ebitda_margin ?? ''} onChange={e => set('ebitda_margin', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Capex ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.capex_m ?? ''} onChange={e => set('capex_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('capex_m')} type="number" step="any" value={form.capex_m ?? ''} onChange={e => set('capex_m', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Revenue Growth (%)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.revenue_growth_pct ?? ''} onChange={e => set('revenue_growth_pct', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('revenue_growth_pct')} type="number" step="any" value={form.revenue_growth_pct ?? ''} onChange={e => set('revenue_growth_pct', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Max Leverage Covenant</label>
-            <input className={formStyles.input} type="number" step="any" value={form.max_leverage_covenant ?? ''} onChange={e => set('max_leverage_covenant', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('max_leverage_covenant')} type="number" step="any" value={form.max_leverage_covenant ?? ''} onChange={e => set('max_leverage_covenant', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Min FCCR Covenant</label>
-            <input className={formStyles.input} type="number" step="any" value={form.min_fccr_covenant ?? ''} onChange={e => set('min_fccr_covenant', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('min_fccr_covenant')} type="number" step="any" value={form.min_fccr_covenant ?? ''} onChange={e => set('min_fccr_covenant', toNullableNumber(e.target.value))} />
           </div>
           <div className={formStyles.field}>
             <label className={formStyles.label}>Capex Limit Covenant ($M)</label>
-            <input className={formStyles.input} type="number" step="any" value={form.capex_limit_covenant_m ?? ''} onChange={e => set('capex_limit_covenant_m', toNullableNumber(e.target.value))} />
+            <input className={formStyles.input} disabled={isLocked('capex_limit_covenant_m')} type="number" step="any" value={form.capex_limit_covenant_m ?? ''} onChange={e => set('capex_limit_covenant_m', toNullableNumber(e.target.value))} />
           </div>
         </div>
 
@@ -274,8 +297,8 @@ export function NewDealModal({ open, onClose }: Props) {
 
         <div className={formStyles.actions}>
           <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={createDeal.isPending}>
-            {createDeal.isPending ? 'Saving…' : 'Create Deal'}
+          <Button type="submit" variant="primary" disabled={saving}>
+            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Deal'}
           </Button>
         </div>
       </form>

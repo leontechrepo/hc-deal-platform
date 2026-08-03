@@ -19,6 +19,13 @@
   cursor: grabbing;
 }
 
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
 .company {
   font-weight: 500;
   font-size: 13px;
@@ -29,6 +36,32 @@
 
 .company:hover {
   text-decoration: underline;
+}
+
+.cardActions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.iconBtn:hover {
+  color: var(--heading);
+  background: var(--panel-raised);
 }
 
 .meta {

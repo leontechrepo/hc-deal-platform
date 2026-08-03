@@ -87,6 +87,7 @@ async def _get_pending_or_404(suggestion_id: int, db: AsyncSession) -> PendingSu
 
 class ApproveRequest(BaseModel):
     value: str | None = None  # optional edited value; falls back to suggestion.suggested_value
+    deal_id: int | None = None  # override which deal this applies to; falls back to suggestion.deal_id
 
 
 @router.post("/inbox/{suggestion_id}/approve")
@@ -125,10 +126,13 @@ async def approve_suggestion(
         await log_activity(db, new_deal.id, "Email Scanner", "system", f"Deal accepted from inbox — {suggestion.email_subject or ''}".strip())
         return {"ok": True, "deal_id": new_deal.id, "company_name": new_deal.company_name, "created": True}
 
-    deal_res = await db.execute(select(Deal).where(Deal.id == suggestion.deal_id))
+    target_deal_id = body.deal_id if body.deal_id is not None else suggestion.deal_id
+    deal_res = await db.execute(select(Deal).where(Deal.id == target_deal_id))
     deal = deal_res.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
+    if target_deal_id != suggestion.deal_id:
+        suggestion.deal_id = target_deal_id
 
     new_line = body.value if body.value is not None else suggestion.suggested_value
 

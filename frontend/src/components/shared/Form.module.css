@@ -64,6 +64,20 @@
   box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
 }
 
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lockedNote {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--gray-400);
+}
+
 .textarea {
   resize: vertical;
   min-height: 60px;
