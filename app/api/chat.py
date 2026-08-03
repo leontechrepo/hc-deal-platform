@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.db.models import ChatMessage, ChatSession
 from app.db.session import get_db
 from app.domain.chat_context import build_chat_context
+from app.domain.text import strip_emoji
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
@@ -111,6 +112,9 @@ async def send_chat_message(
         raise HTTPException(status_code=502, detail=f"Chat model error: {exc}")
 
     reply_text = "".join(block.text for block in response.content if getattr(block, "type", None) == "text").strip()
+    # The prompt asks for no emoji, but that's only probabilistic — enforce it here so
+    # what gets persisted (and anything downstream, e.g. exports) is already clean.
+    reply_text = strip_emoji(reply_text)
     if not reply_text:
         reply_text = "I wasn't able to generate a response — please try rephrasing."
 
