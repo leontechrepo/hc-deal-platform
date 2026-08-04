@@ -74,7 +74,7 @@ export function LoginPage() {
       <div className={styles.grid}>
         <main className={styles.main}>
           <section className={styles.heroSection}>
-            <div className={styles.eyebrow}>LHP Private Credit &mdash; Deal Platform</div>
+            <div className={styles.eyebrow}>Corporate Credit &mdash; Deal Platform</div>
             <h2 className={styles.displayHeading}>
               HC Deal<br />
               <span className={styles.accent}>Pipeline</span>
@@ -132,7 +132,7 @@ export function LoginPage() {
 
         <aside className={styles.aside}>
           <div className={styles.brandCard}>
-            <div className={styles.brandName}>LHP Private Credit</div>
+            <div className={styles.brandName}>Corporate Credit</div>
             <div className={styles.brandDivider} />
             <div className={styles.brandSub}>Deal Pipeline</div>
             <div className={styles.brandTagline}>Internal Deal Management Platform</div>

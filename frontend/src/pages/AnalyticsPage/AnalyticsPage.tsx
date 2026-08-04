@@ -51,7 +51,7 @@ function SectorFilter({ value, onChange, sectors }: {
   )
 }
 
-const SHELL = { title: 'Pipeline Analytics', sub: 'LHP Private Credit — Deal Platform' }
+const SHELL = { title: 'Pipeline Analytics', sub: 'Corporate Credit — Deal Platform' }
 
 export function AnalyticsPage() {
   const { data: deals = [], isLoading, isError } = useDeals()
