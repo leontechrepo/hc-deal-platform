@@ -121,8 +121,21 @@ export function DocumentsTab() {
         >
           {DOCUMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <input ref={fileInputRef} type="file" onChange={handleFileSelected} disabled={uploadDoc.isPending} />
-        {uploadDoc.isPending && <span className={styles.uploading}>Uploading…</span>}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className={styles.fileInput}
+          onChange={handleFileSelected}
+          disabled={uploadDoc.isPending}
+        />
+        <Button
+          variant="gold"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadDoc.isPending}
+        >
+          {uploadDoc.isPending ? 'Uploading…' : 'Upload Document'}
+        </Button>
       </div>
 
       {documents.length === 0 ? (
