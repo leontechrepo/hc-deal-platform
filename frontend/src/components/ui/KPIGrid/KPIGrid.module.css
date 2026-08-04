@@ -1,50 +1,5 @@
-/* Navy KPI strip — this app's own pattern, but lifted into the floating plane so it
-   sits alongside the glass cards rather than looking pasted on. */
-.strip {
-  display: flex;
-  background: var(--navy);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  /* Clip children to the radius, but scroll rather than truncate: the KPIs stop
-     shrinking at min-content, so on a narrow viewport the last figures were cut off
-     with no way to reach them. */
-  overflow: auto hidden;
-}
-
-.kpi {
-  flex: 1;
-  padding: 14px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  position: relative;
-}
-
-.kpi + .kpi::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 20%;
-  height: 60%;
-  width: 1px;
-  background: rgba(255,255,255,0.1);
-}
-
-.value {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 500;
-  color: var(--gold);
-  line-height: 1.1;
-}
-
-.label {
-  font-size: var(--text-label);
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
-  text-align: center;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
 }

@@ -55,7 +55,7 @@ export function NavBar() {
         </div>
         {!collapsed && (
           <div className={styles.logoText}>
-            <span className={styles.logoTitle}>LHP Private Credit</span>
+            <span className={styles.logoTitle}>Corporate Credit</span>
             <span className={styles.logoSub}>Deal Pipeline</span>
           </div>
         )}

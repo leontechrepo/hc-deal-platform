@@ -105,7 +105,7 @@ function groupByStage(deals: Deal[]): StageGroup[] {
   }))
 }
 
-const SHELL = { title: 'Executive Summary', sub: 'LHP Private Credit — Portfolio brief' }
+const SHELL = { title: 'Executive Summary', sub: 'Corporate Credit — Portfolio brief' }
 
 export function ExecutiveSummaryPage() {
   const { data: deals = [], isLoading: dealsLoading, isError: dealsError } = useDeals()

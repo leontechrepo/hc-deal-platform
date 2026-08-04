@@ -44,7 +44,7 @@ def _build_system_prompt(deals: list[Deal]) -> str:
         if d.status not in ("Passed", "Dead")
     )
     stage_list = ", ".join(PIPELINE_STAGES)
-    return f"""You are a deal pipeline assistant for Leon Healthcare Partners (LHP), a healthcare private credit firm.
+    return f"""You are a deal pipeline assistant for Leon Corporate Credit, a healthcare private credit firm.
 
 Active deals in pipeline:
 {deal_list}

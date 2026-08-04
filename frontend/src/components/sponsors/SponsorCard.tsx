@@ -34,7 +34,7 @@ export function SponsorCard({ sponsor, onEdit, onDelete, onUpdateField }: Props)
         </div>
       </div>
 
-      <KPIGrid items={items} />
+      <KPIGrid items={items} flat />
 
       <div className={styles.details}>
         <div className={styles.detailRow}>

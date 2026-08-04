@@ -1,24 +1,23 @@
+import { KPICard } from '../KPICard/KPICard'
 import styles from './KPIGrid.module.css'
 
 export interface KPITileData {
   label: string
   value: React.ReactNode
+  sub?: React.ReactNode
+  accent?: 'gold' | 'navy' | 'green' | 'red'
 }
 
-export function KPITile({ label, value }: KPITileData) {
-  return (
-    <div className={styles.kpi}>
-      <span className={styles.value}>{value}</span>
-      <span className={styles.label}>{label}</span>
-    </div>
-  )
+interface Props {
+  items: KPITileData[]
+  flat?: boolean
 }
 
-export function KPIGrid({ items }: { items: KPITileData[] }) {
+export function KPIGrid({ items, flat = false }: Props) {
   return (
-    <div className={styles.strip}>
+    <div className={styles.grid}>
       {items.map(item => (
-        <KPITile key={item.label} label={item.label} value={item.value} />
+        <KPICard key={item.label} {...item} flat={flat} />
       ))}
     </div>
   )

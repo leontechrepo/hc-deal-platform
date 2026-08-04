@@ -1,6 +1,6 @@
 # HC Deal Platform
 
-Internal deal pipeline management tool for LHP Private Credit. Tracks healthcare deals, monitors inboxes for relevant emails via Microsoft Graph, and uses Claude AI to propose deal updates for human review.
+Internal deal pipeline management tool for Corporate Credit. Tracks healthcare deals, monitors inboxes for relevant emails via Microsoft Graph, and uses Claude AI to propose deal updates for human review.
 
 ## Stack
 

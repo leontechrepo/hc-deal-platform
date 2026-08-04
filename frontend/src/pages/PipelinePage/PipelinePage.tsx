@@ -79,7 +79,7 @@ export function PipelinePage() {
   return (
     <PageShell
       title="Pipeline"
-      sub="LHP Private Credit — Deal Pipeline · Confidential"
+      sub="Corporate Credit — Deal Pipeline · Confidential"
       actions={
         <>
           <ViewToggle view={view} onChange={setView} />

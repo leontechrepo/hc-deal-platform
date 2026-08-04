@@ -63,7 +63,7 @@ export function DealDetailPage() {
   return (
     <PageShell
       title={deal.company_name}
-      sub={deal.sector_primary ?? 'LHP Private Credit — Deal Detail'}
+      sub={deal.sector_primary ?? 'Corporate Credit — Deal Detail'}
       actions={
         <>
           <PipelineStageBadge stage={deal.pipeline_stage} />

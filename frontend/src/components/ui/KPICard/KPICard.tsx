@@ -7,11 +7,13 @@ interface Props {
   value: React.ReactNode
   sub?: React.ReactNode
   accent?: Accent
+  flat?: boolean
 }
 
-export function KPICard({ label, value, sub, accent = 'gold' }: Props) {
+export function KPICard({ label, value, sub, accent = 'gold', flat = false }: Props) {
+  const className = [styles.kpiCard, styles[accent], flat && styles.flat].filter(Boolean).join(' ')
   return (
-    <div className={[styles.kpiCard, styles[accent]].join(' ')}>
+    <div className={className}>
       <span className={styles.label}>{label}</span>
       <span className={styles.value}>{value}</span>
       {sub && <span className={styles.sub}>{sub}</span>}

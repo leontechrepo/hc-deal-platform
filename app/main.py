@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
         app.state.scheduler.shutdown()
 
 
-app = FastAPI(title="LHP Private Credit Pipeline", lifespan=lifespan)
+app = FastAPI(title="Corporate Credit Pipeline", lifespan=lifespan)
 
 from app.api.dashboard import router as dashboard_router
 from app.api.deals import router as deals_router

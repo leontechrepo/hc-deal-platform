@@ -1,5 +1,5 @@
 """
-Parse LHP Private Credit Deal Pipeline Excel and upsert into PostgreSQL.
+Parse Corporate Credit Deal Pipeline Excel and upsert into PostgreSQL.
 
 Usage:
     conda activate hc-deal-platform

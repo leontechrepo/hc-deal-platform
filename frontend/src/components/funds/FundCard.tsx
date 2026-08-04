@@ -38,7 +38,7 @@ export function FundCard({ fund, onEdit, onDelete }: Props) {
         </div>
       </div>
 
-      <KPIGrid items={items} />
+      <KPIGrid items={items} flat />
 
       <div className={styles.progressSection}>
         <div className={styles.progressLabel}>

@@ -8,8 +8,23 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 async def run_migrations(engine: AsyncEngine) -> None:
     async with engine.begin() as conn:
-        await conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS schema_migrations (
+        # So a brand-new database can bootstrap `schema_migrations` (and everything
+        # after it) straight into the target schema.
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS corporate_credit"))
+
+        # `schema_migrations` moves from `public` into `corporate_credit` as part of
+        # migration 014. Until that move has actually happened, `public` still holds
+        # the real applied-migrations history -- don't let search_path's preference
+        # for `corporate_credit` resolve the unqualified name below to a fresh, empty
+        # table there and shadow it (which would make every prior migration look
+        # unapplied and re-run from scratch).
+        in_public = (await conn.execute(
+            text("SELECT to_regclass('public.schema_migrations') IS NOT NULL")
+        )).scalar()
+        history_schema = "public" if in_public else "corporate_credit"
+
+        await conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS {history_schema}.schema_migrations (
                 version TEXT PRIMARY KEY,
                 applied_at TIMESTAMPTZ DEFAULT NOW()
             )
@@ -17,7 +32,9 @@ async def run_migrations(engine: AsyncEngine) -> None:
 
         applied = {
             row[0]
-            for row in (await conn.execute(text("SELECT version FROM schema_migrations"))).fetchall()
+            for row in (await conn.execute(
+                text(f"SELECT version FROM {history_schema}.schema_migrations")
+            )).fetchall()
         }
 
     migrations_dir = Path(__file__).parent
