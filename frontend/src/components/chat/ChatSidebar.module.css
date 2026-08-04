@@ -1,0 +1,128 @@
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  background: var(--chat-surface-soft);
+  overflow: hidden;
+}
+
+.header {
+  padding: 14px 12px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.headerIcon {
+  flex-shrink: 0;
+  color: var(--gold);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+  flex: 1;
+}
+
+.newBtn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+.newBtn:hover {
+  background: var(--lt);
+  color: var(--text);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.empty {
+  padding: 20px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  cursor: pointer;
+  gap: 6px;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+
+.item:hover {
+  background: rgba(10, 31, 68, .05);
+}
+
+.item.active {
+  background: rgba(201, 168, 76, .08);
+  border-left-color: var(--gold);
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item.active .itemTitle {
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.itemDate {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  opacity: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: opacity 0.12s, color 0.12s;
+}
+
+.item:hover .deleteBtn {
+  opacity: 0.55;
+}
+
+.deleteBtn:hover {
+  opacity: 1 !important;
+  color: var(--red);
+}

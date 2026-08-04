@@ -80,12 +80,6 @@ export function PipelinePage() {
     <PageShell
       title="Pipeline"
       sub="Corporate Credit — Deal Pipeline · Confidential"
-      actions={
-        <>
-          <ViewToggle view={view} onChange={setView} />
-          <Button variant="primary" onClick={openCreate}>+ New Deal</Button>
-        </>
-      }
     >
       {kpis && <KPIStrip kpis={kpis} />}
 
@@ -95,6 +89,10 @@ export function PipelinePage() {
           activeKey={activeStatus}
           onChange={key => setActiveStatus(key as StatusTab)}
         />
+        <div className={styles.toolbarActions}>
+          <ViewToggle view={view} onChange={setView} />
+          <Button variant="primary" onClick={openCreate}>+ New Deal</Button>
+        </div>
       </div>
 
       {isLoading ? (

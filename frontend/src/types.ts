@@ -346,3 +346,11 @@ export interface ChatSendResponse {
   reply: string
   created_at: string
 }
+
+export interface ChatSessionSummary {
+  id: string
+  title: string
+  deal_id: number | null
+  created_at: string
+  updated_at: string
+}
