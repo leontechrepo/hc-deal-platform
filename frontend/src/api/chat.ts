@@ -1,4 +1,4 @@
-import type { ChatSendResponse } from '../types'
+import type { ChatMessage, ChatSendResponse, ChatSessionSummary } from '../types'
 import { apiFetch } from './client'
 
 export function sendChatMessage(body: {
@@ -14,4 +14,16 @@ export function sendChatMessage(body: {
       deal_id: body.dealId ?? null,
     }),
   })
+}
+
+export function listChatSessions(): Promise<ChatSessionSummary[]> {
+  return apiFetch('/api/chat/sessions')
+}
+
+export function getChatSessionMessages(sessionId: string): Promise<ChatMessage[]> {
+  return apiFetch(`/api/chat/sessions/${sessionId}/messages`)
+}
+
+export function deleteChatSession(sessionId: string): Promise<void> {
+  return apiFetch(`/api/chat/sessions/${sessionId}`, { method: 'DELETE' })
 }

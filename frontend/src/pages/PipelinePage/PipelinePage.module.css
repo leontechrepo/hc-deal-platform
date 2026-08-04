@@ -6,6 +6,13 @@
   flex-wrap: wrap;
 }
 
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .loading {
   color: var(--gray-400);
   font-style: italic;
