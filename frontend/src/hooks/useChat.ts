@@ -112,6 +112,11 @@ export function useChat() {
   }, [])
 
   const selectSession = useCallback((sessionId: string) => {
+    // Clear immediately rather than waiting on messagesQuery to resolve for
+    // the new id — otherwise the previous session's transcript stays on
+    // screen (looking like it belongs to the newly-selected chat) until the
+    // fetch completes, or indefinitely if it errors.
+    setMessages([])
     setActiveSessionId(sessionId)
     setHasChosenSession(true)
     lastUserMessage.current = null
