@@ -17,6 +17,16 @@ async def upgrade(conn: AsyncConnection) -> None:
     # systems side by side without colliding in `public`. ALTER TABLE ... SET SCHEMA
     # is metadata-only (no data copy/rewrite) and FKs/indexes/constraints move with
     # their table automatically, regardless of order.
+    #
+    # Guarded per table (not a blind ALTER) rather than assumed-present in `public`:
+    # a fresh database bootstraps straight into `corporate_credit` (see runner.py)
+    # and never has these tables in `public` at all, and this stays a safe no-op if
+    # `corporate_credit` was somehow created ahead of the actual move.
     await conn.execute(text("CREATE SCHEMA IF NOT EXISTS corporate_credit"))
     for table in TABLES:
-        await conn.execute(text(f"ALTER TABLE public.{table} SET SCHEMA corporate_credit"))
+        still_in_public = (await conn.execute(
+            text("SELECT to_regclass(:qualified) IS NOT NULL"),
+            {"qualified": f"public.{table}"},
+        )).scalar()
+        if still_in_public:
+            await conn.execute(text(f"ALTER TABLE public.{table} SET SCHEMA corporate_credit"))
