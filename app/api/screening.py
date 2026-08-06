@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import require_auth
@@ -75,15 +76,26 @@ async def create_screening_memo(deal_id: uuid.UUID, body: ScreeningMemoRequest, 
         raise HTTPException(status_code=400, detail=f"Invalid recommendation: {body.recommendation!r}")
     if body.status not in _STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status: {body.status!r}")
-    max_version = (
-        await db.execute(
-            select(ScreeningMemo.version)
-            .where(ScreeningMemo.deal_id == deal_id)
-            .order_by(ScreeningMemo.version.desc())
-            .limit(1)
-        )
-    ).scalar_one_or_none()
-    memo = ScreeningMemo(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
-    db.add(memo)
-    await db.flush()
-    return _memo_to_dict(memo)
+    # max_version + insert isn't atomic — two concurrent requests for the same
+    # deal can both read the same max and then race on UNIQUE(deal_id,
+    # version). Retry inside a savepoint (not the whole request transaction)
+    # on conflict, re-reading the max each time, rather than failing the
+    # second caller's request outright.
+    for attempt in range(5):
+        max_version = (
+            await db.execute(
+                select(ScreeningMemo.version)
+                .where(ScreeningMemo.deal_id == deal_id)
+                .order_by(ScreeningMemo.version.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        memo = ScreeningMemo(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
+        db.add(memo)
+        try:
+            async with db.begin_nested():
+                await db.flush()
+        except IntegrityError:
+            continue
+        return _memo_to_dict(memo)
+    raise HTTPException(status_code=409, detail="Could not allocate a unique version — please retry")

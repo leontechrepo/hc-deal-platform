@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
+from app.db.approvals import log_approval
 from app.db.models import Deal, DealNote, DealUpdateLog, PendingSuggestion
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
@@ -172,6 +173,8 @@ async def approve_suggestion(
             db, deal.id, "Email Scanner", activity_type,
             f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
         )
+        if suggestion.suggested_field in ("pipeline_stage", "status"):
+            await log_approval(db, deal.id, str(final_value), reviewer)
 
     suggestion.status = "approved"
     suggestion.reviewed_at = datetime.now(timezone.utc)

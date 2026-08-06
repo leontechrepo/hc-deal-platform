@@ -96,7 +96,8 @@ export function MonitoringTestDrawer({ position }: Props) {
           >
             <option value="">—</option>
             <option value="Current">Current</option>
-            <option value="Late">Late</option>
+            <option value="PIK">PIK</option>
+            <option value="Past Due">Past Due</option>
             <option value="Default">Default</option>
           </select>
           <PaymentStatusBadge status={position.payment_status} />

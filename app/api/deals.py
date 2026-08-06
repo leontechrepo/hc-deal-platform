@@ -14,7 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_actor_name, require_auth
 from app.core.config import settings
 from app.db.activity import log_activity
+from app.db.approvals import log_approval
 from app.db.models import Deal, DealDocument, DealUpdateLog, EmailScanLog
+from app.db.models.companies import Company
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
 from app.domain.pipeline_stage import (
@@ -145,6 +147,8 @@ async def patch_deal(
             db, deal_id, get_actor_name(auth), activity_type,
             f"{body.field} changed from {old_value!r} to {coerced!r}",
         )
+        if body.field in ("pipeline_stage", "status"):
+            await log_approval(db, deal_id, str(coerced), get_actor_name(auth))
 
     return {"ok": True, "deal_id": str(deal_id), "field": body.field, "value": coerced}
 
@@ -299,6 +303,10 @@ async def update_deal(
         )
     if "status" in changed_field_names:
         await log_activity(db, deal_id, get_actor_name(auth), "status_change", f"Status changed to {deal.status!r}")
+    if "pipeline_stage" in changed_field_names:
+        await log_approval(db, deal_id, deal.pipeline_stage, get_actor_name(auth))
+    if "status" in changed_field_names:
+        await log_approval(db, deal_id, deal.status, get_actor_name(auth))
     other_fields = [f for f in changed_field_names if f not in ("pipeline_stage", "stage", "bucket", "status")]
     if other_fields:
         summary = ", ".join(other_fields[:5]) + (f" (+{len(other_fields) - 5} more)" if len(other_fields) > 5 else "")
@@ -422,6 +430,7 @@ def _deal_to_dict(d: Deal) -> dict:
         "year_founded": d.year_founded,
         "risk_score": float(d.risk_score) if d.risk_score is not None else None,
         "deal_team": d.deal_team,
+        "company_id": str(d.company_id) if d.company_id else None,
         "underwriting_locked": is_underwriting_locked(d.pipeline_stage),
     }
 
@@ -533,7 +542,22 @@ async def create_deal(
     if body.deal_size_m is not None and body.ltm_ebitda_m:
         total_leverage = round(body.deal_size_m / body.ltm_ebitda_m, 2)
 
+    # Every deal gets a backing Company row (Corporate Credit Data Model
+    # v0.2 normalizes the borrower out of the deal) — mirrors migration 020's
+    # one-company-per-deal backfill so deals created after that migration
+    # aren't left with a permanently null company_id.
+    company = Company(
+        company_name=body.company_name,
+        state=body.state,
+        hq_location=body.location,
+        sector=body.sector_primary,
+        subsector=body.subsector,
+    )
+    db.add(company)
+    await db.flush()
+
     deal = Deal(
+        company_id=company.company_id,
         company_name=body.company_name,
         location=body.location,
         sector_primary=body.sector_primary,
