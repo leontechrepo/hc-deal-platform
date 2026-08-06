@@ -12,7 +12,7 @@ from app.core.auth import get_actor_name, require_auth
 from app.core.config import settings
 from app.db.activity import log_activity
 from app.db.models import Deal, DealDocument
-from app.db.models.documents import DOCUMENT_CATEGORIES
+from app.db.models.documents import DOCUMENT_CATEGORIES, PROCESSING_STATUSES
 from app.db.session import get_db
 from app.storage import documents as storage
 
@@ -29,6 +29,10 @@ def _document_to_dict(doc: DealDocument) -> dict:
         "size_bytes": doc.size_bytes,
         "status": doc.status,
         "uploaded_by": doc.uploaded_by,
+        "processing_status": doc.processing_status,
+        "extracted_data": doc.extracted_data,
+        "extraction_confidence": float(doc.extraction_confidence) if doc.extraction_confidence is not None else None,
+        "human_review_required": doc.human_review_required,
         "created_at": doc.created_at.isoformat(),
     }
 
@@ -106,6 +110,8 @@ async def download_document(document_id: int, db: AsyncSession = Depends(get_db)
 class DocumentPatchRequest(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
+    processing_status: Optional[str] = None
+    human_review_required: Optional[bool] = None
 
 
 @router.patch("/documents/{document_id}")
@@ -117,6 +123,8 @@ async def patch_document(document_id: int, body: DocumentPatchRequest, db: Async
     updates = body.model_dump(exclude_unset=True)
     if "category" in updates and updates["category"] not in DOCUMENT_CATEGORIES:
         raise HTTPException(status_code=400, detail=f"Invalid category: {updates['category']!r}")
+    if "processing_status" in updates and updates["processing_status"] is not None and updates["processing_status"] not in PROCESSING_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid processing_status: {updates['processing_status']!r}")
     for field, value in updates.items():
         setattr(doc, field, value)
     doc.updated_at = datetime.now(timezone.utc)

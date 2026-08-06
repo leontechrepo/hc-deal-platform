@@ -103,6 +103,7 @@ def _test_to_dict(t: PortfolioMonitoringTest) -> dict:
         "fccr": float(t.fccr) if t.fccr is not None else None,
         "covenant_status": t.covenant_status,
         "notes": t.notes,
+        "covenant_id": str(t.covenant_id) if t.covenant_id else None,
         "created_at": t.created_at.isoformat(),
     }
 
@@ -125,6 +126,7 @@ class PortfolioTestRequest(BaseModel):
     fccr: Optional[float] = None
     covenant_status: Optional[str] = None
     notes: Optional[str] = None
+    covenant_id: Optional[uuid.UUID] = None
 
 
 @router.post("/portfolio/{deal_id}/tests")
