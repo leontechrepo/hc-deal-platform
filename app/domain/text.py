@@ -18,6 +18,8 @@ import re
 _EMOJI_RANGES = (
     (0x1F000, 0x1FAFF),  # emoticons, transport, pictographs, flags, extended-A
     (0x1FB00, 0x1FBFF),  # symbols for legacy computing
+    (0x231A, 0x231B),    # watch, hourglass (⌚ ⌛) — Misc. Technical, but emoji per Unicode
+    (0x23E9, 0x23FA),    # media-control + clock cluster (⏩ … ⏰ ⏱ ⏲ ⏳ … ⏺)
     (0x2600, 0x26FF),    # miscellaneous symbols (sun, warning, star, recycle …)
     (0x2700, 0x27BF),    # dingbats (check mark button, sparkles, cross mark …)
     (0x2B00, 0x2BFF),    # miscellaneous symbols and arrows (⬆ ⭐ ⬛ …)

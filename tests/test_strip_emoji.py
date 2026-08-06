@@ -20,7 +20,17 @@ EMOJI = [
     "1️⃣",        # keycap sequence
     "👍🏽",        # skin-tone modifier
     "👨‍👩‍👧",  # ZWJ family sequence
+    "⌚", "⌛", "⏰", "⏱", "⏲", "⏳",  # Misc. Technical clock cluster (Codex review)
 ]
+
+# Symbols the brand keeps intact that live outside the curated emoji blocks —
+# regression coverage for the "does this range creep too wide" failure mode.
+NON_EMOJI_TECHNICAL = ["™", "®", "©"]
+
+
+@pytest.mark.parametrize("glyph", NON_EMOJI_TECHNICAL)
+def test_non_emoji_technical_symbols_survive(glyph):
+    assert glyph in strip_emoji(f"a{glyph}b")
 
 
 @pytest.mark.parametrize("glyph", BRAND_GLYPHS)

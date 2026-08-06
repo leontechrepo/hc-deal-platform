@@ -25,6 +25,12 @@ const PICTOGRAPHIC = String.raw`\p{Extended_Pictographic}\p{Emoji_Presentation}`
  *
  * `\p{Extended_Pictographic}` deliberately does not match the glyphs the brand does
  * use — "→" (drill-down), "≤ ≥ ±" (comparators), dashes, or the "▌" cursor.
+ *
+ * `Extended_Pictographic` alone is broader than "emoji" — it also covers symbols
+ * that default to plain TEXT presentation, like ™ ® ©, which the brand keeps intact
+ * (Codex review). The match below therefore anchors on a char with default emoji
+ * presentation, or an Extended_Pictographic char that explicitly requests emoji
+ * presentation via VS16 — never a bare Extended_Pictographic char alone.
  */
 // Modifiers as escapes, never literal characters — they are invisible in source, and a
 // literal combining mark inside a character class is genuinely ambiguous
@@ -39,8 +45,10 @@ const EMOJI_RE = new RegExp(
     // keycap sequences: digit/#/* + optional VS16 + combining enclosing keycap
     `[0-9#*]${VS16}?${KEYCAP}` +
     '|' +
-    // a pictographic char plus trailing VS16 / ZWJ-joined parts / skin tones
-    `[${PICTOGRAPHIC}](?:${VS16}|${ZWJ}[${PICTOGRAPHIC}]|[${SKIN}])*` +
+    // Anchor requires actual emoji presentation — either by default, or an
+    // Extended_Pictographic char with an explicit VS16 request — then any
+    // trailing VS16 / ZWJ-joined parts / skin tones.
+    `(?:\\p{Emoji_Presentation}|\\p{Extended_Pictographic}${VS16})(?:${VS16}|${ZWJ}[${PICTOGRAPHIC}]|[${SKIN}])*` +
     '|' +
     // stray modifiers left on their own. An alternation, not a character class — a class
     // grouping these reads as a combined/joined sequence (no-misleading-character-class),
