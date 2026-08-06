@@ -11,16 +11,16 @@ export function usePortfolio() {
 export function useUpdatePortfolioPosition() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, body }: { dealId: number; body: PortfolioPositionInput }) =>
+    mutationFn: ({ dealId, body }: { dealId: string; body: PortfolioPositionInput }) =>
       updatePortfolioPosition(dealId, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['portfolio'] }),
   })
 }
 
-export function usePortfolioTests(dealId: number | null) {
+export function usePortfolioTests(dealId: string | null) {
   return useQuery({
     queryKey: ['portfolio', dealId, 'tests'],
-    queryFn: () => listPortfolioTests(dealId as number),
+    queryFn: () => listPortfolioTests(dealId as string),
     enabled: dealId !== null,
   })
 }
@@ -28,7 +28,7 @@ export function usePortfolioTests(dealId: number | null) {
 export function useCreatePortfolioTest() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, body }: { dealId: number; body: PortfolioTestInput }) =>
+    mutationFn: ({ dealId, body }: { dealId: string; body: PortfolioTestInput }) =>
       createPortfolioTest(dealId, body),
     onSuccess: (_data, { dealId }) => {
       qc.invalidateQueries({ queryKey: ['portfolio', dealId, 'tests'] })

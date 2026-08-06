@@ -1,4 +1,5 @@
 import re
+import uuid
 from datetime import date, datetime, timezone
 from io import BytesIO
 from typing import Optional
@@ -74,7 +75,7 @@ class PatchRequest(BaseModel):
 
 @router.patch("/deals/{deal_id}")
 async def patch_deal(
-    deal_id: int,
+    deal_id: uuid.UUID,
     body: PatchRequest,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),
@@ -145,7 +146,7 @@ async def patch_deal(
             f"{body.field} changed from {old_value!r} to {coerced!r}",
         )
 
-    return {"ok": True, "deal_id": deal_id, "field": body.field, "value": coerced}
+    return {"ok": True, "deal_id": str(deal_id), "field": body.field, "value": coerced}
 
 
 class DealUpdateRequest(BaseModel):
@@ -207,7 +208,7 @@ class DealUpdateRequest(BaseModel):
 
 @router.put("/deals/{deal_id}")
 async def update_deal(
-    deal_id: int,
+    deal_id: uuid.UUID,
     body: DealUpdateRequest,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),
@@ -219,7 +220,7 @@ async def update_deal(
 
     updates = body.model_dump(exclude_unset=True)
     if not updates:
-        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+        return {"ok": True, "deal_id": str(deal_id), "updated_fields": [], "deal": _deal_to_dict(deal)}
 
     unknown = set(updates) - EDITABLE_FIELDS
     if unknown:
@@ -252,7 +253,7 @@ async def update_deal(
             changed_fields[field] = coerced
 
     if not changed_fields:
-        return {"ok": True, "deal_id": deal_id, "updated_fields": [], "deal": _deal_to_dict(deal)}
+        return {"ok": True, "deal_id": str(deal_id), "updated_fields": [], "deal": _deal_to_dict(deal)}
 
     # Locked against the stage this request would leave the deal in
     # (applying any pipeline_stage change from this same request), not the
@@ -303,12 +304,12 @@ async def update_deal(
         summary = ", ".join(other_fields[:5]) + (f" (+{len(other_fields) - 5} more)" if len(other_fields) > 5 else "")
         await log_activity(db, deal_id, get_actor_name(auth), "system", f"Deal updated — fields changed: {summary}")
 
-    return {"ok": True, "deal_id": deal_id, "updated_fields": changed_field_names, "deal": _deal_to_dict(deal)}
+    return {"ok": True, "deal_id": str(deal_id), "updated_fields": changed_field_names, "deal": _deal_to_dict(deal)}
 
 
 @router.delete("/deals/{deal_id}")
 async def delete_deal(
-    deal_id: int,
+    deal_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),
 ):
@@ -351,12 +352,12 @@ async def delete_deal(
             except Exception:
                 pass
 
-    return {"ok": True, "deal_id": deal_id, "company_name": company_name}
+    return {"ok": True, "deal_id": str(deal_id), "company_name": company_name}
 
 
 def _deal_to_dict(d: Deal) -> dict:
     return {
-        "id": d.id,
+        "id": str(d.id),
         "company_name": d.company_name,
         "bucket": d.bucket,
         "stage": d.stage,
@@ -433,7 +434,7 @@ async def list_deals(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/deals/{deal_id}")
-async def get_deal(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def get_deal(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -442,7 +443,7 @@ async def get_deal(deal_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/deals/{deal_id}/underwriting/export")
-async def export_underwriting(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def export_underwriting(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -586,7 +587,7 @@ async def create_deal(
     ))
     await log_activity(db, deal.id, get_actor_name(auth), "system", "Deal created — entered via New Deal form")
 
-    return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
+    return {"ok": True, "deal_id": str(deal.id), "company_name": deal.company_name}
 
 
 @router.get("/kpis")
@@ -609,7 +610,7 @@ async def get_deal_update_logs(
     db: AsyncSession = Depends(get_db),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    deal_id: Optional[int] = Query(None),
+    deal_id: Optional[uuid.UUID] = Query(None),
 ):
     q = (
         select(DealUpdateLog, Deal.company_name)
@@ -624,7 +625,7 @@ async def get_deal_update_logs(
     return [
         {
             "id": log.id,
-            "deal_id": log.deal_id,
+            "deal_id": str(log.deal_id),
             "company_name": name,
             "field_changed": log.field_changed,
             "old_value": log.old_value,
@@ -658,7 +659,7 @@ async def get_email_scan_logs(
             "user_email": log.user_email,
             "received_at": log.received_at.isoformat() if log.received_at else None,
             "processed_at": log.processed_at.isoformat(),
-            "matched_deal_id": log.matched_deal_id,
+            "matched_deal_id": str(log.matched_deal_id) if log.matched_deal_id else None,
             "company_name": name,
             "claude_summary": log.claude_summary,
             "action_taken": log.action_taken,
@@ -678,7 +679,7 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
 
     pass_rows = await db.execute(
         text(
-            "SELECT reasons_for_passing, COUNT(*) AS cnt FROM deals "
+            "SELECT reasons_for_passing, COUNT(*) AS cnt FROM credit_deals "
             "WHERE bucket='Dead-Hold' AND reasons_for_passing IS NOT NULL AND reasons_for_passing != '' "
             "GROUP BY reasons_for_passing ORDER BY cnt DESC"
         )
@@ -687,7 +688,7 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
 
     source_rows = await db.execute(
         text(
-            "SELECT source, COUNT(*) AS cnt FROM deals "
+            "SELECT source, COUNT(*) AS cnt FROM credit_deals "
             "WHERE source IS NOT NULL AND source != '' "
             "GROUP BY source ORDER BY cnt DESC LIMIT 12"
         )
@@ -696,7 +697,7 @@ async def get_analytics(db: AsyncSession = Depends(get_db)):
 
     quarter_rows = await db.execute(
         text(
-            "SELECT timing_qtr, COUNT(*) AS cnt FROM deals "
+            "SELECT timing_qtr, COUNT(*) AS cnt FROM credit_deals "
             "WHERE timing_qtr IS NOT NULL AND timing_qtr != '' "
             "GROUP BY timing_qtr ORDER BY SUBSTRING(timing_qtr FROM 4), LEFT(timing_qtr, 1)"
         )

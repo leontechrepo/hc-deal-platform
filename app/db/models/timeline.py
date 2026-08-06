@@ -1,6 +1,8 @@
+import uuid
 from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
@@ -17,7 +19,9 @@ class DealTimelineWorkstream(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    deal_id: Mapped[int] = mapped_column(Integer, ForeignKey("deals.id", ondelete="CASCADE"), nullable=False)
+    deal_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("credit_deals.id", ondelete="CASCADE"), nullable=False
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)

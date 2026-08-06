@@ -1,6 +1,8 @@
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, Numeric, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -20,7 +22,9 @@ class PendingSuggestion(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    deal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deals.id", ondelete="CASCADE"), nullable=True)
+    deal_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("credit_deals.id", ondelete="CASCADE"), nullable=True
+    )
     email_scan_log_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("email_scan_log.id", ondelete="SET NULL"), nullable=True)
     suggested_field: Mapped[str] = mapped_column(Text, default="commentary", nullable=False)
     suggested_value: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -56,7 +60,9 @@ class EmailScanLog(Base):
     subject: Mapped[str | None] = mapped_column(Text, nullable=True)
     thread_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    matched_deal_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True)
+    matched_deal_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("credit_deals.id", ondelete="SET NULL"), nullable=True
+    )
     claude_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
     action_taken: Mapped[str | None] = mapped_column(Text, nullable=True)  # no_match | queued_for_review | filtered | new_deal_detected

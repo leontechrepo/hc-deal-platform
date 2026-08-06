@@ -48,7 +48,7 @@ def _check_rate_limit(user_sub: str) -> None:
 class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str
-    deal_id: int | None = None
+    deal_id: uuid.UUID | None = None
 
 
 class ChatResponse(BaseModel):
@@ -60,7 +60,7 @@ class ChatResponse(BaseModel):
 class ChatSessionOut(BaseModel):
     id: str
     title: str
-    deal_id: int | None
+    deal_id: uuid.UUID | None
     created_at: str
     updated_at: str
 

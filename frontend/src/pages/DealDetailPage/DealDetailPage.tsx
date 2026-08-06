@@ -23,8 +23,7 @@ function fmtX(value: number | null): string {
 
 export function DealDetailPage() {
   const { dealId } = useParams<{ dealId: string }>()
-  const id = Number(dealId)
-  const { data: deal, isLoading, isError } = useDeal(Number.isFinite(id) ? id : null)
+  const { data: deal, isLoading, isError } = useDeal(dealId ?? null)
   const updateDeal = useUpdateDeal()
   const deleteDeal = useDeleteDeal()
   const navigate = useNavigate()

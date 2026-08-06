@@ -20,7 +20,16 @@ from app.core.config import settings
 
 @pytest.fixture
 async def db_engine():
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    # Must match app/db/session.py's connect_args — without it, unqualified
+    # table names in migrations/queries resolve via Postgres's default
+    # search_path ("$user", public) instead of corporate_credit, silently
+    # operating on a different (and possibly stale/duplicate) set of tables
+    # than the real app ever touches.
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=False,
+        connect_args={"server_settings": {"search_path": "corporate_credit,public"}},
+    )
     try:
         async with engine.connect():
             pass

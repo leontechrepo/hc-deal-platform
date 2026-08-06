@@ -29,7 +29,7 @@ const SHELL = { title: 'Portfolio', sub: 'Positions in monitoring' }
 
 export function PortfolioPage() {
   const { data: positions = [], isLoading, isError } = usePortfolio()
-  const [selectedDealId, setSelectedDealId] = useState<number | null>(null)
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
 
   const selectedPosition = useMemo(
     () => positions.find(p => p.deal_id === selectedDealId) ?? null,

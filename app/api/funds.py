@@ -32,7 +32,7 @@ def _lp_dict(lp: FundLP) -> dict:
 
 def _fund_deal_dict(d: Deal) -> dict:
     return {
-        "id": d.id,
+        "id": str(d.id),
         "company_name": d.company_name,
         "pipeline_stage": d.pipeline_stage,
         "status": d.status,

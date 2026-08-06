@@ -8,7 +8,7 @@ import formStyles from '../shared/Form.module.css'
 import styles from './CreateTimelineWizard.module.css'
 
 interface Props {
-  dealId: number
+  dealId: string
   open: boolean
   onClose: () => void
 }

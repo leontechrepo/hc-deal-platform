@@ -7,7 +7,7 @@ import formStyles from '../shared/Form.module.css'
 import styles from './AddTaskForm.module.css'
 
 interface Props {
-  dealId: number
+  dealId: string
   workstreamId: number
   open: boolean
   onClose: () => void

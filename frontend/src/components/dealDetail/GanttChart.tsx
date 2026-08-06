@@ -16,7 +16,7 @@ const MIN_TRACK_WIDTH = 500
 const TRACK_PADDING_DAYS = 10
 
 interface Props {
-  dealId: number
+  dealId: string
   workstreams: DealTimelineWorkstream[]
 }
 

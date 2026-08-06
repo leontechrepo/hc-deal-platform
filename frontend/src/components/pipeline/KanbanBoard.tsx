@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function KanbanBoard({ deals, onEdit, onDelete }: Props) {
-  const [draggingId, setDraggingId] = useState<number | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
   const patchDeal = usePatchDeal()
 
   const byStage = new Map<string, Deal[]>()

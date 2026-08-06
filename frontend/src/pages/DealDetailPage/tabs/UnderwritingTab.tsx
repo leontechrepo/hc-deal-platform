@@ -34,7 +34,7 @@ function LockAwareText({ locked, value, onSave, multiline }: {
 
 function LockAwareDate({ locked, dealId, field, value, actor }: {
   locked: boolean
-  dealId: number
+  dealId: string
   field: string
   value: string | null
   actor?: string

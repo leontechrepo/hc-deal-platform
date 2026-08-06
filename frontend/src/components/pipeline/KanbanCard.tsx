@@ -6,7 +6,7 @@ import styles from './KanbanCard.module.css'
 
 interface Props {
   deal: Deal
-  onDragStart: (dealId: number) => void
+  onDragStart: (dealId: string) => void
   onDragEnd: () => void
   onEdit: (deal: Deal) => void
   onDelete: (deal: Deal) => void

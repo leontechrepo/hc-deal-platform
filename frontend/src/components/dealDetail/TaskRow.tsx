@@ -18,7 +18,7 @@ const STATUS_BAR_TONE: Record<string, string> = {
 }
 
 interface Props {
-  dealId: number
+  dealId: string
   task: DealTimelineTask
   rangeStart: Date
   pxPerDay: number

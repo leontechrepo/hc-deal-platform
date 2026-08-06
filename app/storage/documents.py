@@ -27,7 +27,7 @@ def _get_client():
     return _client
 
 
-def make_storage_key(deal_id: int, filename: str) -> str:
+def make_storage_key(deal_id: uuid.UUID, filename: str) -> str:
     return f"deals/{deal_id}/{uuid.uuid4().hex}-{filename}"
 
 

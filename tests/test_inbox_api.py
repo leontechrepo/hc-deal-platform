@@ -79,7 +79,7 @@ async def test_approving_with_deal_id_override_retargets_the_update(db_session):
     assert result["company_name"] == "Right Match Co"
 
     await db_session.refresh(suggestion)
-    assert suggestion.deal_id == correct["deal_id"]
+    assert str(suggestion.deal_id) == correct["deal_id"]
 
     from app.api.deals import get_deal
 

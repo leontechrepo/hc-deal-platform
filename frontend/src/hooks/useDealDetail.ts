@@ -4,18 +4,18 @@ import {
 } from '../api/dealDetail'
 import { deleteDealDocument, listDealDocuments, uploadDealDocument } from '../api/dealDocuments'
 
-export function useDealActivity(dealId: number | null) {
+export function useDealActivity(dealId: string | null) {
   return useQuery({
     queryKey: ['deals', dealId, 'activity'],
-    queryFn: () => listDealActivity(dealId as number),
+    queryFn: () => listDealActivity(dealId as string),
     enabled: dealId !== null,
   })
 }
 
-export function useDealNotes(dealId: number | null) {
+export function useDealNotes(dealId: string | null) {
   return useQuery({
     queryKey: ['deals', dealId, 'notes'],
-    queryFn: () => listDealNotes(dealId as number),
+    queryFn: () => listDealNotes(dealId as string),
     enabled: dealId !== null,
   })
 }
@@ -23,13 +23,13 @@ export function useDealNotes(dealId: number | null) {
 export function useCreateDealNote() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, body }: { dealId: number; body: { author?: string; body: string } }) =>
+    mutationFn: ({ dealId, body }: { dealId: string; body: { author?: string; body: string } }) =>
       createDealNote(dealId, body),
     onSuccess: (_data, { dealId }) => qc.invalidateQueries({ queryKey: ['deals', dealId, 'notes'] }),
   })
 }
 
-export function useUpdateDealNote(dealId: number) {
+export function useUpdateDealNote(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ noteId, body }: { noteId: number; body: string }) => updateDealNote(noteId, body),
@@ -37,7 +37,7 @@ export function useUpdateDealNote(dealId: number) {
   })
 }
 
-export function useDeleteDealNote(dealId: number) {
+export function useDeleteDealNote(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (noteId: number) => deleteDealNote(noteId),
@@ -45,15 +45,15 @@ export function useDeleteDealNote(dealId: number) {
   })
 }
 
-export function useDealDocuments(dealId: number | null) {
+export function useDealDocuments(dealId: string | null) {
   return useQuery({
     queryKey: ['deals', dealId, 'documents'],
-    queryFn: () => listDealDocuments(dealId as number),
+    queryFn: () => listDealDocuments(dealId as string),
     enabled: dealId !== null,
   })
 }
 
-export function useUploadDealDocument(dealId: number) {
+export function useUploadDealDocument(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ file, category }: { file: File; category: string }) =>
@@ -62,7 +62,7 @@ export function useUploadDealDocument(dealId: number) {
   })
 }
 
-export function useDeleteDealDocument(dealId: number) {
+export function useDeleteDealDocument(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (documentId: number) => deleteDealDocument(documentId),

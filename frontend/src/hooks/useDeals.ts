@@ -6,10 +6,10 @@ export function useDeals() {
   return useQuery({ queryKey: ['deals'], queryFn: listDeals })
 }
 
-export function useDeal(dealId: number | null) {
+export function useDeal(dealId: string | null) {
   return useQuery({
     queryKey: ['deals', dealId],
-    queryFn: () => getDeal(dealId as number),
+    queryFn: () => getDeal(dealId as string),
     enabled: dealId !== null,
   })
 }
@@ -17,7 +17,7 @@ export function useDeal(dealId: number | null) {
 export function usePatchDeal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, field, value, actor }: { dealId: number; field: string; value: string | null; actor?: string }) =>
+    mutationFn: ({ dealId, field, value, actor }: { dealId: string; field: string; value: string | null; actor?: string }) =>
       patchDeal(dealId, field, value, actor),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
@@ -40,7 +40,7 @@ export function useCreateDeal() {
 export function useUpdateDeal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, body }: { dealId: number; body: Partial<CreateDealInput> }) => updateDeal(dealId, body),
+    mutationFn: ({ dealId, body }: { dealId: string; body: Partial<CreateDealInput> }) => updateDeal(dealId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })
@@ -51,7 +51,7 @@ export function useUpdateDeal() {
 export function useDeleteDeal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (dealId: number) => deleteDeal(dealId),
+    mutationFn: (dealId: string) => deleteDeal(dealId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })

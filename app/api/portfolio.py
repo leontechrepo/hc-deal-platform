@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -21,7 +22,7 @@ async def _position_to_dict(pos: PortfolioPosition, deal: Deal, db: AsyncSession
         sponsor_name = sp_res.scalar_one_or_none()
     return {
         "id": pos.id,
-        "deal_id": deal.id,
+        "deal_id": str(deal.id),
         "company_name": deal.company_name,
         "sponsor_name": sponsor_name,
         "funded_date": pos.funded_date.isoformat() if pos.funded_date else None,
@@ -45,7 +46,7 @@ async def list_portfolio(db: AsyncSession = Depends(get_db)):
     return [await _position_to_dict(pos, deal, db) for pos, deal in result.all()]
 
 
-async def _get_position(deal_id: int, db: AsyncSession) -> tuple[PortfolioPosition, Deal]:
+async def _get_position(deal_id: uuid.UUID, db: AsyncSession) -> tuple[PortfolioPosition, Deal]:
     result = await db.execute(
         select(PortfolioPosition, Deal).join(Deal, PortfolioPosition.deal_id == Deal.id).where(Deal.id == deal_id)
     )
@@ -56,7 +57,7 @@ async def _get_position(deal_id: int, db: AsyncSession) -> tuple[PortfolioPositi
 
 
 @router.get("/portfolio/{deal_id}")
-async def get_portfolio_position(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def get_portfolio_position(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     pos, deal = await _get_position(deal_id, db)
     return await _position_to_dict(pos, deal, db)
 
@@ -79,7 +80,7 @@ class PortfolioPatchRequest(BaseModel):
 
 
 @router.patch("/portfolio/{deal_id}")
-async def patch_portfolio_position(deal_id: int, body: PortfolioPatchRequest, db: AsyncSession = Depends(get_db)):
+async def patch_portfolio_position(deal_id: uuid.UUID, body: PortfolioPatchRequest, db: AsyncSession = Depends(get_db)):
     pos, deal = await _get_position(deal_id, db)
     updates = body.model_dump(exclude_unset=True)
     if "payment_status" in updates and updates["payment_status"] is not None and updates["payment_status"] not in _PAYMENT_STATUSES:
@@ -107,7 +108,7 @@ def _test_to_dict(t: PortfolioMonitoringTest) -> dict:
 
 
 @router.get("/portfolio/{deal_id}/tests")
-async def list_portfolio_tests(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def list_portfolio_tests(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     pos, _ = await _get_position(deal_id, db)
     result = await db.execute(
         select(PortfolioMonitoringTest)
@@ -127,7 +128,7 @@ class PortfolioTestRequest(BaseModel):
 
 
 @router.post("/portfolio/{deal_id}/tests")
-async def create_portfolio_test(deal_id: int, body: PortfolioTestRequest, db: AsyncSession = Depends(get_db)):
+async def create_portfolio_test(deal_id: uuid.UUID, body: PortfolioTestRequest, db: AsyncSession = Depends(get_db)):
     pos, _ = await _get_position(deal_id, db)
     test = PortfolioMonitoringTest(portfolio_position_id=pos.id, **body.model_dump())
     db.add(test)
