@@ -35,18 +35,31 @@ async def upgrade(conn: AsyncConnection) -> None:
     # safe to leave half-done; this file must be rehearsed against a real
     # data clone and run against production only from a fresh backup.
 
-    # 1. Drop every dependent table's old integer FK column. Postgres
+    # 1. Re-run the migration 015 backfill one last time. Rows written by
+    #    old app code between migration 016 and this cutover can still have
+    #    a NULL uuid column — silently, for the tables where 016 didn't (or
+    #    couldn't yet) enforce NOT NULL — because the old integer FK column
+    #    is about to be dropped below. This UPDATE is idempotent (WHERE ...
+    #    IS NULL) and closes that gap immediately before the point where it
+    #    would otherwise become permanent data loss.
+    for table, fk_column, uuid_column, _on_delete in _DEPENDENT_FKS:
+        await conn.execute(text(f"""
+            UPDATE {table} t SET {uuid_column} = d.uuid_id
+            FROM deals d WHERE d.id = t.{fk_column} AND t.{uuid_column} IS NULL
+        """))
+
+    # 2. Drop every dependent table's old integer FK column. Postgres
     #    auto-drops the FK constraint (and, for portfolio_positions, the
     #    UNIQUE constraint) defined on that column along with it — no need
     #    to name/guess the underlying constraint.
     for table, fk_column, _uuid_column, _on_delete in _DEPENDENT_FKS:
         await conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {fk_column}"))
 
-    # 2. Drop deals' old integer PK column — safe now that no FK anywhere
+    # 3. Drop deals' old integer PK column — safe now that no FK anywhere
     #    still references it.
     await conn.execute(text("ALTER TABLE deals DROP COLUMN IF EXISTS id"))
 
-    # 3. Promote the UUID column to be the real id/PK and rename the table.
+    # 4. Promote the UUID column to be the real id/PK and rename the table.
     #    USING INDEX reuses the unique index from migration 015 instead of
     #    building a new one, and Postgres renames that index to match the
     #    constraint name automatically.
@@ -56,7 +69,7 @@ async def upgrade(conn: AsyncConnection) -> None:
     ))
     await conn.execute(text("ALTER TABLE deals RENAME TO credit_deals"))
 
-    # 4. Rename each dependent's UUID column into the real FK name and
+    # 5. Rename each dependent's UUID column into the real FK name and
     #    re-add its foreign key against credit_deals(id).
     for table, fk_column, uuid_column, on_delete in _DEPENDENT_FKS:
         await conn.execute(text(f"ALTER TABLE {table} RENAME COLUMN {uuid_column} TO {fk_column}"))
@@ -66,13 +79,13 @@ async def upgrade(conn: AsyncConnection) -> None:
         """))
 
     # portfolio_positions' 1:1-with-a-deal invariant was enforced by a
-    # UNIQUE constraint that got dropped along with its old column in step 1
+    # UNIQUE constraint that got dropped along with its old column in step 2
     # — restore it on the renamed column.
     await conn.execute(text(
         "ALTER TABLE portfolio_positions ADD CONSTRAINT portfolio_positions_deal_id_key UNIQUE (deal_id)"
     ))
 
-    # 5. Cosmetic: rename the old idx_deals_* indexes so `\d credit_deals`
+    # 6. Cosmetic: rename the old idx_deals_* indexes so `\d credit_deals`
     #    doesn't show index names referencing a table that no longer exists.
     for old_name, new_name in _INDEX_RENAMES:
         await conn.execute(text(f"ALTER INDEX IF EXISTS {old_name} RENAME TO {new_name}"))
