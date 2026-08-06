@@ -1,5 +1,5 @@
 import type { ChatMessage } from '../../types'
-import { renderChatMarkdown } from './chatMarkdown'
+import { ChatMarkdown } from './chatMarkdown'
 import styles from './ChatBubble.module.css'
 
 export function ChatBubble({ message }: { message: ChatMessage }) {
@@ -13,7 +13,7 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={`${styles.row} ${isUser ? styles.rowUser : styles.rowAssistant}`}>
       <div className={bubbleClass}>
-        {isUser ? message.content : renderChatMarkdown(message.content)}
+        {isUser ? message.content : <ChatMarkdown content={message.content} />}
       </div>
     </div>
   )

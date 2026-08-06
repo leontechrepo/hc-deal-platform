@@ -1,42 +1,97 @@
-import type { ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import styles from './chatMarkdown.module.css'
 
-function parseInline(text: string, keyPrefix: string): ReactNode[] {
-  return text.split(/(\*\*.+?\*\*)/g).map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return <strong key={`${keyPrefix}-${i}`}>{part.slice(2, -2)}</strong>
-    }
-    return <span key={`${keyPrefix}-${i}`}>{part}</span>
-  })
+/**
+ * Renders assistant replies as real markdown.
+ *
+ * Ported from Reip's `ChatMarkdown`, which moved to react-markdown + remark-gfm
+ * precisely to fix this — see its commit "fix: render markdown tables in chat
+ * assistant responses". `remark-gfm` is what supplies GFM tables; without it the
+ * pipe rows come through as literal text, which is what this file used to do.
+ *
+ * (The previous hand-rolled version handled only bold, bullets and line breaks, so
+ * headings, `---` rules and tables all rendered as raw source.)
+ *
+ * Tables get a scroll wrapper — Reip's pattern — so a wide one scrolls inside the
+ * bubble instead of stretching it.
+ */
+const PICTOGRAPHIC = String.raw`\p{Extended_Pictographic}\p{Emoji_Presentation}`
+
+/**
+ * Mirrors the server's `strip_emoji` (app/domain/text.py). The backend cleans replies
+ * before persisting, but sessions created before that landed still hold emoji, so
+ * strip on render too rather than migrating the table.
+ *
+ * `\p{Extended_Pictographic}` deliberately does not match the glyphs the brand does
+ * use — "→" (drill-down), "≤ ≥ ±" (comparators), dashes, or the "▌" cursor.
+ *
+ * `Extended_Pictographic` alone is broader than "emoji" — it also covers symbols
+ * that default to plain TEXT presentation, like ™ ® ©, which the brand keeps intact
+ * (Codex review). The match below therefore anchors on a char with default emoji
+ * presentation, or an Extended_Pictographic char that explicitly requests emoji
+ * presentation via VS16 — never a bare Extended_Pictographic char alone.
+ */
+// Modifiers as escapes, never literal characters — they are invisible in source, and a
+// literal combining mark inside a character class is genuinely ambiguous
+// (eslint no-misleading-character-class flags it, correctly).
+const VS16 = '\\uFE0F' // variation selector-16 (emoji presentation)
+const ZWJ = '\\u200D' // zero-width joiner (family/profession sequences)
+const KEYCAP = '\\u20E3' // combining enclosing keycap
+const SKIN = String.raw`\u{1F3FB}-\u{1F3FF}` // skin-tone modifiers
+
+const EMOJI_RE = new RegExp(
+  '(?:' +
+    // keycap sequences: digit/#/* + optional VS16 + combining enclosing keycap
+    `[0-9#*]${VS16}?${KEYCAP}` +
+    '|' +
+    // Anchor requires actual emoji presentation — either by default, or an
+    // Extended_Pictographic char with an explicit VS16 request — then any
+    // trailing VS16 / ZWJ-joined parts / skin tones.
+    `(?:\\p{Emoji_Presentation}|\\p{Extended_Pictographic}${VS16})(?:${VS16}|${ZWJ}[${PICTOGRAPHIC}]|[${SKIN}])*` +
+    '|' +
+    // stray modifiers left on their own. An alternation, not a character class — a class
+    // grouping these reads as a combined/joined sequence (no-misleading-character-class),
+    // and matching them individually is exactly the intent.
+    `${VS16}|${ZWJ}|${KEYCAP}` +
+  ')',
+  'gu',
+)
+
+function stripEmoji(text: string): string {
+  if (!EMOJI_RE.test(text)) return text
+  EMOJI_RE.lastIndex = 0
+  return text
+    .split('\n')
+    .map(line => {
+      const next = line.replace(EMOJI_RE, '')
+      if (next === line) return line
+      // Collapse the gap the removal opens ("### 📊 Overall"), but never the leading
+      // indentation — that is what marks a nested list item or a code block. Measure it
+      // on the ORIGINAL line, else the space that followed a line-leading emoji looks
+      // like indentation.
+      const indent = line.slice(0, line.length - line.trimStart().length)
+      const body = next.startsWith(indent) ? next.slice(indent.length) : next
+      return (indent + body.trimStart().replace(/[ \t]{2,}/g, ' ')).trimEnd()
+    })
+    .join('\n')
 }
 
-// Deliberately minimal — mirrors the Reip design system's own hand-rolled
-// ChatMarkdown (bold + bullet lists + line breaks only, no headings/tables/
-// code fences), not a full markdown library.
-export function renderChatMarkdown(content: string): ReactNode {
-  const blocks = content.trim().split(/\n{2,}/)
-  return blocks.map((block, bi) => {
-    const lines = block.split('\n').filter(l => l.length > 0)
-    const isList = lines.length > 0 && lines.every(l => /^[-*]\s+/.test(l.trim()))
-
-    if (isList) {
-      return (
-        <ul key={bi}>
-          {lines.map((line, li) => (
-            <li key={li}>{parseInline(line.trim().replace(/^[-*]\s+/, ''), `${bi}-${li}`)}</li>
-          ))}
-        </ul>
-      )
-    }
-
-    return (
-      <p key={bi}>
-        {lines.map((line, li) => (
-          <span key={li}>
-            {parseInline(line, `${bi}-${li}`)}
-            {li < lines.length - 1 && <br />}
-          </span>
-        ))}
-      </p>
-    )
-  })
+export function ChatMarkdown({ content }: { content: string }) {
+  return (
+    <div className={styles.markdown}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          table: ({ children }) => (
+            <div className={styles.tableWrap}>
+              <table>{children}</table>
+            </div>
+          ),
+        }}
+      >
+        {stripEmoji(content)}
+      </ReactMarkdown>
+    </div>
+  )
 }
