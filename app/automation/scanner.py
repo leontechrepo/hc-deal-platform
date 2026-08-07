@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -37,22 +38,54 @@ def _is_low_value(subject: str, sender: str) -> bool:
     return any(p in sender.lower() for p in _SKIP_SENDER_PATTERNS)
 
 
-def _build_system_prompt(deals: list[Deal]) -> str:
-    deal_list = "\n".join(
-        f"- ID {d.id}: {d.company_name} (pipeline_stage: {d.pipeline_stage}, status: {d.status}, sector: {d.sector_primary})"
-        for d in deals
-        if d.status not in ("Passed", "Dead")
-    )
+_MAX_TOOL_ROUNDS = 3
+_SEARCH_RESULT_LIMIT = 5
+
+_SEARCH_DEALS_TOOL = {
+    "name": "search_deals",
+    "description": (
+        "Search the active deal pipeline for deals matching a company name. "
+        "Use this to find the right deal for an email before classifying it "
+        "— never guess or invent a deal identifier, always search first. "
+        "You may call this more than once (e.g. with a shortened or "
+        "alternate spelling of the name) if the first search isn't useful."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "company_name": {
+                "type": "string",
+                "description": "Company name (or a close approximation) mentioned in the email",
+            },
+        },
+        "required": ["company_name"],
+    },
+}
+
+
+def _search_deals(deals: list[Deal], query: str) -> list[Deal]:
+    q = query.strip().lower()
+    if not q:
+        return []
+    matches = [
+        d for d in deals
+        if d.status not in ("Passed", "Dead") and (q in d.company_name.lower() or d.company_name.lower() in q)
+    ]
+    return matches[:_SEARCH_RESULT_LIMIT]
+
+
+def _build_system_prompt() -> str:
     stage_list = ", ".join(PIPELINE_STAGES)
     return f"""You are a deal pipeline assistant for Leon Corporate Credit, a healthcare private credit firm.
 
-Active deals in pipeline:
-{deal_list}
+You'll be given an email. First decide whether it's about an existing deal, a brand-new opportunity, or neither.
 
-When given an email, return ONLY valid JSON in one of these formats:
+If it might be about an existing deal, call search_deals with the company name mentioned in the email — never guess or invent a deal identifier.
 
-Matched existing deal:
-{{"matched": true, "deal_id": 123, "confidence": 0.9, "commentary": "One sentence update (max 120 chars).", "field_updates": [{{"field": "pipeline_stage", "value": "screening", "reasoning": "NDA confirmed signed"}}]}}
+Once you're done searching (or if no search was needed), respond with ONLY valid JSON in one of these formats:
+
+Matched an existing deal (candidate_index is the numbered result from your most recent search_deals call):
+{{"matched": true, "candidate_index": 1, "confidence": 0.9, "commentary": "One sentence update (max 120 chars).", "field_updates": [{{"field": "pipeline_stage", "value": "screening", "reasoning": "NDA confirmed signed"}}]}}
 (omit field_updates if no structural changes are clearly evidenced)
 
 New healthcare investment opportunity not in pipeline:
@@ -69,7 +102,8 @@ Rules:
 - commentary max 120 characters
 - Only propose field_updates when evidence is explicit (e.g. "NDA was executed today" -> pipeline_stage: screening)
 - new_deal only for genuine healthcare investment opportunity introductions
-- Do not match calendar accepts/declines, meeting invites, or internal admin messages"""
+- Do not match calendar accepts/declines, meeting invites, or internal admin messages
+- If search_deals returns nothing convincing, treat it as a possible new_deal or no match — never fabricate a match"""
 
 
 async def _classify_email(
@@ -78,38 +112,80 @@ async def _classify_email(
     deals: list[Deal],
     anthropic_client,
 ) -> dict:
-    import anthropic
-
-    system = _build_system_prompt(deals)
+    # Tool-use loop rather than a single free-text completion: deal ids are
+    # UUIDs, and asking an LLM to transcribe one exactly (by embedding every
+    # active deal's id in the prompt and hoping it's echoed back correctly)
+    # is unreliable — a mistyped id just misses silently. Claude instead
+    # searches by company name (something it's reliably copying straight out
+    # of the email text) and picks a small-numbered candidate; the real id
+    # is resolved server-side from that index, never handled by the model.
+    system = _build_system_prompt()
     email_text = f"Subject: {subject}\n\n{body[:2000]}"
+    messages: list[dict] = [{"role": "user", "content": email_text}]
+    last_candidates: list[Deal] = []
 
-    message = anthropic_client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=512,
-        system=[
-            {
-                "type": "text",
-                "text": system,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": email_text}],
-    )
+    for _ in range(_MAX_TOOL_ROUNDS):
+        message = anthropic_client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=512,
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+            tools=[_SEARCH_DEALS_TOOL],
+            messages=messages,
+        )
 
-    raw = message.content[0].text.strip()
-    raw = re.sub(r"^```(?:json)?\s*", "", raw)
-    raw = re.sub(r"\s*```$", "", raw)
+        if message.stop_reason != "tool_use":
+            raw = "".join(b.text for b in message.content if getattr(b, "type", None) == "text").strip()
+            raw = re.sub(r"^```(?:json)?\s*", "", raw)
+            raw = re.sub(r"\s*```$", "", raw)
+            try:
+                result = json.loads(raw)
+            except json.JSONDecodeError:
+                return {"matched": False}
 
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return {"matched": False}
+            if result.get("matched"):
+                candidate_index = result.get("candidate_index")
+                deal = next(
+                    (d for i, d in enumerate(last_candidates, start=1) if i == candidate_index),
+                    None,
+                )
+                if deal is None:
+                    # Claude claimed a match but referenced a candidate that
+                    # doesn't exist (e.g. never searched, or the index is
+                    # out of range) — never guess, treat as unmatched.
+                    return {"matched": False}
+                result["deal_id"] = deal.id
+            return result
+
+        messages.append({"role": "assistant", "content": message.content})
+        tool_results = []
+        for block in message.content:
+            if getattr(block, "type", None) != "tool_use" or block.name != "search_deals":
+                continue
+            query = (block.input or {}).get("company_name", "")
+            last_candidates = _search_deals(deals, query)
+            payload = [
+                {
+                    "index": i + 1,
+                    "company_name": d.company_name,
+                    "pipeline_stage": d.pipeline_stage,
+                    "status": d.status,
+                }
+                for i, d in enumerate(last_candidates)
+            ]
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": block.id,
+                "content": json.dumps(payload) if payload else "No matching deals found.",
+            })
+        messages.append({"role": "user", "content": tool_results})
+
+    return {"matched": False}
 
 
 async def _upsert_suggestion(
     db: AsyncSession,
     *,
-    deal_id: int | None,
+    deal_id: uuid.UUID | None,
     thread_id: str | None,
     scan_log_id: int,
     suggested_field: str,

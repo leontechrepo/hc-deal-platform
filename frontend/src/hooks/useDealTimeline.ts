@@ -5,10 +5,10 @@ import {
 } from '../api/dealTimeline'
 import type { CreateTaskInput, PatchTaskInput } from '../api/dealTimeline'
 
-export function useDealTimeline(dealId: number | null) {
+export function useDealTimeline(dealId: string | null) {
   return useQuery({
     queryKey: ['deals', dealId, 'timeline'],
-    queryFn: () => getDealTimeline(dealId as number),
+    queryFn: () => getDealTimeline(dealId as string),
     enabled: dealId !== null,
   })
 }
@@ -17,7 +17,7 @@ export function useTimelineTemplates() {
   return useQuery({ queryKey: ['timeline-templates'], queryFn: listTimelineTemplates })
 }
 
-export function useApplyTimelineTemplate(dealId: number) {
+export function useApplyTimelineTemplate(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ templateName, startDate, actor }: { templateName: string; startDate?: string | null; actor?: string }) =>
@@ -26,7 +26,7 @@ export function useApplyTimelineTemplate(dealId: number) {
   })
 }
 
-export function useCreateWorkstream(dealId: number) {
+export function useCreateWorkstream(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ name, sortOrder }: { name: string; sortOrder?: number }) => createWorkstream(dealId, name, sortOrder),
@@ -34,7 +34,7 @@ export function useCreateWorkstream(dealId: number) {
   })
 }
 
-export function usePatchWorkstream(dealId: number) {
+export function usePatchWorkstream(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ workstreamId, body }: { workstreamId: number; body: { name?: string; sort_order?: number } }) =>
@@ -43,7 +43,7 @@ export function usePatchWorkstream(dealId: number) {
   })
 }
 
-export function useDeleteWorkstream(dealId: number) {
+export function useDeleteWorkstream(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (workstreamId: number) => deleteWorkstream(workstreamId),
@@ -51,7 +51,7 @@ export function useDeleteWorkstream(dealId: number) {
   })
 }
 
-export function useCreateTask(dealId: number) {
+export function useCreateTask(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ workstreamId, body }: { workstreamId: number; body: CreateTaskInput }) => createTask(workstreamId, body),
@@ -59,7 +59,7 @@ export function useCreateTask(dealId: number) {
   })
 }
 
-export function usePatchTask(dealId: number) {
+export function usePatchTask(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ taskId, body }: { taskId: number; body: PatchTaskInput }) => patchTask(taskId, body),
@@ -67,7 +67,7 @@ export function usePatchTask(dealId: number) {
   })
 }
 
-export function useDeleteTask(dealId: number) {
+export function useDeleteTask(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (taskId: number) => deleteTask(taskId),

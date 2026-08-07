@@ -1,6 +1,8 @@
+import uuid
 from datetime import date, datetime, timezone
 
 from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, Numeric, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
@@ -19,7 +21,9 @@ class PortfolioPosition(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    deal_id: Mapped[int] = mapped_column(Integer, ForeignKey("deals.id", ondelete="CASCADE"), unique=True, nullable=False)
+    deal_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("credit_deals.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
     funded_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     original_amount_m: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     current_balance_m: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)

@@ -5,6 +5,8 @@ app/automation/scanner.py's _build_system_prompt.
 """
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -83,7 +85,7 @@ async def _deal_detail_block(db: AsyncSession, deal: Deal) -> str:
     return "\n".join(lines)
 
 
-async def build_chat_context(db: AsyncSession, deal_id: int | None = None) -> str:
+async def build_chat_context(db: AsyncSession, deal_id: uuid.UUID | None = None) -> str:
     deal_rows = (await db.execute(
         select(Deal).where(Deal.status.notin_(["Passed", "Dead"])).order_by(Deal.updated_at.desc()).limit(_MAX_DEALS_IN_CONTEXT)
     )).scalars().all()

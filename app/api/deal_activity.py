@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -15,7 +16,7 @@ from app.db.session import get_db
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
 
-async def _get_deal_or_404(deal_id: int, db: AsyncSession) -> Deal:
+async def _get_deal_or_404(deal_id: uuid.UUID, db: AsyncSession) -> Deal:
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -26,7 +27,7 @@ async def _get_deal_or_404(deal_id: int, db: AsyncSession) -> Deal:
 def _activity_to_dict(a: DealActivity) -> dict:
     return {
         "id": a.id,
-        "deal_id": a.deal_id,
+        "deal_id": str(a.deal_id),
         "actor": a.actor,
         "activity_type": a.activity_type,
         "description": a.description,
@@ -36,7 +37,7 @@ def _activity_to_dict(a: DealActivity) -> dict:
 
 
 @router.get("/deals/{deal_id}/activity")
-async def list_activity(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def list_activity(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     await _get_deal_or_404(deal_id, db)
     result = await db.execute(
         select(DealActivity).where(DealActivity.deal_id == deal_id).order_by(DealActivity.created_at.desc())
@@ -52,7 +53,7 @@ class ActivityRequest(BaseModel):
 
 @router.post("/deals/{deal_id}/activity")
 async def create_activity(
-    deal_id: int,
+    deal_id: uuid.UUID,
     body: ActivityRequest,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),
@@ -67,7 +68,7 @@ async def create_activity(
 def _note_to_dict(n: DealNote) -> dict:
     return {
         "id": n.id,
-        "deal_id": n.deal_id,
+        "deal_id": str(n.deal_id),
         "author": n.author,
         "body": n.body,
         "created_at": n.created_at.isoformat(),
@@ -76,7 +77,7 @@ def _note_to_dict(n: DealNote) -> dict:
 
 
 @router.get("/deals/{deal_id}/notes")
-async def list_notes(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def list_notes(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     await _get_deal_or_404(deal_id, db)
     result = await db.execute(select(DealNote).where(DealNote.deal_id == deal_id).order_by(DealNote.created_at.desc()))
     return [_note_to_dict(n) for n in result.scalars().all()]
@@ -88,7 +89,7 @@ class NoteRequest(BaseModel):
 
 @router.post("/deals/{deal_id}/notes")
 async def create_note(
-    deal_id: int,
+    deal_id: uuid.UUID,
     body: NoteRequest,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),

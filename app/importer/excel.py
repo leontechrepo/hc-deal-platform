@@ -191,7 +191,7 @@ async def _upsert(deals: list[dict]) -> None:
     async with AsyncSessionLocal() as session:
         for d in deals:
             result = await session.execute(
-                text("SELECT id FROM deals WHERE company_name = :name"),
+                text("SELECT id FROM credit_deals WHERE company_name = :name"),
                 {"name": d["company_name"]},
             )
             row = result.fetchone()
@@ -199,7 +199,7 @@ async def _upsert(deals: list[dict]) -> None:
                 # Update all fields except created_at
                 await session.execute(
                     text("""
-                        UPDATE deals SET
+                        UPDATE credit_deals SET
                             location=:location, stage=:stage,
                             sector_full=:sector_full, sector_primary=:sector_primary,
                             subsector=:subsector, deal_size_m=:deal_size_m,
@@ -237,7 +237,7 @@ async def _upsert(deals: list[dict]) -> None:
                 )
                 await session.execute(
                     text("""
-                        INSERT INTO deals (
+                        INSERT INTO credit_deals (
                             company_name, location, bucket, stage,
                             sector_full, sector_primary, subsector,
                             deal_size_m, security, uop, source,

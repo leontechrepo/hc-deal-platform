@@ -10,7 +10,7 @@ export function useInbox() {
 export function useApproveInboxItem() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, value, reviewer, dealId }: { id: number; value?: string; reviewer?: string; dealId?: number }) =>
+    mutationFn: ({ id, value, reviewer, dealId }: { id: number; value?: string; reviewer?: string; dealId?: string }) =>
       approveInboxItem(id, value, reviewer, dealId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })
@@ -24,7 +24,7 @@ export function useApproveInboxItem() {
 export function useAssignInboxItem() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, dealId, reviewer }: { id: number; dealId: number; reviewer?: string }) =>
+    mutationFn: ({ id, dealId, reviewer }: { id: number; dealId: string; reviewer?: string }) =>
       assignInboxItem(id, dealId, reviewer),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })

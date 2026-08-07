@@ -4,7 +4,7 @@ import { exportDealUnderwriting } from '../../api/dealDetail'
 import { useToast } from '../Toast/Toast'
 
 interface Props {
-  dealId: number
+  dealId: string
   companyName: string
 }
 

@@ -1,7 +1,7 @@
 import type { DealTimeline, DealTimelineTask, DealTimelineWorkstream, TimelineTemplate } from '../types'
 import { apiFetch } from './client'
 
-export function getDealTimeline(dealId: number): Promise<DealTimeline> {
+export function getDealTimeline(dealId: string): Promise<DealTimeline> {
   return apiFetch(`/api/deals/${dealId}/timeline`)
 }
 
@@ -10,7 +10,7 @@ export function listTimelineTemplates(): Promise<TimelineTemplate[]> {
 }
 
 export function applyTimelineTemplate(
-  dealId: number,
+  dealId: string,
   templateName: string,
   startDate?: string | null,
   actor?: string,
@@ -21,7 +21,7 @@ export function applyTimelineTemplate(
   })
 }
 
-export function createWorkstream(dealId: number, name: string, sortOrder = 0): Promise<DealTimelineWorkstream> {
+export function createWorkstream(dealId: string, name: string, sortOrder = 0): Promise<DealTimelineWorkstream> {
   return apiFetch(`/api/deals/${dealId}/timeline/workstreams`, {
     method: 'POST',
     body: JSON.stringify({ name, sort_order: sortOrder }),

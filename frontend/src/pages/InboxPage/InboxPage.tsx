@@ -47,7 +47,7 @@ export function InboxPage() {
                   id: s.id,
                   value,
                   reviewer: actor,
-                  dealId: dealId ? Number(dealId) : undefined,
+                  dealId: dealId ?? undefined,
                 })
                 showToast(
                   s.suggested_field === 'new_deal'

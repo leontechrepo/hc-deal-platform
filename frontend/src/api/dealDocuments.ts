@@ -1,11 +1,11 @@
 import type { DealDocument } from '../types'
 import { apiFetch, apiFetchBlob, apiFetchForm } from './client'
 
-export function listDealDocuments(dealId: number): Promise<DealDocument[]> {
+export function listDealDocuments(dealId: string): Promise<DealDocument[]> {
   return apiFetch(`/api/deals/${dealId}/documents`)
 }
 
-export function uploadDealDocument(dealId: number, file: File, category: string): Promise<DealDocument> {
+export function uploadDealDocument(dealId: string, file: File, category: string): Promise<DealDocument> {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('category', category)

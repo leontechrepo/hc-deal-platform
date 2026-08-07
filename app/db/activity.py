@@ -6,6 +6,8 @@ ad hoc per route.
 """
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.activity import DealActivity
@@ -13,7 +15,7 @@ from app.db.models.activity import DealActivity
 
 async def log_activity(
     db: AsyncSession,
-    deal_id: int,
+    deal_id: uuid.UUID,
     actor: str,
     activity_type: str,
     description: str,

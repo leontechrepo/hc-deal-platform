@@ -32,7 +32,7 @@ export function AssignToDealControl({ suggestionId, companyName }: Props) {
   async function handleAssign() {
     if (!dealId) return
     try {
-      await assign.mutateAsync({ id: suggestionId, dealId: Number(dealId), reviewer: actor })
+      await assign.mutateAsync({ id: suggestionId, dealId, reviewer: actor })
       showToast(`Linked ${companyName} to existing deal`)
     } catch {
       showToast('Failed to link deal', true)

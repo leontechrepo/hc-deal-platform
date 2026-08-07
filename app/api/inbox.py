@@ -9,6 +9,7 @@ the new /api/inbox/* paths — the deployed frontend (frontend/src/api/reviewQue
 still calls the old paths and hasn't migrated yet. Remove the aliases once it does.
 """
 import json
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -40,7 +41,7 @@ def _suggestion_to_dict(s: PendingSuggestion, deal: Deal | None) -> dict:
         stage = deal.stage if deal else None
     return {
         "id": s.id,
-        "deal_id": s.deal_id,
+        "deal_id": str(s.deal_id) if s.deal_id else None,
         "company_name": company_name,
         # `stage` is the legacy free-text field, kept for the not-yet-migrated
         # frontend (frontend/src/types.ts PendingSuggestion.stage); pipeline_stage
@@ -87,7 +88,7 @@ async def _get_pending_or_404(suggestion_id: int, db: AsyncSession) -> PendingSu
 
 class ApproveRequest(BaseModel):
     value: str | None = None  # optional edited value; falls back to suggestion.suggested_value
-    deal_id: int | None = None  # override which deal this applies to; falls back to suggestion.deal_id
+    deal_id: uuid.UUID | None = None  # override which deal this applies to; falls back to suggestion.deal_id
 
 
 @router.post("/inbox/{suggestion_id}/approve")
@@ -124,7 +125,7 @@ async def approve_suggestion(
         suggestion.reviewed_at = datetime.now(timezone.utc)
         suggestion.reviewed_by = reviewer
         await log_activity(db, new_deal.id, "Email Scanner", "system", f"Deal accepted from inbox — {suggestion.email_subject or ''}".strip())
-        return {"ok": True, "deal_id": new_deal.id, "company_name": new_deal.company_name, "created": True}
+        return {"ok": True, "deal_id": str(new_deal.id), "company_name": new_deal.company_name, "created": True}
 
     target_deal_id = body.deal_id if body.deal_id is not None else suggestion.deal_id
     deal_res = await db.execute(select(Deal).where(Deal.id == target_deal_id))
@@ -176,11 +177,11 @@ async def approve_suggestion(
     suggestion.reviewed_at = datetime.now(timezone.utc)
     suggestion.reviewed_by = reviewer
 
-    return {"ok": True, "deal_id": deal.id, "company_name": deal.company_name}
+    return {"ok": True, "deal_id": str(deal.id), "company_name": deal.company_name}
 
 
 class AssignRequest(BaseModel):
-    deal_id: int
+    deal_id: uuid.UUID
 
 
 @router.post("/inbox/{suggestion_id}/assign")
@@ -210,7 +211,7 @@ async def assign_suggestion(
     db.add(DealNote(deal_id=body.deal_id, author="Email Scanner", body=note_body))
     await log_activity(db, body.deal_id, "Email Scanner", "email", f"Inbox item linked — {suggestion.email_subject or ''}".strip())
 
-    return {"ok": True, "deal_id": body.deal_id, "company_name": deal.company_name}
+    return {"ok": True, "deal_id": str(body.deal_id), "company_name": deal.company_name}
 
 
 @router.post("/inbox/{suggestion_id}/reject")

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 def _document_to_dict(doc: DealDocument) -> dict:
     return {
         "id": doc.id,
-        "deal_id": doc.deal_id,
+        "deal_id": str(doc.deal_id),
         "name": doc.name,
         "category": doc.category,
         "doc_type": doc.doc_type,
@@ -32,7 +33,7 @@ def _document_to_dict(doc: DealDocument) -> dict:
     }
 
 
-async def _get_deal_or_404(deal_id: int, db: AsyncSession) -> Deal:
+async def _get_deal_or_404(deal_id: uuid.UUID, db: AsyncSession) -> Deal:
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -41,7 +42,7 @@ async def _get_deal_or_404(deal_id: int, db: AsyncSession) -> Deal:
 
 
 @router.get("/deals/{deal_id}/documents")
-async def list_documents(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def list_documents(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     await _get_deal_or_404(deal_id, db)
     result = await db.execute(
         select(DealDocument)
@@ -53,7 +54,7 @@ async def list_documents(deal_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/deals/{deal_id}/documents")
 async def upload_document(
-    deal_id: int,
+    deal_id: uuid.UUID,
     file: UploadFile = File(...),
     category: str = Form(...),
     db: AsyncSession = Depends(get_db),

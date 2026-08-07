@@ -12,7 +12,7 @@ import styles from './OverviewTab.module.css'
 const NDA_STATUSES = ['Not Started', 'Sent', 'Signed']
 
 function EditableSelect({ dealId, field, value, options, labelFor }: {
-  dealId: number
+  dealId: string
   field: string
   value: string | null
   options: readonly string[]
@@ -41,7 +41,7 @@ function EditableSelect({ dealId, field, value, options, labelFor }: {
   )
 }
 
-function EditableDate({ dealId, field, value }: { dealId: number; field: string; value: string | null }) {
+function EditableDate({ dealId, field, value }: { dealId: string; field: string; value: string | null }) {
   const patchMutation = usePatchDeal()
   const actor = useCurrentActor()
   const { showToast } = useToast()

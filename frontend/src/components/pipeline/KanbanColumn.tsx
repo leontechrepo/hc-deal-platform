@@ -7,8 +7,8 @@ import styles from './KanbanColumn.module.css'
 interface Props {
   stage: string
   deals: Deal[]
-  draggingId: number | null
-  onDragStart: (dealId: number) => void
+  draggingId: string | null
+  onDragStart: (dealId: string) => void
   onDragEnd: () => void
   onDrop: (stage: string) => void
   onEdit: (deal: Deal) => void

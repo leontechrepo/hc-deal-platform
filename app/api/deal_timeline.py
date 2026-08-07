@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 _TASK_STATUSES = {"Not Started", "In Progress", "Complete", "Blocked"}
 
 
-async def _get_deal_or_404(deal_id: int, db: AsyncSession) -> Deal:
+async def _get_deal_or_404(deal_id: uuid.UUID, db: AsyncSession) -> Deal:
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -42,7 +43,7 @@ def _task_to_dict(t: DealTimelineTask) -> dict:
 
 
 @router.get("/deals/{deal_id}/timeline")
-async def get_timeline(deal_id: int, db: AsyncSession = Depends(get_db)):
+async def get_timeline(deal_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     await _get_deal_or_404(deal_id, db)
     ws_result = await db.execute(
         select(DealTimelineWorkstream)
@@ -51,7 +52,7 @@ async def get_timeline(deal_id: int, db: AsyncSession = Depends(get_db)):
     )
     workstreams = ws_result.scalars().all()
     if not workstreams:
-        return {"deal_id": deal_id, "workstreams": []}
+        return {"deal_id": str(deal_id), "workstreams": []}
 
     tasks_result = await db.execute(
         select(DealTimelineTask)
@@ -63,7 +64,7 @@ async def get_timeline(deal_id: int, db: AsyncSession = Depends(get_db)):
         tasks_by_ws.setdefault(t.workstream_id, []).append(t)
 
     return {
-        "deal_id": deal_id,
+        "deal_id": str(deal_id),
         "workstreams": [
             {
                 "id": w.id,
@@ -91,7 +92,7 @@ class ApplyTemplateRequest(BaseModel):
 
 @router.post("/deals/{deal_id}/timeline/from-template")
 async def apply_timeline_template(
-    deal_id: int,
+    deal_id: uuid.UUID,
     body: ApplyTemplateRequest,
     db: AsyncSession = Depends(get_db),
     auth: dict = Depends(require_auth),
@@ -137,12 +138,12 @@ class WorkstreamRequest(BaseModel):
 
 
 @router.post("/deals/{deal_id}/timeline/workstreams")
-async def create_workstream(deal_id: int, body: WorkstreamRequest, db: AsyncSession = Depends(get_db)):
+async def create_workstream(deal_id: uuid.UUID, body: WorkstreamRequest, db: AsyncSession = Depends(get_db)):
     await _get_deal_or_404(deal_id, db)
     workstream = DealTimelineWorkstream(deal_id=deal_id, name=body.name, sort_order=body.sort_order)
     db.add(workstream)
     await db.flush()
-    return {"id": workstream.id, "deal_id": deal_id, "name": workstream.name, "sort_order": workstream.sort_order, "tasks": []}
+    return {"id": workstream.id, "deal_id": str(deal_id), "name": workstream.name, "sort_order": workstream.sort_order, "tasks": []}
 
 
 class WorkstreamPatchRequest(BaseModel):

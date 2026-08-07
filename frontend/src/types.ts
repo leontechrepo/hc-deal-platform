@@ -1,5 +1,5 @@
 export interface Deal {
-  id: number
+  id: string
   company_name: string
   bucket: string | null
   stage: string | null
@@ -114,7 +114,7 @@ export interface KPIs {
 
 export interface PendingSuggestion {
   id: number
-  deal_id: number | null
+  deal_id: string | null
   company_name: string
   stage: string | null
   pipeline_stage: string | null
@@ -131,7 +131,7 @@ export interface PendingSuggestion {
 }
 
 export interface SponsorDealSummary {
-  id: number
+  id: string
   company_name: string
   pipeline_stage: string | null
   status: string | null
@@ -164,7 +164,7 @@ export interface Sponsor {
 export type SponsorInput = Omit<Sponsor, 'id' | 'deals' | 'active_deal_count' | 'total_exposure_m'>
 
 export interface FundDealSummary {
-  id: number
+  id: string
   company_name: string
   pipeline_stage: string | null
   status: string | null
@@ -212,7 +212,7 @@ export type FundInput = Omit<Fund, 'id' | 'lps' | 'deals'>
 
 export interface PortfolioPosition {
   id: number
-  deal_id: number
+  deal_id: string
   company_name: string
   sponsor_name: string | null
   funded_date: string | null
@@ -245,7 +245,7 @@ export type PortfolioTestInput = Omit<PortfolioMonitoringTest, 'id' | 'portfolio
 
 export interface DealActivity {
   id: number
-  deal_id: number
+  deal_id: string
   actor: string | null
   activity_type: string
   description: string
@@ -255,7 +255,7 @@ export interface DealActivity {
 
 export interface DealNote {
   id: number
-  deal_id: number
+  deal_id: string
   author: string | null
   body: string
   created_at: string
@@ -264,7 +264,7 @@ export interface DealNote {
 
 export interface DealDocument {
   id: number
-  deal_id: number
+  deal_id: string
   name: string
   category: string | null
   doc_type: string | null
@@ -301,7 +301,7 @@ export interface DealTimelineWorkstream {
 }
 
 export interface DealTimeline {
-  deal_id: number
+  deal_id: string
   workstreams: DealTimelineWorkstream[]
 }
 
@@ -313,7 +313,7 @@ export interface TimelineTemplate {
 
 export interface DealUpdateLogEntry {
   id: number
-  deal_id: number
+  deal_id: string
   company_name: string
   field_changed: string
   old_value: string | null
@@ -329,7 +329,7 @@ export interface EmailScanLogEntry {
   user_email: string
   received_at: string | null
   processed_at: string
-  matched_deal_id: number | null
+  matched_deal_id: string | null
   company_name: string | null
   claude_summary: string | null
   action_taken: string | null
@@ -350,7 +350,7 @@ export interface ChatSendResponse {
 export interface ChatSessionSummary {
   id: string
   title: string
-  deal_id: number | null
+  deal_id: string | null
   created_at: string
   updated_at: string
 }
