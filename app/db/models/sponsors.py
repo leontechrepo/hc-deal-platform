@@ -32,5 +32,10 @@ class Sponsor(Base):
     coverage_cadence: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_contact_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     relationship_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Corporate Credit Data Model v0.2: who on our desk owns this relationship,
+    # and a narrative rollup of deal history — distinct from contact_name/
+    # contact_role (the sponsor's OWN contact) and relationship_note (freeform).
+    relationship_owner: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deal_history_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now, nullable=False)

@@ -2,7 +2,8 @@ import { Badge, type BadgeTone } from '../ui/Badge/Badge'
 
 const PAYMENT_STATUS_TONE: Record<string, BadgeTone> = {
   Current: 'green',
-  Late: 'amber',
+  PIK: 'amber',
+  'Past Due': 'amber',
   Default: 'red',
 }
 

@@ -133,6 +133,11 @@ class Deal(Base):
     sponsor_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("sponsors.id", ondelete="SET NULL"), nullable=True)
     fund_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("funds.id", ondelete="SET NULL"), nullable=True)
 
+    # --- Company reference (migration 020, Corporate Credit Data Model v0.2) ---
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.company_id", ondelete="SET NULL"), nullable=True
+    )
+
     update_log: Mapped[list["DealUpdateLog"]] = relationship(
         back_populates="deal", cascade="all, delete-orphan"
     )
