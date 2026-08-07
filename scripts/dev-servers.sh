@@ -71,8 +71,7 @@ start_backend() {
   echo "Starting backend on :$BACKEND_PORT (log: $BACKEND_LOG)..."
   (
     cd "$REPO_ROOT"
-    source .venv/bin/activate
-    nohup uvicorn app.main:app --reload --port "$BACKEND_PORT" > "$BACKEND_LOG" 2>&1 &
+    nohup conda run --no-capture-output -n hc-deal-platform uvicorn app.main:app --reload --port "$BACKEND_PORT" > "$BACKEND_LOG" 2>&1 &
     disown
   )
   wait_for_port "$BACKEND_PORT" 30 || { echo "Backend didn't come up — check $BACKEND_LOG" >&2; return 1; }
