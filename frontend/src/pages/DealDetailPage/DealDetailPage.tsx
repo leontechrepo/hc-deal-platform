@@ -37,7 +37,7 @@ export function DealDetailPage() {
     return <PageShell title="Deal"><div className={styles.state}>Failed to load deal.</div></PageShell>
   }
 
-  async function handleUpdate(body: Partial<CreateDealInput>) {
+  async function handleUpdate(body: Partial<CreateDealInput> & { reasoning?: string }) {
     await updateDeal.mutateAsync({ dealId: deal!.id, body })
   }
 

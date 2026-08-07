@@ -17,8 +17,8 @@ export function useDeal(dealId: string | null) {
 export function usePatchDeal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, field, value, actor }: { dealId: string; field: string; value: string | null; actor?: string }) =>
-      patchDeal(dealId, field, value, actor),
+    mutationFn: ({ dealId, field, value, actor, reasoning }: { dealId: string; field: string; value: string | null; actor?: string; reasoning?: string }) =>
+      patchDeal(dealId, field, value, actor, reasoning),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })
@@ -40,7 +40,7 @@ export function useCreateDeal() {
 export function useUpdateDeal() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ dealId, body }: { dealId: string; body: Partial<CreateDealInput> }) => updateDeal(dealId, body),
+    mutationFn: ({ dealId, body }: { dealId: string; body: Partial<CreateDealInput> & { reasoning?: string } }) => updateDeal(dealId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })

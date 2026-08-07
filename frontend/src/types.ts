@@ -156,6 +156,8 @@ export interface Sponsor {
   coverage_cadence: string | null
   last_contact_date: string | null
   relationship_note: string | null
+  relationship_owner: string | null
+  deal_history_summary: string | null
   deals: SponsorDealSummary[]
   active_deal_count: number
   total_exposure_m: number

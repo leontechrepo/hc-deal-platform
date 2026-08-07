@@ -75,3 +75,14 @@ async def test_patch_deal_company_name_syncs_to_company(db_session):
 
     company = await get_company(fetched["company_id"], db_session)
     assert company["company_name"] == "Renamed From Deal Co"
+
+
+async def test_create_deal_with_unrestricted_state_value_does_not_truncate(db_session):
+    # credit_deals.state has always been unrestricted TEXT — companies.state
+    # must accept the same values without a width-related insert failure.
+    deal = await create_deal(
+        CreateDealRequest(company_name="Full State Name Co", state="California"), db_session, auth=TEST_AUTH,
+    )
+    fetched = await get_deal(deal["deal_id"], db_session)
+    company = await get_company(fetched["company_id"], db_session)
+    assert company["state"] == "California"

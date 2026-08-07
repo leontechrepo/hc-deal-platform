@@ -56,11 +56,12 @@ export function PipelinePage() {
     setSearchParams(params, { replace: true })
   }
 
-  async function handleSubmit(body: Partial<CreateDealInput>) {
+  async function handleSubmit(body: Partial<CreateDealInput> & { reasoning?: string }) {
     if (editing) {
       await updateDeal.mutateAsync({ dealId: editing.id, body })
     } else {
-      await createDeal.mutateAsync(body as CreateDealInput)
+      const { reasoning: _reasoning, ...createBody } = body
+      await createDeal.mutateAsync(createBody as CreateDealInput)
     }
   }
 
