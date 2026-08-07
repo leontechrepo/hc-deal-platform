@@ -113,10 +113,15 @@ async def create_underwriting_assumption(
                 .limit(1)
             )
         ).scalar_one_or_none()
-        assumption = UnderwritingAssumption(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
-        db.add(assumption)
         try:
             async with db.begin_nested():
+                # add() must happen inside the savepoint — entering
+                # begin_nested() autoflushes any already-pending state first,
+                # so adding beforehand means the INSERT (and its conflict)
+                # happens outside the savepoint's protection, poisoning the
+                # whole outer transaction instead of just this attempt.
+                assumption = UnderwritingAssumption(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
+                db.add(assumption)
                 await db.flush()
         except IntegrityError:
             continue

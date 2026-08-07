@@ -77,7 +77,9 @@ async def test_underwriting_fields_lock_after_loi_signed(db_session):
 
 
 def test_deal_update_request_fields_match_editable_fields():
-    assert set(DealUpdateRequest.model_fields) == EDITABLE_FIELDS
+    # `reasoning` is metadata for the approval_log write-through (required when
+    # `status` moves to a terminal value), not itself a Deal column.
+    assert set(DealUpdateRequest.model_fields) - {"reasoning"} == EDITABLE_FIELDS
 
 
 async def test_update_deal_saves_multiple_fields_in_one_call(db_session):
@@ -86,7 +88,7 @@ async def test_update_deal_saves_multiple_fields_in_one_call(db_session):
 
     updated = await update_deal(
         deal_id,
-        DealUpdateRequest(location="Austin, TX", sector_primary="Healthcare", status="On Hold"),
+        DealUpdateRequest(location="Austin, TX", sector_primary="Healthcare", status="On Hold", reasoning="Sponsor requested a pause"),
         db_session,
         auth=TEST_AUTH,
     )
@@ -158,6 +160,34 @@ async def test_update_deal_rejects_invalid_enum(db_session):
     with pytest.raises(HTTPException) as exc_info:
         await update_deal(deal_id, DealUpdateRequest(status="Not A Real Status"), db_session, auth=TEST_AUTH)
     assert exc_info.value.status_code == 400
+
+
+async def test_patch_deal_status_to_terminal_requires_reasoning(db_session):
+    result = await create_deal(CreateDealRequest(company_name="Terminal Patch Co"), db_session, auth=TEST_AUTH)
+    deal_id = result["deal_id"]
+
+    with pytest.raises(HTTPException) as exc_info:
+        await patch_deal(deal_id, PatchRequest(field="status", value="Dead"), db_session, auth=TEST_AUTH)
+    assert exc_info.value.status_code == 400
+
+    patched = await patch_deal(
+        deal_id, PatchRequest(field="status", value="Dead", reasoning="Lost to a competing lender"), db_session, auth=TEST_AUTH
+    )
+    assert patched["value"] == "Dead"
+
+
+async def test_update_deal_status_to_terminal_requires_reasoning(db_session):
+    result = await create_deal(CreateDealRequest(company_name="Terminal Bulk Update Co"), db_session, auth=TEST_AUTH)
+    deal_id = result["deal_id"]
+
+    with pytest.raises(HTTPException) as exc_info:
+        await update_deal(deal_id, DealUpdateRequest(status="Closed"), db_session, auth=TEST_AUTH)
+    assert exc_info.value.status_code == 400
+
+    updated = await update_deal(
+        deal_id, DealUpdateRequest(status="Closed", reasoning="Funded and closed"), db_session, auth=TEST_AUTH
+    )
+    assert updated["deal"]["status"] == "Closed"
 
 
 async def test_delete_deal_cascades_child_records(db_session):

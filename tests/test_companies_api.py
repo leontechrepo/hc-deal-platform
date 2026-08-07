@@ -12,6 +12,7 @@ from app.api.companies import (
     list_companies,
     patch_company,
 )
+from app.api.deals import CreateDealRequest, PatchRequest, create_deal, get_deal, patch_deal
 
 TEST_AUTH = {"sub": "test-user"}
 
@@ -38,3 +39,39 @@ async def test_patch_company(db_session):
     updated = await patch_company(result["company_id"], CompanyPatchRequest(sector="Cardiology"), db_session)
     assert updated["sector"] == "Cardiology"
     assert updated["company_name"] == "Patch Co"
+
+
+async def test_create_deal_creates_and_links_a_company(db_session):
+    deal = await create_deal(
+        CreateDealRequest(company_name="Linked Borrower Co", sector_primary="Industrials", location="Dallas, TX"),
+        db_session, auth=TEST_AUTH,
+    )
+    assert deal.get("deal_id")
+    fetched = await get_deal(deal["deal_id"], db_session)
+    assert fetched["company_id"] is not None
+
+    company = await get_company(fetched["company_id"], db_session)
+    assert company["company_name"] == "Linked Borrower Co"
+    assert company["sector"] == "Industrials"
+    assert company["hq_location"] == "Dallas, TX"
+
+
+async def test_patch_company_syncs_to_linked_deal(db_session):
+    deal = await create_deal(CreateDealRequest(company_name="Sync From Company Co"), db_session, auth=TEST_AUTH)
+    fetched = await get_deal(deal["deal_id"], db_session)
+
+    await patch_company(fetched["company_id"], CompanyPatchRequest(company_name="Renamed Co", sector="Fintech"), db_session)
+
+    refetched = await get_deal(deal["deal_id"], db_session)
+    assert refetched["company_name"] == "Renamed Co"
+    assert refetched["sector_primary"] == "Fintech"
+
+
+async def test_patch_deal_company_name_syncs_to_company(db_session):
+    deal = await create_deal(CreateDealRequest(company_name="Sync From Deal Co"), db_session, auth=TEST_AUTH)
+    fetched = await get_deal(deal["deal_id"], db_session)
+
+    await patch_deal(deal["deal_id"], PatchRequest(field="company_name", value="Renamed From Deal Co"), db_session, auth=TEST_AUTH)
+
+    company = await get_company(fetched["company_id"], db_session)
+    assert company["company_name"] == "Renamed From Deal Co"

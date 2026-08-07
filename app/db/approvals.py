@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import uuid
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.approvals import ApprovalLogEntry
+from app.domain.pipeline_stage import TERMINAL_STATUSES
 
 
 async def log_approval(
@@ -21,6 +23,11 @@ async def log_approval(
     approver: str,
     reasoning: str | None = None,
 ) -> ApprovalLogEntry:
+    # Mirrors create_approval's own validation (app/api/approvals.py) — this
+    # helper is a second write path into the same table, so it must enforce
+    # the same terminal-reasoning invariant, not just the dedicated endpoint.
+    if approval_stage in TERMINAL_STATUSES and not reasoning:
+        raise HTTPException(status_code=400, detail="reasoning is required when approval_stage is a terminal status")
     entry = ApprovalLogEntry(
         deal_id=deal_id,
         approval_stage=approval_stage,

@@ -15,13 +15,14 @@ from app.core.auth import get_actor_name, require_auth
 from app.core.config import settings
 from app.db.activity import log_activity
 from app.db.approvals import log_approval
+from app.db.companies import create_company_for_deal, sync_company_from_deal
 from app.db.models import Deal, DealDocument, DealUpdateLog, EmailScanLog
-from app.db.models.companies import Company
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
 from app.domain.pipeline_stage import (
     PIPELINE_STAGES,
     STATUSES,
+    TERMINAL_STATUSES,
     UNDERWRITING_FIELDS,
     is_underwriting_locked,
 )
@@ -70,9 +71,13 @@ def _coerce_field_value(field: str, value):
     return value
 
 
+_COMPANY_MIRROR_FIELDS = {"company_name", "location", "state", "sector_primary", "subsector"}
+
+
 class PatchRequest(BaseModel):
     field: str
     value: str | float | int | None = None
+    reasoning: Optional[str] = None  # required when field="status" moves to a terminal status
 
 
 @router.patch("/deals/{deal_id}")
@@ -102,6 +107,8 @@ async def patch_deal(
         raise HTTPException(status_code=400, detail=f"Invalid pipeline_stage: {body.value!r}")
     if body.field == "status" and body.value not in STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status: {body.value!r}")
+    if body.field == "status" and body.value in TERMINAL_STATUSES and not body.reasoning:
+        raise HTTPException(status_code=400, detail="reasoning is required when moving a deal to a terminal status")
 
     old_value_raw = getattr(deal, body.field)
 
@@ -148,7 +155,9 @@ async def patch_deal(
             f"{body.field} changed from {old_value!r} to {coerced!r}",
         )
         if body.field in ("pipeline_stage", "status"):
-            await log_approval(db, deal_id, str(coerced), get_actor_name(auth))
+            await log_approval(db, deal_id, str(coerced), get_actor_name(auth), reasoning=body.reasoning)
+        if body.field in _COMPANY_MIRROR_FIELDS:
+            await sync_company_from_deal(db, deal)
 
     return {"ok": True, "deal_id": str(deal_id), "field": body.field, "value": coerced}
 
@@ -208,6 +217,7 @@ class DealUpdateRequest(BaseModel):
     ltm_revenue_m: Optional[float] = None
     ltm_ebitda_m: Optional[float] = None
     ebitda_margin: Optional[float] = None
+    reasoning: Optional[str] = None  # required when status moves to a terminal status
 
 
 @router.put("/deals/{deal_id}")
@@ -222,7 +232,7 @@ async def update_deal(
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
 
-    updates = body.model_dump(exclude_unset=True)
+    updates = body.model_dump(exclude_unset=True, exclude={"reasoning"})
     if not updates:
         return {"ok": True, "deal_id": str(deal_id), "updated_fields": [], "deal": _deal_to_dict(deal)}
 
@@ -258,6 +268,9 @@ async def update_deal(
 
     if not changed_fields:
         return {"ok": True, "deal_id": str(deal_id), "updated_fields": [], "deal": _deal_to_dict(deal)}
+
+    if changed_fields.get("status") in TERMINAL_STATUSES and not body.reasoning:
+        raise HTTPException(status_code=400, detail="reasoning is required when moving a deal to a terminal status")
 
     # Locked against the stage this request would leave the deal in
     # (applying any pipeline_stage change from this same request), not the
@@ -306,7 +319,9 @@ async def update_deal(
     if "pipeline_stage" in changed_field_names:
         await log_approval(db, deal_id, deal.pipeline_stage, get_actor_name(auth))
     if "status" in changed_field_names:
-        await log_approval(db, deal_id, deal.status, get_actor_name(auth))
+        await log_approval(db, deal_id, deal.status, get_actor_name(auth), reasoning=body.reasoning)
+    if any(f in _COMPANY_MIRROR_FIELDS for f in changed_field_names):
+        await sync_company_from_deal(db, deal)
     other_fields = [f for f in changed_field_names if f not in ("pipeline_stage", "stage", "bucket", "status")]
     if other_fields:
         summary = ", ".join(other_fields[:5]) + (f" (+{len(other_fields) - 5} more)" if len(other_fields) > 5 else "")
@@ -546,15 +561,14 @@ async def create_deal(
     # v0.2 normalizes the borrower out of the deal) — mirrors migration 020's
     # one-company-per-deal backfill so deals created after that migration
     # aren't left with a permanently null company_id.
-    company = Company(
-        company_name=body.company_name,
+    company = await create_company_for_deal(
+        db,
+        body.company_name,
         state=body.state,
         hq_location=body.location,
         sector=body.sector_primary,
         subsector=body.subsector,
     )
-    db.add(company)
-    await db.flush()
 
     deal = Deal(
         company_id=company.company_id,

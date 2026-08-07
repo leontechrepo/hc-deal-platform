@@ -11,14 +11,11 @@ from app.db.activity import log_activity
 from app.db.models import Deal
 from app.db.models.approvals import ApprovalLogEntry
 from app.db.session import get_db
+from app.domain.pipeline_stage import TERMINAL_STATUSES as _TERMINAL_STAGES
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
 _APPROVAL_STATUSES = {"pending", "approved", "rejected"}
-# Business classification of "terminal", kept local rather than imported
-# from app.domain.pipeline_stage.STATUSES — approval_stage here can also be
-# a pipeline_stage transition name, not just a Deal.status value.
-_TERMINAL_STAGES = {"Passed", "Dead", "On Hold", "Closed"}
 
 
 def _entry_to_dict(a: ApprovalLogEntry) -> dict:

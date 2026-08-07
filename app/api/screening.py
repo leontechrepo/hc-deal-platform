@@ -90,10 +90,15 @@ async def create_screening_memo(deal_id: uuid.UUID, body: ScreeningMemoRequest, 
                 .limit(1)
             )
         ).scalar_one_or_none()
-        memo = ScreeningMemo(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
-        db.add(memo)
         try:
             async with db.begin_nested():
+                # add() must happen inside the savepoint — entering
+                # begin_nested() autoflushes any already-pending state first,
+                # so adding beforehand means the INSERT (and its conflict)
+                # happens outside the savepoint's protection, poisoning the
+                # whole outer transaction instead of just this attempt.
+                memo = ScreeningMemo(deal_id=deal_id, version=(max_version or 0) + 1, **body.model_dump())
+                db.add(memo)
                 await db.flush()
         except IntegrityError:
             continue

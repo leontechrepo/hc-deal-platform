@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import require_auth
+from app.db.companies import sync_deals_from_company
 from app.db.models.companies import Company
 from app.db.session import get_db
 
@@ -72,7 +73,10 @@ async def patch_company(company_id: uuid.UUID, body: CompanyPatchRequest, db: As
     company = result.scalar_one_or_none()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    for field, value in body.model_dump(exclude_unset=True).items():
+    updates = body.model_dump(exclude_unset=True)
+    for field, value in updates.items():
         setattr(company, field, value)
     company.updated_at = datetime.now(timezone.utc)
+    if updates:
+        await sync_deals_from_company(db, company)
     return _company_to_dict(company)
