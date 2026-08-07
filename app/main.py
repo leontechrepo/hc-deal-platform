@@ -56,6 +56,17 @@ from app.api.deal_activity import router as deal_activity_router
 from app.api.deal_timeline import router as deal_timeline_router
 from app.api.inbox import router as inbox_router
 from app.api.chat import router as chat_router
+from app.api.companies import router as companies_router
+from app.api.contacts import router as contacts_router
+from app.api.deal_team import router as deal_team_router
+from app.api.competition import router as competition_router
+from app.api.capital_structure import router as capital_structure_router
+from app.api.underwriting import router as underwriting_router
+from app.api.screening import router as screening_router
+from app.api.covenants import router as covenants_router
+from app.api.amendments import router as amendments_router
+from app.api.risk_ratings import router as risk_ratings_router
+from app.api.approvals import router as approvals_router
 
 app.include_router(dashboard_router)
 app.include_router(deals_router)
@@ -67,6 +78,17 @@ app.include_router(deal_activity_router)
 app.include_router(deal_timeline_router)
 app.include_router(inbox_router)
 app.include_router(chat_router)
+app.include_router(companies_router)
+app.include_router(contacts_router)
+app.include_router(deal_team_router)
+app.include_router(competition_router)
+app.include_router(capital_structure_router)
+app.include_router(underwriting_router)
+app.include_router(screening_router)
+app.include_router(covenants_router)
+app.include_router(amendments_router)
+app.include_router(risk_ratings_router)
+app.include_router(approvals_router)
 
 # Serve React build — only when frontend/dist exists (skips gracefully in dev)
 if (FRONTEND_DIST / "assets").exists():

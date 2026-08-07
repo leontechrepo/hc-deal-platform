@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import require_auth
 from app.db.models import Deal, Sponsor
+from app.db.models.covenants import Covenant
 from app.db.models.portfolio import PortfolioMonitoringTest, PortfolioPosition
 from app.db.session import get_db
 
@@ -35,6 +36,10 @@ async def _position_to_dict(pos: PortfolioPosition, deal: Deal, db: AsyncSession
         "covenant_status": pos.covenant_status,
         "leverage": float(pos.leverage) if pos.leverage is not None else None,
         "dscr": float(pos.dscr) if pos.dscr is not None else None,
+        "repayment_date": pos.repayment_date.isoformat() if pos.repayment_date else None,
+        "repayment_type": pos.repayment_type,
+        "realized_irr": float(pos.realized_irr) if pos.realized_irr is not None else None,
+        "moic": float(pos.moic) if pos.moic is not None else None,
     }
 
 
@@ -62,8 +67,9 @@ async def get_portfolio_position(deal_id: uuid.UUID, db: AsyncSession = Depends(
     return await _position_to_dict(pos, deal, db)
 
 
-_PAYMENT_STATUSES = {"Current", "Late", "Default"}
+_PAYMENT_STATUSES = {"Current", "PIK", "Past Due", "Default"}
 _RISK_VALUES = {"Pass", "Watch"}
+_REPAYMENT_TYPES = {"maturity", "prepayment", "refinance", "restructuring", "write_off"}
 
 
 class PortfolioPatchRequest(BaseModel):
@@ -77,6 +83,10 @@ class PortfolioPatchRequest(BaseModel):
     covenant_status: Optional[str] = None
     leverage: Optional[float] = None
     dscr: Optional[float] = None
+    repayment_date: Optional[date] = None
+    repayment_type: Optional[str] = None
+    realized_irr: Optional[float] = None
+    moic: Optional[float] = None
 
 
 @router.patch("/portfolio/{deal_id}")
@@ -87,6 +97,8 @@ async def patch_portfolio_position(deal_id: uuid.UUID, body: PortfolioPatchReque
         raise HTTPException(status_code=400, detail=f"Invalid payment_status: {updates['payment_status']!r}")
     if "risk" in updates and updates["risk"] is not None and updates["risk"] not in _RISK_VALUES:
         raise HTTPException(status_code=400, detail=f"Invalid risk: {updates['risk']!r}")
+    if "repayment_type" in updates and updates["repayment_type"] is not None and updates["repayment_type"] not in _REPAYMENT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Invalid repayment_type: {updates['repayment_type']!r}")
     for field, value in updates.items():
         setattr(pos, field, value)
     pos.updated_at = datetime.now(timezone.utc)
@@ -103,6 +115,7 @@ def _test_to_dict(t: PortfolioMonitoringTest) -> dict:
         "fccr": float(t.fccr) if t.fccr is not None else None,
         "covenant_status": t.covenant_status,
         "notes": t.notes,
+        "covenant_id": str(t.covenant_id) if t.covenant_id else None,
         "created_at": t.created_at.isoformat(),
     }
 
@@ -125,11 +138,17 @@ class PortfolioTestRequest(BaseModel):
     fccr: Optional[float] = None
     covenant_status: Optional[str] = None
     notes: Optional[str] = None
+    covenant_id: Optional[uuid.UUID] = None
 
 
 @router.post("/portfolio/{deal_id}/tests")
 async def create_portfolio_test(deal_id: uuid.UUID, body: PortfolioTestRequest, db: AsyncSession = Depends(get_db)):
     pos, _ = await _get_position(deal_id, db)
+    if body.covenant_id is not None:
+        cov_res = await db.execute(select(Covenant.deal_id).where(Covenant.covenant_id == body.covenant_id))
+        cov_deal_id = cov_res.scalar_one_or_none()
+        if cov_deal_id is None or str(cov_deal_id) != str(deal_id):
+            raise HTTPException(status_code=400, detail="covenant_id does not belong to this deal")
     test = PortfolioMonitoringTest(portfolio_position_id=pos.id, **body.model_dump())
     db.add(test)
     await db.flush()

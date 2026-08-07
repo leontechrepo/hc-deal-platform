@@ -28,6 +28,11 @@ STAGE_INDEX: dict[str, int] = {stage: i for i, stage in enumerate(PIPELINE_STAGE
 
 STATUSES: list[str] = ["Active", "On Hold", "Passed", "Dead", "Closed"]
 
+# Statuses that end a deal's active lifecycle — the approval_log invariant
+# requires reasoning on any approved entry that lands here (see
+# app/api/approvals.py's create_approval and app/db/approvals.py's callers).
+TERMINAL_STATUSES: frozenset[str] = frozenset({"Passed", "Dead", "On Hold", "Closed"})
+
 # Underwriting fields become read-only once a deal reaches this stage or later.
 UNDERWRITING_LOCK_STAGE = "loi_signed"
 

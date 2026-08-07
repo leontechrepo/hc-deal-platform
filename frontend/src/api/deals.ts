@@ -9,10 +9,10 @@ export function getDeal(dealId: string): Promise<Deal> {
   return apiFetch(`/api/deals/${dealId}`)
 }
 
-export function patchDeal(dealId: string, field: string, value: string | null, actor?: string): Promise<unknown> {
+export function patchDeal(dealId: string, field: string, value: string | null, actor?: string, reasoning?: string): Promise<unknown> {
   return apiFetch(`/api/deals/${dealId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ field, value, actor }),
+    body: JSON.stringify({ field, value, actor, reasoning }),
   })
 }
 
@@ -25,7 +25,7 @@ export function createDeal(body: CreateDealInput): Promise<{ ok: boolean; deal_i
 
 export function updateDeal(
   dealId: string,
-  body: Partial<CreateDealInput>
+  body: Partial<CreateDealInput> & { reasoning?: string }
 ): Promise<{ ok: boolean; deal_id: string; updated_fields: string[]; deal: Deal }> {
   return apiFetch(`/api/deals/${dealId}`, {
     method: 'PUT',

@@ -7,7 +7,10 @@ Regression tests for the Codex-review findings on app/api/inbox.py:
 """
 from sqlalchemy import select
 
-from app.api.deals import CreateDealRequest, create_deal
+import json
+
+from app.api.companies import get_company
+from app.api.deals import CreateDealRequest, create_deal, get_deal
 from app.api.inbox import ApproveRequest, approve_suggestion, list_inbox
 from app.api.sponsors import SponsorRequest, create_sponsor
 from app.db.models import EmailScanLog, PendingSuggestion
@@ -101,3 +104,30 @@ async def test_approving_portfolio_monitoring_transition_creates_position(db_ses
     ).scalar_one_or_none()
     assert position is not None
     assert float(position.original_amount_m) == 8.0
+
+
+async def test_approving_new_deal_suggestion_creates_a_linked_company(db_session):
+    new_deal_payload = json.dumps({"company_name": "Inbox-Detected Co", "sector": "Logistics", "summary": "New borrower signal"})
+    suggestion = await _make_suggestion(db_session, None, "new_deal", new_deal_payload)
+
+    result = await approve_suggestion(suggestion.id, ApproveRequest(), db_session, auth=TEST_AUTH)
+    assert result["created"] is True
+
+    deal = await get_deal(result["deal_id"], db_session)
+    assert deal["company_id"] is not None
+
+    company = await get_company(deal["company_id"], db_session)
+    assert company["company_name"] == "Inbox-Detected Co"
+    assert company["sector"] == "Logistics"
+
+
+async def test_approving_new_deal_suggestion_reuses_existing_company_by_name(db_session):
+    existing = await create_deal(CreateDealRequest(company_name="Repeat Borrower Via Inbox Co"), db_session, auth=TEST_AUTH)
+    existing_deal = await get_deal(existing["deal_id"], db_session)
+
+    new_deal_payload = json.dumps({"company_name": "Repeat Borrower Via Inbox Co", "summary": "Follow-on signal"})
+    suggestion = await _make_suggestion(db_session, None, "new_deal", new_deal_payload)
+    result = await approve_suggestion(suggestion.id, ApproveRequest(), db_session, auth=TEST_AUTH)
+
+    new_deal = await get_deal(result["deal_id"], db_session)
+    assert new_deal["company_id"] == existing_deal["company_id"]

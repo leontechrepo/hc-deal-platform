@@ -47,6 +47,8 @@ async def _sponsor_to_dict(sp: Sponsor, db: AsyncSession) -> dict:
         "coverage_cadence": sp.coverage_cadence,
         "last_contact_date": sp.last_contact_date.isoformat() if sp.last_contact_date else None,
         "relationship_note": sp.relationship_note,
+        "relationship_owner": sp.relationship_owner,
+        "deal_history_summary": sp.deal_history_summary,
         "deals": [_sponsor_deal_dict(d) for d in deals],
         "active_deal_count": len(active_deals),
         "total_exposure_m": total_exposure,
@@ -83,6 +85,8 @@ class SponsorRequest(BaseModel):
     coverage_cadence: Optional[str] = None
     last_contact_date: Optional[date] = None
     relationship_note: Optional[str] = None
+    relationship_owner: Optional[str] = None
+    deal_history_summary: Optional[str] = None
 
 
 _SPONSOR_TYPES = {"PE Sponsor", "Strategic"}
@@ -117,6 +121,8 @@ class SponsorPatchRequest(BaseModel):
     coverage_cadence: Optional[str] = None
     last_contact_date: Optional[date] = None
     relationship_note: Optional[str] = None
+    relationship_owner: Optional[str] = None
+    deal_history_summary: Optional[str] = None
 
 
 @router.patch("/sponsors/{sponsor_id}")

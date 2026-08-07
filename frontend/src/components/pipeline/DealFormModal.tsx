@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Modal } from '../ui/Modal/Modal'
 import { Button } from '../ui/Button/Button'
 import { PIPELINE_STAGES, formatPipelineStage } from '../shared/PipelineStageBadge'
-import { STATUSES } from '../shared/StatusBadge'
+import { STATUSES, TERMINAL_STATUSES } from '../shared/StatusBadge'
 import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../../components/Toast/Toast'
 import type { CreateDealInput, Deal } from '../../types'
@@ -56,7 +56,7 @@ interface Props {
   open: boolean
   onClose: () => void
   initial?: Deal | null
-  onSubmit: (body: Partial<CreateDealInput>) => Promise<unknown>
+  onSubmit: (body: Partial<CreateDealInput> & { reasoning?: string }) => Promise<unknown>
 }
 
 function toNullableNumber(v: string): number | null {
@@ -109,16 +109,22 @@ function dealToFormInput(deal: Deal): CreateDealInput {
 
 export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
   const [form, setForm] = useState<CreateDealInput>(EMPTY)
+  const [reasoning, setReasoning] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const actor = useCurrentActor()
   const { showToast } = useToast()
   const isEdit = !!initial
   const locked = initial?.underwriting_locked ?? false
+  // Only editing an existing deal can trigger the backend's terminal-status
+  // reasoning requirement — create_deal has no such check, and a brand new
+  // deal defaulting to "Active" never lands on a terminal value anyway.
+  const statusChangingToTerminal = isEdit && TERMINAL_STATUSES.has(form.status ?? '') && form.status !== initial?.status
 
   useEffect(() => {
     if (open) {
       setForm(initial ? dealToFormInput(initial) : EMPTY)
+      setReasoning('')
       setError(null)
     }
   }, [open, initial])
@@ -137,10 +143,14 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
       setError('Company name is required.')
       return
     }
+    if (statusChangingToTerminal && !reasoning.trim()) {
+      setError(`Reasoning is required when moving status to ${form.status}.`)
+      return
+    }
     setError(null)
     setSaving(true)
     try {
-      await onSubmit({ ...form, actor })
+      await onSubmit({ ...form, actor, reasoning: reasoning.trim() || undefined })
       showToast(isEdit ? `Deal updated: ${form.company_name}` : `New deal added: ${form.company_name}`)
       onClose()
     } catch {
@@ -243,6 +253,19 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
             </select>
           </div>
         </div>
+
+        {statusChangingToTerminal && (
+          <div className={formStyles.field}>
+            <label className={formStyles.label}>Reasoning *</label>
+            <textarea
+              className={formStyles.input}
+              value={reasoning}
+              onChange={e => setReasoning(e.target.value)}
+              rows={2}
+              placeholder={`Why is this deal moving to ${form.status}?`}
+            />
+          </div>
+        )}
 
         <div className={formStyles.row}>
           <div className={formStyles.field}>

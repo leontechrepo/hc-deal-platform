@@ -19,9 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
+from app.db.approvals import log_approval
+from app.db.companies import find_or_create_company_for_deal, sync_company_from_deal
 from app.db.models import Deal, DealNote, DealUpdateLog, PendingSuggestion
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
+
+_COMPANY_MIRROR_FIELDS = {"company_name", "location", "state", "sector_primary", "subsector"}
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
@@ -109,8 +113,11 @@ async def approve_suggestion(
         except (json.JSONDecodeError, TypeError):
             nd = {}
         ts = datetime.now(timezone.utc).strftime("%Y/%m/%d")
+        company_name = nd.get("company_name", "Unknown")
+        company = await find_or_create_company_for_deal(db, company_name, sector=nd.get("sector"))
         new_deal = Deal(
-            company_name=nd.get("company_name", "Unknown"),
+            company_id=company.company_id,
+            company_name=company_name,
             sector_primary=nd.get("sector"),
             bucket="Active-Discussions",
             stage="Initial Conversations",
@@ -172,6 +179,15 @@ async def approve_suggestion(
             db, deal.id, "Email Scanner", activity_type,
             f"{suggestion.suggested_field} updated from email: {suggestion.email_subject or ''}".strip(),
         )
+        if suggestion.suggested_field in ("pipeline_stage", "status"):
+            # Automated approval has no interactive reasoning input — fall
+            # back to the email context, which also satisfies log_approval's
+            # terminal-status-requires-reasoning check.
+            context = suggestion.email_subject or suggestion.claude_summary
+            auto_reasoning = f"Approved via inbox — {context}" if context else "Approved via inbox"
+            await log_approval(db, deal.id, str(final_value), reviewer, reasoning=auto_reasoning)
+        if suggestion.suggested_field in _COMPANY_MIRROR_FIELDS:
+            await sync_company_from_deal(db, deal)
 
     suggestion.status = "approved"
     suggestion.reviewed_at = datetime.now(timezone.utc)

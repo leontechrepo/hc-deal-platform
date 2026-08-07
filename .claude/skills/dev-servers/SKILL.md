@@ -11,7 +11,7 @@ description: >-
 # hc-deal-platform dev servers
 
 Run `scripts/dev-servers.sh {start|stop|status}` from the repo root instead of
-manually chaining `docker run` / `source .venv/bin/activate` / `uvicorn` /
+manually chaining `docker run` / `conda run -n hc-deal-platform` / `uvicorn` /
 `npm run dev` commands. It encodes a few non-obvious, previously
 time-consuming gotchas specific to this machine/repo:
 
@@ -54,9 +54,11 @@ foreground terminal since both processes are started detached (`nohup` +
 
 ## Assumptions
 
-- `.venv/` already exists at the repo root with `requirements.txt` installed
-  (backend). If not: `python -m venv .venv && source .venv/bin/activate && pip
-  install -r requirements.txt` once, first.
+- The `hc-deal-platform` conda environment already exists with
+  `requirements.txt` installed (backend). If not: `conda create -n
+  hc-deal-platform python=3.11 && conda run -n hc-deal-platform pip install -r
+  requirements.txt` once, first. (This repo previously used a `.venv/` —
+  retired in favor of the conda env; don't recreate `.venv/`.)
 - `frontend/node_modules/` — the script runs `npm install` automatically if
   missing.
 - `.env` exists at the repo root (copy from `.env.example` if not — see

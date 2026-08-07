@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { usePatchDeal } from '../../../hooks/useDeals'
 import { useCurrentActor } from '../../../hooks/useCurrentActor'
 import { useToast } from '../../../components/Toast/Toast'
 import { InlineEditText } from '../../../components/ui/InlineEditText/InlineEditText'
+import { Modal } from '../../../components/ui/Modal/Modal'
+import { Button } from '../../../components/ui/Button/Button'
 import { PIPELINE_STAGES, formatPipelineStage } from '../../../components/shared/PipelineStageBadge'
-import { STATUSES } from '../../../components/shared/StatusBadge'
+import { STATUSES, TERMINAL_STATUSES } from '../../../components/shared/StatusBadge'
 import type { Deal } from '../../../types'
 import formStyles from '../../../components/shared/Form.module.css'
 import styles from './OverviewTab.module.css'
@@ -38,6 +41,66 @@ function EditableSelect({ dealId, field, value, options, labelFor }: {
         <option key={o} value={o}>{labelFor ? labelFor(o) : o}</option>
       ))}
     </select>
+  )
+}
+
+// The backend requires a `reasoning` string when `status` moves to a
+// terminal value (On Hold/Passed/Dead/Closed) — collect it via a small
+// confirmation modal instead of silently failing the PATCH.
+function StatusSelect({ dealId, value }: { dealId: string; value: string | null }) {
+  const patchMutation = usePatchDeal()
+  const actor = useCurrentActor()
+  const { showToast } = useToast()
+  const [pendingValue, setPendingValue] = useState<string | null>(null)
+  const [reasoning, setReasoning] = useState('')
+
+  async function commit(newValue: string, reasoningText?: string) {
+    try {
+      await patchMutation.mutateAsync({ dealId, field: 'status', value: newValue, actor, reasoning: reasoningText })
+      showToast('Saved')
+    } catch {
+      showToast('Save failed', true)
+    }
+  }
+
+  function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newValue = e.target.value
+    if (TERMINAL_STATUSES.has(newValue)) {
+      setReasoning('')
+      setPendingValue(newValue)
+    } else {
+      void commit(newValue)
+    }
+  }
+
+  async function confirmPending() {
+    if (!pendingValue || !reasoning.trim()) return
+    await commit(pendingValue, reasoning.trim())
+    setPendingValue(null)
+  }
+
+  return (
+    <>
+      <select className={formStyles.select} value={value ?? ''} onChange={onChange}>
+        <option value="" disabled>—</option>
+        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+      </select>
+      <Modal open={pendingValue !== null} onClose={() => setPendingValue(null)} title={`Move to ${pendingValue}`}>
+        <div className={formStyles.form}>
+          <div className={formStyles.field}>
+            <label className={formStyles.label}>Reasoning *</label>
+            <textarea
+              className={formStyles.input}
+              value={reasoning}
+              onChange={e => setReasoning(e.target.value)}
+              rows={3}
+              autoFocus
+            />
+          </div>
+          <Button variant="primary" disabled={!reasoning.trim()} onClick={confirmPending}>Confirm</Button>
+        </div>
+      </Modal>
+    </>
   )
 }
 
@@ -118,7 +181,7 @@ export function OverviewTab() {
           />
         </Field>
         <Field label="Status">
-          <EditableSelect dealId={deal.id} field="status" value={deal.status} options={STATUSES} />
+          <StatusSelect dealId={deal.id} value={deal.status} />
         </Field>
         <Field label="Sourcing Date"><EditableDate dealId={deal.id} field="sourcing_date" value={deal.sourcing_date} /></Field>
         <Field label="NDA Date"><EditableDate dealId={deal.id} field="nda_date" value={deal.nda_date} /></Field>

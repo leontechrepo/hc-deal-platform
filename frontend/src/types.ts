@@ -156,6 +156,8 @@ export interface Sponsor {
   coverage_cadence: string | null
   last_contact_date: string | null
   relationship_note: string | null
+  relationship_owner: string | null
+  deal_history_summary: string | null
   deals: SponsorDealSummary[]
   active_deal_count: number
   total_exposure_m: number
@@ -219,12 +221,16 @@ export interface PortfolioPosition {
   original_amount_m: number | null
   current_balance_m: number | null
   rate: number | null
-  payment_status: 'Current' | 'Late' | 'Default' | null
+  payment_status: 'Current' | 'PIK' | 'Past Due' | 'Default' | null
   risk: 'Pass' | 'Watch' | null
   next_test_date: string | null
   covenant_status: string | null
   leverage: number | null
   dscr: number | null
+  repayment_date: string | null
+  repayment_type: 'maturity' | 'prepayment' | 'refinance' | 'restructuring' | 'write_off' | null
+  realized_irr: number | null
+  moic: number | null
 }
 
 export type PortfolioPositionInput = Partial<Omit<PortfolioPosition, 'id' | 'deal_id' | 'company_name' | 'sponsor_name'>>
@@ -278,6 +284,8 @@ export interface DealDocument {
 export const DOCUMENT_CATEGORIES = [
   'Sourcing', 'Intake', 'NDA', 'Screening', 'LOI', 'Diligence',
   'IC Memo', 'Credit Agreement', 'Closing',
+  'CIM', 'QoE Report', 'Management Presentation', 'Term Sheet',
+  'Board Consent', 'Compliance Certificate',
 ] as const
 
 export interface DealTimelineTask {
