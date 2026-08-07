@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
 _RECOMMENDATIONS = {"go", "no_go", "hold"}
 _STATUSES = {"draft", "decided"}
+_DATA_CLASSIFICATIONS = {"Internal", "PII", "MNPI", "LP"}
 
 
 def _memo_to_dict(m: ScreeningMemo) -> dict:
@@ -76,6 +77,8 @@ async def create_screening_memo(deal_id: uuid.UUID, body: ScreeningMemoRequest, 
         raise HTTPException(status_code=400, detail=f"Invalid recommendation: {body.recommendation!r}")
     if body.status not in _STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status: {body.status!r}")
+    if body.data_classification not in _DATA_CLASSIFICATIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid data_classification: {body.data_classification!r}")
     # max_version + insert isn't atomic — two concurrent requests for the same
     # deal can both read the same max and then race on UNIQUE(deal_id,
     # version). Retry inside a savepoint (not the whole request transaction)

@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_actor_name, require_auth
 from app.db.activity import log_activity
 from app.db.approvals import log_approval
-from app.db.companies import create_company_for_deal, sync_company_from_deal
+from app.db.companies import find_or_create_company_for_deal, sync_company_from_deal
 from app.db.models import Deal, DealNote, DealUpdateLog, PendingSuggestion
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
@@ -114,7 +114,7 @@ async def approve_suggestion(
             nd = {}
         ts = datetime.now(timezone.utc).strftime("%Y/%m/%d")
         company_name = nd.get("company_name", "Unknown")
-        company = await create_company_for_deal(db, company_name, sector=nd.get("sector"))
+        company = await find_or_create_company_for_deal(db, company_name, sector=nd.get("sector"))
         new_deal = Deal(
             company_id=company.company_id,
             company_name=company_name,

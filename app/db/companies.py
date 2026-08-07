@@ -8,13 +8,23 @@ frontend/API just reading through a join everywhere.
 """
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
+from sqlalchemy import func, select
 from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.companies import Company
 from app.db.models.deals import Deal
+
+
+async def get_company_or_404(db: AsyncSession, company_id: uuid.UUID) -> Company:
+    company = await db.get(Company, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return company
 
 
 async def create_company_for_deal(
@@ -38,6 +48,26 @@ async def create_company_for_deal(
     db.add(company)
     await db.flush()
     return company
+
+
+async def find_or_create_company_for_deal(
+    db: AsyncSession,
+    company_name: str,
+    state: str | None = None,
+    hq_location: str | None = None,
+    sector: str | None = None,
+    subsector: str | None = None,
+) -> Company:
+    """Reuse an existing Company for a repeat borrower (case-insensitive
+    exact name match) instead of always inserting a new row — used by
+    callers that only have a free-text company name, not an explicit
+    company_id (create_deal's default path, inbox.py's new-deal branch)."""
+    existing = (
+        await db.execute(select(Company).where(func.lower(Company.company_name) == company_name.lower()).limit(1))
+    ).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    return await create_company_for_deal(db, company_name, state=state, hq_location=hq_location, sector=sector, subsector=subsector)
 
 
 async def sync_deals_from_company(db: AsyncSession, company: Company) -> None:

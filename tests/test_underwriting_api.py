@@ -40,3 +40,12 @@ async def test_latest_404_when_no_assumptions_recorded(db_session):
     with pytest.raises(HTTPException) as exc_info:
         await get_latest_underwriting_assumption(deal["deal_id"], db_session)
     assert exc_info.value.status_code == 404
+
+
+async def test_create_rejects_invalid_data_classification(db_session):
+    deal = await create_deal(CreateDealRequest(company_name="Bad Classification Co"), db_session, auth=TEST_AUTH)
+    with pytest.raises(HTTPException) as exc_info:
+        await create_underwriting_assumption(
+            deal["deal_id"], UnderwritingAssumptionRequest(data_classification="Confidential"), db_session
+        )
+    assert exc_info.value.status_code == 400

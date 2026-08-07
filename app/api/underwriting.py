@@ -15,6 +15,8 @@ from app.db.session import get_db
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
+_DATA_CLASSIFICATIONS = {"Internal", "PII", "MNPI", "LP"}
+
 
 def _assumption_to_dict(a: UnderwritingAssumption) -> dict:
     return {
@@ -99,6 +101,8 @@ async def create_underwriting_assumption(
     deal_id: uuid.UUID, body: UnderwritingAssumptionRequest, db: AsyncSession = Depends(get_db)
 ):
     await _get_deal_or_404(deal_id, db)
+    if body.data_classification not in _DATA_CLASSIFICATIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid data_classification: {body.data_classification!r}")
     # max_version + insert isn't atomic — two concurrent requests for the same
     # deal can both read the same max and then race on UNIQUE(deal_id,
     # version). Retry inside a savepoint (not the whole request transaction)

@@ -119,3 +119,15 @@ async def test_approving_new_deal_suggestion_creates_a_linked_company(db_session
     company = await get_company(deal["company_id"], db_session)
     assert company["company_name"] == "Inbox-Detected Co"
     assert company["sector"] == "Logistics"
+
+
+async def test_approving_new_deal_suggestion_reuses_existing_company_by_name(db_session):
+    existing = await create_deal(CreateDealRequest(company_name="Repeat Borrower Via Inbox Co"), db_session, auth=TEST_AUTH)
+    existing_deal = await get_deal(existing["deal_id"], db_session)
+
+    new_deal_payload = json.dumps({"company_name": "Repeat Borrower Via Inbox Co", "summary": "Follow-on signal"})
+    suggestion = await _make_suggestion(db_session, None, "new_deal", new_deal_payload)
+    result = await approve_suggestion(suggestion.id, ApproveRequest(), db_session, auth=TEST_AUTH)
+
+    new_deal = await get_deal(result["deal_id"], db_session)
+    assert new_deal["company_id"] == existing_deal["company_id"]

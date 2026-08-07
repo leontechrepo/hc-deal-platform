@@ -1,5 +1,8 @@
 """Smoke tests for the new screening-memos endpoints (versioned, Corporate
 Credit Data Model v0.2)."""
+import pytest
+from fastapi import HTTPException
+
 from app.api.deals import CreateDealRequest, create_deal
 from app.api.screening import ScreeningMemoRequest, create_screening_memo, list_screening_memos
 
@@ -18,3 +21,10 @@ async def test_versions_increment(db_session):
 
     memos = await list_screening_memos(deal["deal_id"], db_session)
     assert {m["version"] for m in memos} == {1, 2}
+
+
+async def test_create_rejects_invalid_data_classification(db_session):
+    deal = await create_deal(CreateDealRequest(company_name="Bad Classification Screening Co"), db_session, auth=TEST_AUTH)
+    with pytest.raises(HTTPException) as exc_info:
+        await create_screening_memo(deal["deal_id"], ScreeningMemoRequest(data_classification="Confidential"), db_session)
+    assert exc_info.value.status_code == 400

@@ -56,6 +56,40 @@ async def test_create_deal_creates_and_links_a_company(db_session):
     assert company["hq_location"] == "Dallas, TX"
 
 
+async def test_create_deal_reuses_existing_company_by_explicit_id(db_session):
+    company = await create_company(CompanyRequest(company_name="Existing Borrower Co"), db_session)
+
+    deal = await create_deal(
+        CreateDealRequest(company_name="Existing Borrower Co", company_id=company["company_id"]),
+        db_session, auth=TEST_AUTH,
+    )
+    fetched = await get_deal(deal["deal_id"], db_session)
+    assert fetched["company_id"] == company["company_id"]
+
+    companies = await list_companies(db_session)
+    assert sum(1 for c in companies if c["company_name"] == "Existing Borrower Co") == 1
+
+
+async def test_create_deal_reuses_existing_company_by_name_match(db_session):
+    first = await create_deal(CreateDealRequest(company_name="Repeat Borrower Co"), db_session, auth=TEST_AUTH)
+    second = await create_deal(CreateDealRequest(company_name="Repeat Borrower Co"), db_session, auth=TEST_AUTH)
+
+    first_deal = await get_deal(first["deal_id"], db_session)
+    second_deal = await get_deal(second["deal_id"], db_session)
+    assert first_deal["company_id"] == second_deal["company_id"]
+
+    companies = await list_companies(db_session)
+    assert sum(1 for c in companies if c["company_name"] == "Repeat Borrower Co") == 1
+
+
+async def test_create_deal_with_missing_company_id_404s(db_session):
+    with pytest.raises(HTTPException) as exc_info:
+        await create_deal(
+            CreateDealRequest(company_name="Ghost Co", company_id=uuid.uuid4()), db_session, auth=TEST_AUTH
+        )
+    assert exc_info.value.status_code == 404
+
+
 async def test_patch_company_syncs_to_linked_deal(db_session):
     deal = await create_deal(CreateDealRequest(company_name="Sync From Company Co"), db_session, auth=TEST_AUTH)
     fetched = await get_deal(deal["deal_id"], db_session)

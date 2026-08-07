@@ -15,7 +15,7 @@ from app.core.auth import get_actor_name, require_auth
 from app.core.config import settings
 from app.db.activity import log_activity
 from app.db.approvals import log_approval
-from app.db.companies import create_company_for_deal, sync_company_from_deal
+from app.db.companies import find_or_create_company_for_deal, get_company_or_404, sync_company_from_deal
 from app.db.models import Deal, DealDocument, DealUpdateLog, EmailScanLog
 from app.db.portfolio import ensure_portfolio_position
 from app.db.session import get_db
@@ -504,6 +504,7 @@ async def export_underwriting(deal_id: uuid.UUID, db: AsyncSession = Depends(get
 
 class CreateDealRequest(BaseModel):
     company_name: str
+    company_id: Optional[uuid.UUID] = None  # link an existing Company instead of creating a new one
     location: Optional[str] = None
     sector_primary: Optional[str] = None
     sector_full: Optional[str] = None
@@ -560,23 +561,28 @@ async def create_deal(
     # Every deal gets a backing Company row (Corporate Credit Data Model
     # v0.2 normalizes the borrower out of the deal) — mirrors migration 020's
     # one-company-per-deal backfill so deals created after that migration
-    # aren't left with a permanently null company_id.
-    company = await create_company_for_deal(
-        db,
-        body.company_name,
-        state=body.state,
-        hq_location=body.location,
-        sector=body.sector_primary,
-        subsector=body.subsector,
-    )
+    # aren't left with a permanently null company_id. An explicit company_id
+    # links to an existing borrower; otherwise reuse one by exact name match
+    # rather than always inserting a duplicate for a repeat borrower.
+    if body.company_id is not None:
+        company = await get_company_or_404(db, body.company_id)
+    else:
+        company = await find_or_create_company_for_deal(
+            db,
+            body.company_name,
+            state=body.state,
+            hq_location=body.location,
+            sector=body.sector_primary,
+            subsector=body.subsector,
+        )
 
     deal = Deal(
         company_id=company.company_id,
-        company_name=body.company_name,
-        location=body.location,
-        sector_primary=body.sector_primary,
+        company_name=company.company_name,
+        location=company.hq_location,
+        sector_primary=company.sector,
         sector_full=body.sector_full,
-        subsector=body.subsector,
+        subsector=company.subsector,
         security=body.security,
         uop=body.uop,
         source=body.source,
@@ -584,7 +590,7 @@ async def create_deal(
         stage="Initial Conversations",
         pipeline_stage=body.pipeline_stage,
         status=body.status,
-        state=body.state,
+        state=company.state,
         contact_name=body.contact_name,
         contact_role=body.contact_role,
         employees=body.employees,
