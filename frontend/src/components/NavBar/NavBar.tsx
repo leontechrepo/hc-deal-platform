@@ -15,6 +15,7 @@ import {
   InboxIcon,
   Users,
   Landmark,
+  Building,
   Building2,
   RefreshCw,
   PanelLeftClose,
@@ -84,6 +85,11 @@ export function NavBar() {
           <NavLink to="/sponsors" title="Sponsors" className={navItemClass}>
             <NavIcon icon={Users} />
             <span className={styles.navLabel}>Sponsors</span>
+          </NavLink>
+
+          <NavLink to="/companies" title="Companies" className={navItemClass}>
+            <NavIcon icon={Building} />
+            <span className={styles.navLabel}>Companies</span>
           </NavLink>
 
           <NavLink to="/funds" title="Funds" className={navItemClass}>

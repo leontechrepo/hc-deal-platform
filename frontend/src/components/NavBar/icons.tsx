@@ -6,6 +6,7 @@ export {
   Inbox as InboxIcon,
   Users,
   Landmark,
+  Building,
   Building2,
   RefreshCw,
   PanelLeftClose,

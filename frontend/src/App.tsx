@@ -8,6 +8,7 @@ import { PipelinePage } from './pages/PipelinePage/PipelinePage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
 import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
 import { SponsorsPage } from './pages/SponsorsPage/SponsorsPage'
+import { CompaniesPage } from './pages/CompaniesPage/CompaniesPage'
 import { FundsPage } from './pages/FundsPage/FundsPage'
 import { PortfolioPage } from './pages/PortfolioPage/PortfolioPage'
 import { InboxPage } from './pages/InboxPage/InboxPage'
@@ -22,6 +23,7 @@ import { FormulasTab } from './pages/DealDetailPage/tabs/FormulasTab'
 import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
 import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
 import { DocumentsTab } from './pages/DealDetailPage/tabs/DocumentsTab'
+import { TeamTab } from './pages/DealDetailPage/tabs/TeamTab'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -45,6 +47,7 @@ function Layout() {
           <Route path="/logs" element={<LogsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/sponsors" element={<SponsorsPage />} />
+          <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/funds" element={<FundsPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/inbox" element={<InboxPage />} />
@@ -58,6 +61,7 @@ function Layout() {
             <Route path="activity" element={<ActivityTab />} />
             <Route path="notes" element={<NotesTab />} />
             <Route path="documents" element={<DocumentsTab />} />
+            <Route path="team" element={<TeamTab />} />
           </Route>
         </Routes>
       </main>

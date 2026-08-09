@@ -65,6 +65,7 @@ export interface Deal {
   risk_score: number | null
   deal_team: string[] | null
   underwriting_locked: boolean
+  company_id: string | null
 }
 
 export interface CreateDealInput {
@@ -362,3 +363,53 @@ export interface ChatSessionSummary {
   created_at: string
   updated_at: string
 }
+
+export interface Company {
+  company_id: string
+  company_name: string
+  state: string | null
+  hq_location: string | null
+  sector: string | null
+  subsector: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type CompanyInput = Omit<Company, 'company_id' | 'created_at' | 'updated_at'>
+
+export const CONTACT_ROLES = [
+  'CEO', 'CFO', 'COO', 'Board Member', 'Sponsor Partner', 'Banker/Intermediary', 'Legal Counsel', 'Auditor/QoE Provider',
+] as const
+
+export interface Contact {
+  contact_id: string
+  company_id: string | null
+  sponsor_id: number | null
+  deal_id: string | null
+  name: string
+  email: string | null
+  role: typeof CONTACT_ROLES[number] | null
+  cadence_frequency: string | null
+  last_interaction_date: string | null
+  next_touchpoint_due: string | null
+  draft_followup_ref: string | null
+  data_classification: string
+  created_at: string
+  updated_at: string
+}
+
+export type ContactInput = Omit<Contact, 'contact_id' | 'data_classification' | 'created_at' | 'updated_at'>
+export type ContactPatchInput = Partial<Omit<ContactInput, 'company_id' | 'sponsor_id' | 'deal_id'>>
+
+export const DEAL_TEAM_ROLES = ['Lead', 'Analyst', 'Associate'] as const
+
+export interface DealTeamMember {
+  team_id: number
+  deal_id: string
+  team_member: string
+  role_on_deal: typeof DEAL_TEAM_ROLES[number] | null
+  created_at: string
+  updated_at: string
+}
+
+export type DealTeamMemberInput = Omit<DealTeamMember, 'team_id' | 'deal_id' | 'created_at' | 'updated_at'>

@@ -51,6 +51,15 @@
   color: var(--muted);
 }
 
+.companyLink {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.companyLink:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 700px) {
   .field {
     grid-template-columns: 1fr;
