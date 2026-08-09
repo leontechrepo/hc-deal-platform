@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCompanies, useCreateCompany, useUpdateCompany } from '../../hooks/useCompanies'
 import { CompanyFormModal } from '../../components/companies/CompanyFormModal'
 import { Button } from '../../components/ui/Button/Button'
@@ -16,10 +17,25 @@ export function CompaniesPage() {
   const createCompany = useCreateCompany()
   const updateCompany = useUpdateCompany()
   const { showToast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
+
+  // Deep link support (e.g. "View in Companies" from a deal's Overview tab):
+  // ?id=<company_id> opens that company's edit modal directly, once, as soon
+  // as the list has loaded.
+  const linkedId = searchParams.get('id')
+  const openedLinkedId = useRef<string | null>(null)
+  useEffect(() => {
+    if (!linkedId || linkedId === openedLinkedId.current) return
+    const match = companies.find(c => c.company_id === linkedId)
+    if (match) {
+      openedLinkedId.current = linkedId
+      openEdit(match)
+    }
+  }, [linkedId, companies])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -86,7 +102,15 @@ export function CompaniesPage() {
         <DataTable columns={columns} rows={filtered} rowKey={c => c.company_id} />
       )}
 
-      <CompanyFormModal open={modalOpen} onClose={() => setModalOpen(false)} initial={editing} onSubmit={handleSubmit} />
+      <CompanyFormModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false)
+          if (linkedId) setSearchParams({}, { replace: true })
+        }}
+        initial={editing}
+        onSubmit={handleSubmit}
+      />
     </PageShell>
   )
 }

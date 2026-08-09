@@ -146,7 +146,7 @@ export function OverviewTab() {
         <Field label="Company Name"><InlineEditText value={deal.company_name} onSave={saveField('company_name')} /></Field>
         <Field label="Company Record">
           {deal.company_id ? (
-            <Link to="/companies" className={styles.companyLink}>View in Companies →</Link>
+            <Link to={`/companies?id=${deal.company_id}`} className={styles.companyLink}>View in Companies →</Link>
           ) : (
             <span className={styles.readOnly}>—</span>
           )}

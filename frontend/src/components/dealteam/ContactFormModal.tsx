@@ -98,13 +98,23 @@ export function ContactFormModal({ open, onClose, initial, defaultCompanyId, onS
 
         <div className={formStyles.field}>
           <label className={formStyles.label}>Company</label>
-          <SearchableSelect
-            options={companies.map(c => ({ id: c.company_id, label: c.company_name }))}
-            value={form.company_id ?? null}
-            onChange={id => set('company_id', id)}
-            placeholder="Search companies…"
-          />
-          {isEdit && <span className={formStyles.lockedNote}>Company can only be set when a contact is created.</span>}
+          {isEdit ? (
+            <>
+              <input
+                className={formStyles.input}
+                value={companies.find(c => c.company_id === form.company_id)?.company_name ?? '—'}
+                disabled
+              />
+              <span className={formStyles.lockedNote}>Company can only be set when a contact is created.</span>
+            </>
+          ) : (
+            <SearchableSelect
+              options={companies.map(c => ({ id: c.company_id, label: c.company_name }))}
+              value={form.company_id ?? null}
+              onChange={id => set('company_id', id)}
+              placeholder="Search companies…"
+            />
+          )}
         </div>
 
         <div className={formStyles.row}>
