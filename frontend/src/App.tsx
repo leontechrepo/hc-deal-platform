@@ -24,6 +24,7 @@ import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
 import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
 import { DocumentsTab } from './pages/DealDetailPage/tabs/DocumentsTab'
 import { TeamTab } from './pages/DealDetailPage/tabs/TeamTab'
+import { CapitalStructureTab } from './pages/DealDetailPage/tabs/CapitalStructureTab'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -62,6 +63,7 @@ function Layout() {
             <Route path="notes" element={<NotesTab />} />
             <Route path="documents" element={<DocumentsTab />} />
             <Route path="team" element={<TeamTab />} />
+            <Route path="capital-structure" element={<CapitalStructureTab />} />
           </Route>
         </Routes>
       </main>
