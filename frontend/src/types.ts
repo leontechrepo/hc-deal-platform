@@ -413,3 +413,46 @@ export interface DealTeamMember {
 }
 
 export type DealTeamMemberInput = Omit<DealTeamMember, 'team_id' | 'deal_id' | 'created_at' | 'updated_at'>
+
+export interface CapitalStructureTranche {
+  tranche_id: string
+  deal_id: string
+  tranche_type: string | null
+  holder: string | null
+  amount: number | null // cents
+  seniority_rank: number | null
+  is_lcg_position: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type CapitalStructureTrancheInput = Omit<CapitalStructureTranche, 'tranche_id' | 'deal_id' | 'created_at' | 'updated_at'>
+
+export interface ParticipantLender {
+  participant_id: string
+  deal_id: string
+  lender_name: string
+  participation_amount: number | null // cents
+  is_agent: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ParticipantLenderInput = Omit<ParticipantLender, 'participant_id' | 'deal_id' | 'created_at' | 'updated_at'>
+
+export const COVENANT_TYPES = ['Financial', 'Negative', 'Affirmative'] as const
+export const COVENANT_TEST_FREQUENCIES = ['Quarterly', 'Monthly', 'Annual'] as const
+
+export interface Covenant {
+  covenant_id: string
+  deal_id: string
+  covenant_type: typeof COVENANT_TYPES[number]
+  covenant_name: string
+  threshold_value: number | null
+  test_frequency: typeof COVENANT_TEST_FREQUENCIES[number] | null
+  created_at: string
+  updated_at: string
+}
+
+export type CovenantInput = Omit<Covenant, 'covenant_id' | 'deal_id' | 'created_at' | 'updated_at'>
+export type CovenantPatchInput = Partial<CovenantInput>

@@ -83,6 +83,13 @@
   min-height: 60px;
 }
 
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

@@ -1,0 +1,40 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border-gold);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(10px);
+  padding: 20px 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.state {
+  padding: 16px 0;
+  font-size: 13px;
+  color: var(--gray-400);
+}
+
+.rowActions {
+  display: flex;
+  gap: 4px;
+}
