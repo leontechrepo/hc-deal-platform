@@ -81,6 +81,7 @@ export function DealDetailPage() {
       <Tabs
         items={[
           { key: 'overview', label: 'Overview', to: `/deals/${deal.id}/overview` },
+          { key: 'team', label: 'Team & Contacts', to: `/deals/${deal.id}/team` },
           { key: 'underwriting', label: 'Underwriting', to: `/deals/${deal.id}/underwriting` },
           { key: 'timeline', label: 'Timeline', to: `/deals/${deal.id}/timeline` },
           { key: 'formulas', label: 'Formulas', to: `/deals/${deal.id}/formulas` },

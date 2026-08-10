@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { usePatchDeal } from '../../../hooks/useDeals'
 import { useCurrentActor } from '../../../hooks/useCurrentActor'
 import { useToast } from '../../../components/Toast/Toast'
@@ -144,6 +144,13 @@ export function OverviewTab() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Company</h2>
         <Field label="Company Name"><InlineEditText value={deal.company_name} onSave={saveField('company_name')} /></Field>
+        <Field label="Company Record">
+          {deal.company_id ? (
+            <Link to={`/companies?id=${deal.company_id}`} className={styles.companyLink}>View in Companies →</Link>
+          ) : (
+            <span className={styles.readOnly}>—</span>
+          )}
+        </Field>
         <Field label="Sector"><InlineEditText value={deal.sector_primary} onSave={saveField('sector_primary')} /></Field>
         <Field label="Sector (Full)"><InlineEditText value={deal.sector_full} onSave={saveField('sector_full')} /></Field>
         <Field label="Subsector"><InlineEditText value={deal.subsector} onSave={saveField('subsector')} /></Field>
