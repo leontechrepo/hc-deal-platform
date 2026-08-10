@@ -20,7 +20,7 @@ import styles from './CapitalStructureTab.module.css'
 
 function fmtCents(cents: number | null): string {
   if (cents === null) return '—'
-  return `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+  return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 export function CapitalStructureTab() {
