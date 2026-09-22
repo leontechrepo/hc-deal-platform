@@ -40,7 +40,7 @@ migrations/
 ### Prerequisites
 
 - Python 3.13+
-- Node.js 18+
+- Node.js 20.19+ or 22.12+ (required by Vite 8 / `@vitejs/plugin-react` 6, per the committed lockfile)
 - Docker (for local Postgres)
 
 ### Setup
@@ -48,7 +48,7 @@ migrations/
 1. Start local Postgres:
 
    ```bash
-   docker run -d --name hc-deal-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=hc_deal -p 5432:5432 postgres:17
+   docker run -d --name hc-deal-db -e POSTGRES_PASSWORD=leon -e POSTGRES_USER=leon -e POSTGRES_DB=hc_deals -p 5432:5432 postgres:17
    ```
 
 2. Create and activate a virtual environment:
@@ -67,13 +67,19 @@ migrations/
    uvicorn app.main:app --reload --port 8000
    ```
 
-5. In a separate terminal, start the frontend dev server:
+5. In a separate terminal, set up and start the frontend dev server:
 
    ```bash
    cd frontend
+   echo "VITE_CLERK_PUBLISHABLE_KEY=pk_..." > .env
    npm install
    npm run dev
    ```
+
+   Vite's env root is `frontend/`, so `VITE_CLERK_PUBLISHABLE_KEY` must live
+   in `frontend/.env` (the root `.env.example` does not include it) —
+   `frontend/src/main.tsx` passes `import.meta.env.VITE_CLERK_PUBLISHABLE_KEY`
+   to `ClerkProvider`.
 
    Frontend runs at `http://localhost:5173` and proxies API calls to
    `http://localhost:8000`.

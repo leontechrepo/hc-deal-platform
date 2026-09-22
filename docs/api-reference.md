@@ -23,6 +23,7 @@ nav_order: 3
 | `STORAGE_ACCESS_KEY_ID` | Bucket access key ID |
 | `STORAGE_SECRET_ACCESS_KEY` | Bucket secret access key |
 | `STORAGE_REGION` | Bucket region (default: `auto`) |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the frontend; must be set in `frontend/.env` (Vite's env root), read via `import.meta.env` in `frontend/src/main.tsx` |
 
 ## API surface
 
