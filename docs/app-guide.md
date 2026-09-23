@@ -12,8 +12,8 @@
 ## Local development
 
 ```bash
-# 1. Local Postgres
-docker run -d --name hc-deal-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=hc_deal -p 5432:5432 postgres:17
+# 1. Local Postgres (matches the DATABASE_URL in .env.example below)
+docker run -d --name hc-deal-db -e POSTGRES_PASSWORD=leon -e POSTGRES_USER=leon -e POSTGRES_DB=hc_deals -p 5432:5432 postgres:17
 
 # 2. Backend
 python -m venv .venv && source .venv/bin/activate
