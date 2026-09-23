@@ -4,8 +4,8 @@ All endpoints are FastAPI routers mounted under `app/api/` (see `app/main.py` fo
 
 | Router | Owns |
 |---|---|
-| `deals.py` | Core deal CRUD and pipeline fields |
-| `dashboard.py` | Pipeline/portfolio KPIs and summary views |
+| `deals.py` | Core deal CRUD and pipeline fields, plus summary/reporting endpoints: `GET /api/kpis` (pipeline/portfolio KPIs) and `GET /api/analytics` (funnel, pass reasons, deal sources, deals by quarter) |
+| `dashboard.py` | Empty legacy router (no endpoints) — dashboard KPI/summary views moved to the React SPA, backed by `deals.py`'s `/api/kpis` and `/api/analytics` |
 | `inbox.py` | Mined-mail review queue (Microsoft Graph scan results, Claude-proposed updates) |
 | `deal_activity.py` | Deal activity/audit feed |
 | `deal_documents.py` | Deal document upload/download/storage |
