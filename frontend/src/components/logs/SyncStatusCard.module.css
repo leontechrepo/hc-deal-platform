@@ -1,0 +1,24 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.dim {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.error {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--red);
+  font-size: 11px;
+}
