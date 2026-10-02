@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { PageShell } from '../../components/ui/PageShell/PageShell'
+import { Card, CardHeader, CardTitle, SearchableSelect } from '@leontechrepo/leon-ui'
+import { PageError, PageLoading } from '../../components/ui/PageState'
 import { useDeals } from '../../hooks/useDeals'
 import type { Deal } from '../../types'
 import styles from './AnalyticsPage.module.css'
@@ -40,21 +41,20 @@ function SectorFilter({ value, onChange, sectors }: {
   sectors: string[]
 }) {
   return (
-    <select
-      className={styles.filterSelect}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-    >
-      <option value="">All Sectors</option>
-      {sectors.map(s => <option key={s} value={s}>{s}</option>)}
-    </select>
+    <div className={styles.filter}>
+      <SearchableSelect
+        options={sectors.map(s => ({ id: s, label: s }))}
+        value={value || null}
+        onChange={v => onChange(v ?? '')}
+        placeholder="All sectors"
+        noneLabel="All sectors"
+      />
+    </div>
   )
 }
 
-const SHELL = { title: 'Pipeline Analytics', sub: 'Corporate Credit — Deal Platform' }
-
 export function AnalyticsPage() {
-  const { data: deals = [], isLoading, isError } = useDeals()
+  const { data: deals = [], isLoading, isError, refetch } = useDeals()
 
   const [funnelSector, setFunnelSector]   = useState('')
   const [passSector, setPassSector]       = useState('')
@@ -104,17 +104,17 @@ export function AnalyticsPage() {
       .map(r => ({ quarter: r.key, count: r.count }))
   }, [deals, quarterSector])
 
-  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading analytics…</div></PageShell>
-  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load analytics.</div></PageShell>
+  if (isLoading) return <PageLoading label="Loading analytics…" lines={6} />
+  if (isError) return <PageError title="Couldn't load analytics" onRetry={() => void refetch()} />
 
   return (
-    <PageShell {...SHELL}>
+    <>
       <div className={styles.grid}>
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Deal Funnel</h2>
+        <Card className={styles.card}>
+          <CardHeader className={styles.cardHeader}>
+            <CardTitle>Deal Funnel</CardTitle>
             <SectorFilter value={funnelSector} onChange={setFunnelSector} sectors={sectors} />
-          </div>
+          </CardHeader>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={funnelData} layout="vertical" margin={{ left: 8, right: 24, top: 20, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid)" />
@@ -124,13 +124,13 @@ export function AnalyticsPage() {
               <Bar dataKey="count" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Reasons for Passing</h2>
+        <Card className={styles.card}>
+          <CardHeader className={styles.cardHeader}>
+            <CardTitle>Reasons for Passing</CardTitle>
             <SectorFilter value={passSector} onChange={setPassSector} sectors={sectors} />
-          </div>
+          </CardHeader>
           {passReasonsData.length === 0 ? (
             <p className={styles.empty}>No pass reasons recorded yet.</p>
           ) : (
@@ -150,13 +150,13 @@ export function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Card>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Sources of Deals</h2>
+        <Card className={styles.card}>
+          <CardHeader className={styles.cardHeader}>
+            <CardTitle>Sources of Deals</CardTitle>
             <SectorFilter value={sourceSector} onChange={setSourceSector} sectors={sectors} />
-          </div>
+          </CardHeader>
           {dealSourcesData.length === 0 ? (
             <p className={styles.empty}>No source data recorded yet.</p>
           ) : (
@@ -176,13 +176,13 @@ export function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Card>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Deals by Quarter</h2>
+        <Card className={styles.card}>
+          <CardHeader className={styles.cardHeader}>
+            <CardTitle>Deals by Quarter</CardTitle>
             <SectorFilter value={quarterSector} onChange={setQuarterSector} sectors={sectors} />
-          </div>
+          </CardHeader>
           {dealsByQuarterData.length === 0 ? (
             <p className={styles.empty}>No quarterly data recorded yet.</p>
           ) : (
@@ -202,8 +202,8 @@ export function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Card>
       </div>
-    </PageShell>
+    </>
   )
 }

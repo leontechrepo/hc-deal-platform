@@ -3,8 +3,8 @@
   border: 1px solid var(--card-border-gold);
   border-radius: 12px;
   box-shadow: var(--shadow-soft);
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
   cursor: grab;
   transition: box-shadow 0.16s, border-color 0.16s, transform 0.16s;
 }
@@ -15,9 +15,10 @@
   transform: translateY(-2px);
 }
 
-.card:active {
-  cursor: grabbing;
-}
+.card:active { cursor: grabbing; }
+
+/* Feedback for the card in flight, so it's easy to track on a long board. */
+.dragging { opacity: 0.45; box-shadow: none; transform: none; }
 
 .cardHeader {
   display: flex;
@@ -31,18 +32,13 @@
   font-size: 13px;
   color: var(--heading);
   display: block;
-  text-decoration: none;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.company:hover {
-  text-decoration: underline;
-}
+.company:hover { text-decoration: underline; }
 
-.cardActions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
+.cardActions { display: flex; gap: 2px; flex-shrink: 0; }
 
 .iconBtn {
   display: inline-flex;
@@ -54,26 +50,20 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--gray-400);
+  color: var(--muted);
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
-.iconBtn:hover {
-  color: var(--heading);
-  background: var(--panel-raised);
-}
+.iconBtn:hover { color: var(--heading); background: var(--panel-raised); }
 
-.meta {
-  font-size: 11px;
-  color: var(--gray-400);
-  margin-top: 3px;
-}
+.meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   margin-top: 8px;
 }
 
@@ -84,7 +74,4 @@
   color: var(--heading);
 }
 
-.dim {
-  color: var(--gray-400);
-  font-weight: 400;
-}
+.dim { color: var(--muted); font-weight: 400; }

@@ -1,20 +1,11 @@
-import { useOutletContext } from 'react-router-dom'
+import { Activity } from 'lucide-react'
+import { useDealContext } from '../dealContext'
 import { useDealActivity } from '../../../hooks/useDealDetail'
 import { DataTable, type Column } from '../../../components/ui/DataTable/DataTable'
-import { EmptyState } from '../../../components/ui/EmptyState/EmptyState'
-import { Badge, type BadgeTone } from '../../../components/ui/Badge/Badge'
-import type { Deal, DealActivity } from '../../../types'
-import styles from './ActivityTab.module.css'
-
-const ACTIVITY_TONE: Record<string, BadgeTone> = {
-  stage_change: 'navy',
-  document: 'blue',
-  note: 'gray',
-  approval: 'green',
-  system: 'gray',
-  email: 'blue',
-  status_change: 'gold',
-}
+import { DataSection } from '../../../components/dealDetail/DataSection'
+import { TonedBadge } from '../../../components/ui/TonedBadge'
+import { activityTone } from '../../../domain/badgeTones'
+import type { DealActivity } from '../../../types'
 
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
@@ -24,26 +15,27 @@ function fmtDate(iso: string): string {
 
 const columns: Column<DealActivity>[] = [
   { key: 'date', header: 'Date', render: a => fmtDate(a.created_at) },
-  { key: 'type', header: 'Type', render: a => <Badge tone={ACTIVITY_TONE[a.activity_type] ?? 'gray'}>{a.activity_type}</Badge> },
+  { key: 'type', header: 'Type', render: a => <TonedBadge tone={activityTone(a.activity_type)}>{a.activity_type}</TonedBadge> },
   { key: 'description', header: 'Description', width: 320, render: a => a.description },
   { key: 'actor', header: 'Actor', render: a => a.actor ?? '—' },
 ]
 
 export function ActivityTab() {
-  const { deal } = useOutletContext<{ deal: Deal }>()
+  const { deal } = useDealContext()
   const { data: activity = [], isLoading, isError } = useDealActivity(deal.id)
 
-  if (isLoading) return <div className={styles.state}>Loading activity…</div>
-  if (isError) return <div className={styles.state}>Failed to load activity.</div>
-
-  if (activity.length === 0) {
-    return (
-      <EmptyState
-        title="No activity yet"
-        description="Activity is logged automatically as this deal moves through the pipeline."
-      />
-    )
-  }
-
-  return <DataTable columns={columns} rows={activity} rowKey={a => a.id} />
+  return (
+    <DataSection
+      title="Activity"
+      noun="activity"
+      isLoading={isLoading}
+      isError={isError}
+      isEmpty={activity.length === 0}
+      emptyIcon={Activity}
+      emptyTitle="No activity yet"
+      emptyDescription="Activity is logged automatically as this deal moves through the pipeline."
+    >
+      <DataTable columns={columns} rows={activity} rowKey={a => a.id} />
+    </DataSection>
+  )
 }

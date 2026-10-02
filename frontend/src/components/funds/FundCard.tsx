@@ -1,6 +1,5 @@
-import { Card } from '../ui/Card/Card'
-import { Badge } from '../ui/Badge/Badge'
-import { KPIGrid } from '../ui/KPIGrid/KPIGrid'
+import { Button, Card, KeyValue, KeyValueGrid } from '@leontechrepo/leon-ui'
+import { TonedBadge } from '../ui/TonedBadge'
 import { ProgressBar } from '../ui/ProgressBar/ProgressBar'
 import { PipelineDealsMiniTable } from '../shared/PipelineDealsMiniTable'
 import { LPTable } from './LPTable'
@@ -30,15 +29,19 @@ export function FundCard({ fund, onEdit, onDelete }: Props) {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.name}>{fund.name}</span>
-          {fund.status && <Badge tone={fund.status === 'Investing' ? 'green' : 'gold'}>{fund.status}</Badge>}
+          {fund.status && <TonedBadge tone={fund.status === 'Investing' ? 'green' : 'gold'}>{fund.status}</TonedBadge>}
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.iconBtn} onClick={onEdit} title="Edit fund">Edit</button>
-          <button className={styles.iconBtn} onClick={onDelete} title="Delete fund">Delete</button>
+          <Button variant="ghost" size="sm" onClick={onEdit} title="Edit fund">Edit</Button>
+          <Button variant="ghost" size="sm" onClick={onDelete} title="Delete fund">Delete</Button>
         </div>
       </div>
 
-      <KPIGrid items={items} flat />
+      <KeyValueGrid>
+        {items.map(item => (
+          <KeyValue key={item.label} label={item.label} value={item.value} />
+        ))}
+      </KeyValueGrid>
 
       <div className={styles.progressSection}>
         <div className={styles.progressLabel}>
@@ -79,7 +82,7 @@ export function FundCard({ fund, onEdit, onDelete }: Props) {
 
       {fund.focus_sectors && fund.focus_sectors.length > 0 && (
         <div className={styles.sectors}>
-          {fund.focus_sectors.map(s => <Badge key={s} tone="blue">{s}</Badge>)}
+          {fund.focus_sectors.map(s => <TonedBadge key={s} tone="blue">{s}</TonedBadge>)}
         </div>
       )}
 

@@ -1,4 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+@import "@leontechrepo/leon-ui/styles.css";
 @import './styles/tokens.css';
 @import './styles/base.css';
+@import './styles/app.css';
+
+/* Package CSS is precompiled; re-declare dark + @theme for this app's Tailwind build. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--lt);
+  --color-foreground: var(--text);
+  --color-card: var(--card);
+  --color-card-foreground: var(--text);
+  --color-primary: var(--navy);
+  --color-primary-foreground: var(--gold);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--navy);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--gold);
+  --color-accent-foreground: var(--on-gold);
+  --color-destructive: var(--red);
+  --color-destructive-foreground: var(--chat-user-text);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--gold);
+  --font-sans: var(--font);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}

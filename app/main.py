@@ -17,22 +17,46 @@ FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 async def lifespan(app: FastAPI):
     await init_db()
 
+    scheduler = AsyncIOScheduler()
     if settings.AZURE_CLIENT_ID and settings.ANTHROPIC_API_KEY:
-        scheduler = AsyncIOScheduler()
-
         async def _scan_job():
             from app.automation.scanner import run_scan
             async with AsyncSessionLocal() as db:
-                count = await run_scan(db)
-                if count:
-                    print(f"[scheduler] Email scan processed {count} emails")
+                outcome = await run_scan(db, trigger="scheduler")
+                if outcome.messages_classified:
+                    print(
+                        f"[scheduler] Email scan {outcome.status}: "
+                        f"classified={outcome.messages_classified} "
+                        f"cost=${outcome.estimated_cost_usd}"
+                    )
 
         scheduler.add_job(
             _scan_job,
             "interval",
             minutes=settings.SCAN_INTERVAL_MINUTES,
             id="email_scan",
+            max_instances=1,
+            coalesce=True,
         )
+
+    if settings.document_extraction_enabled:
+        async def _extraction_job():
+            from app.services.deal_extraction import process_pending_runs
+            async with AsyncSessionLocal() as db:
+                changed = await process_pending_runs(db)
+                if changed:
+                    print(f"[scheduler] Processed {changed} extraction run(s)")
+
+        scheduler.add_job(
+            _extraction_job,
+            "interval",
+            minutes=1,
+            id="document_extraction",
+            max_instances=1,
+            coalesce=True,
+        )
+
+    if scheduler.get_jobs():
         scheduler.start()
         app.state.scheduler = scheduler
     else:
@@ -67,6 +91,9 @@ from app.api.covenants import router as covenants_router
 from app.api.amendments import router as amendments_router
 from app.api.risk_ratings import router as risk_ratings_router
 from app.api.approvals import router as approvals_router
+from app.api.meta import router as meta_router
+from app.api.admin import router as admin_router
+from app.api.extractions import router as extractions_router
 
 app.include_router(dashboard_router)
 app.include_router(deals_router)
@@ -89,8 +116,10 @@ app.include_router(covenants_router)
 app.include_router(amendments_router)
 app.include_router(risk_ratings_router)
 app.include_router(approvals_router)
+app.include_router(meta_router)
+app.include_router(admin_router)
+app.include_router(extractions_router)
 
-# Serve React build — only when frontend/dist exists (skips gracefully in dev)
 if (FRONTEND_DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
@@ -100,7 +129,6 @@ async def spa_fallback(full_path: str):
     index = FRONTEND_DIST / "index.html"
     if index.exists():
         return FileResponse(index)
-    # Dev mode fallback: tell the developer to start the Vite dev server
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         "Frontend not built. Run: cd frontend && npm run dev",

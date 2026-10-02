@@ -1,50 +1,41 @@
-"""
-Presigned-URL access to Railway's S3-compatible object storage bucket for deal
-document uploads. Only metadata (storage_key, size_bytes, ...) lives in
-Postgres — raw bytes never pass through the API process.
-"""
+"""Helpers around the storage abstraction for deal documents."""
 from __future__ import annotations
 
 import uuid
 
-from app.core.config import settings
-
-_client = None
-
-
-def _get_client():
-    global _client
-    if _client is None:
-        import boto3
-
-        _client = boto3.client(
-            "s3",
-            endpoint_url=settings.STORAGE_ENDPOINT_URL,
-            aws_access_key_id=settings.STORAGE_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.STORAGE_SECRET_ACCESS_KEY,
-            region_name=settings.STORAGE_REGION,
-        )
-    return _client
+from app.storage.base import get_storage
 
 
 def make_storage_key(deal_id: uuid.UUID, filename: str) -> str:
-    return f"deals/{deal_id}/{uuid.uuid4().hex}-{filename}"
+    return get_storage().key_for(filename, folder=f"active/{deal_id}")
 
 
-def put_object(storage_key: str, body: bytes, content_type: str | None) -> None:
-    kwargs = {"Bucket": settings.STORAGE_BUCKET_NAME, "Key": storage_key, "Body": body}
-    if content_type:
-        kwargs["ContentType"] = content_type
-    _get_client().put_object(**kwargs)
+async def put_object(
+    storage_key: str,
+    body: bytes,
+    content_type: str | None,
+    *,
+    backend: str | None = None,
+) -> str:
+    """Write bytes; returns the backend name that was used."""
+    storage = get_storage(backend)
+    await storage.put(storage_key, body, content_type)
+    return storage.name
 
 
-def presigned_get_url(storage_key: str, expires_in: int = 300) -> str:
-    return _get_client().generate_presigned_url(
-        "get_object",
-        Params={"Bucket": settings.STORAGE_BUCKET_NAME, "Key": storage_key},
-        ExpiresIn=expires_in,
+async def presigned_get_url(
+    storage_key: str,
+    *,
+    backend: str | None = None,
+    download_name: str | None = None,
+    expires_in: int = 300,
+) -> str | None:
+    return await get_storage(backend).url_for(
+        storage_key, download_name=download_name, expires_in=expires_in
     )
 
 
-def delete_object(storage_key: str) -> None:
-    _get_client().delete_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=storage_key)
+async def delete_object(
+    storage_key: str, *, backend: str | None = None
+) -> None:
+    await get_storage(backend).delete(storage_key)

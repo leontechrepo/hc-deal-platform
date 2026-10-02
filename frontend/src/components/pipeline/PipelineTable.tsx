@@ -1,15 +1,13 @@
 import { Link } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
+
+import { PIPELINE_STAGES, formatPipelineStage } from '../../domain/stages'
+import { fmtM, parseLocalDate, sumDealSize } from '../../domain/format'
 import type { Deal } from '../../types'
+import { CountBadge } from '../ui/CountBadge'
 import { DataTable, type Column } from '../ui/DataTable/DataTable'
-import { PipelineStageBadge, PIPELINE_STAGES } from '../shared/PipelineStageBadge'
 import { StatusBadge } from '../shared/StatusBadge'
 import styles from './PipelineTable.module.css'
-
-function parseLocalDate(s: string) {
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 function buildColumns(onEdit: (deal: Deal) => void, onDelete: (deal: Deal) => void): Column<Deal>[] {
   return [
@@ -33,9 +31,7 @@ function buildColumns(onEdit: (deal: Deal) => void, onDelete: (deal: Deal) => vo
       header: 'Size ($M)',
       mono: true,
       render: (deal) => (
-        <span className={styles.size}>
-          {deal.deal_size_m ? `$${deal.deal_size_m}M` : <span className={styles.dim}>TBD</span>}
-        </span>
+        <span className={styles.size}>{deal.deal_size_m ? fmtM(deal.deal_size_m, 1) : <span className={styles.dim}>TBD</span>}</span>
       ),
     },
     {
@@ -53,11 +49,7 @@ function buildColumns(onEdit: (deal: Deal) => void, onDelete: (deal: Deal) => vo
       header: 'Security',
       render: (deal) => deal.security ?? <span className={styles.dim}>—</span>,
     },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (deal) => <StatusBadge status={deal.status} />,
-    },
+    { key: 'status', header: 'Status', render: (deal) => <StatusBadge status={deal.status} /> },
     {
       key: 'commentary',
       header: 'Commentary / Next Steps',
@@ -70,10 +62,10 @@ function buildColumns(onEdit: (deal: Deal) => void, onDelete: (deal: Deal) => vo
       width: 72,
       render: (deal) => (
         <div className={styles.rowActions}>
-          <button type="button" className={styles.iconBtn} onClick={() => onEdit(deal)} title="Edit deal">
+          <button type="button" className={styles.iconBtn} onClick={() => onEdit(deal)} title="Edit deal" aria-label={`Edit ${deal.company_name}`}>
             <Pencil size={14} />
           </button>
-          <button type="button" className={styles.iconBtn} onClick={() => onDelete(deal)} title="Delete deal">
+          <button type="button" className={styles.iconBtn} onClick={() => onDelete(deal)} title="Delete deal" aria-label={`Delete ${deal.company_name}`}>
             <Trash2 size={14} />
           </button>
         </div>
@@ -88,38 +80,39 @@ interface Props {
   onDelete: (deal: Deal) => void
 }
 
+/**
+ * The same deals as the board, grouped into one panel per stage in funnel
+ * order. A deal with no stage gets its own group rather than disappearing.
+ */
 export function PipelineTable({ deals, onEdit, onDelete }: Props) {
-  if (deals.length === 0) {
-    return <div className={styles.empty}>No deals match this filter.</div>
-  }
-
   const byStage = new Map<string, Deal[]>()
   for (const d of deals) {
-    const s = d.pipeline_stage ?? 'Unknown'
+    const s = d.pipeline_stage ?? 'unstaged'
     if (!byStage.has(s)) byStage.set(s, [])
     byStage.get(s)!.push(d)
   }
 
-  const stages = [
-    ...PIPELINE_STAGES.filter(s => byStage.has(s)),
-    ...[...byStage.keys()].filter(s => !(PIPELINE_STAGES as readonly string[]).includes(s)),
-  ]
-
+  const known = PIPELINE_STAGES.filter((s) => byStage.has(s)) as string[]
+  const rest = [...byStage.keys()].filter((s) => !known.includes(s))
   const columns = buildColumns(onEdit, onDelete)
 
   return (
-    <div>
-      {stages.map(stage => (
-        <div key={stage} className={styles.section}>
-          <div className={styles.stageHeader}>
-            <PipelineStageBadge stage={stage} />
-            <span className={styles.dealCount}>
-              {byStage.get(stage)!.length} deal{byStage.get(stage)!.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <DataTable columns={columns} rows={byStage.get(stage)!} rowKey={(deal) => deal.id} />
-        </div>
-      ))}
+    <div className={styles.stack}>
+      {[...known, ...rest].map((stage) => {
+        const rows = byStage.get(stage)!
+        const total = sumDealSize(rows)
+        return (
+          <section key={stage} className={`table-card ${styles.section}`} aria-label={formatPipelineStage(stage) ?? 'No stage'}>
+            <div className={styles.stageHeader}>
+              <span className={styles.stageTitle}>{stage === 'unstaged' ? 'No stage' : (formatPipelineStage(stage) ?? stage)}</span>
+              <CountBadge count={rows.length} />
+              <div className={styles.spacer} />
+              {total > 0 && <span className={styles.total}>{fmtM(total, 1)}</span>}
+            </div>
+            <DataTable columns={columns} rows={rows} rowKey={(deal) => deal.id} />
+          </section>
+        )
+      })}
     </div>
   )
 }

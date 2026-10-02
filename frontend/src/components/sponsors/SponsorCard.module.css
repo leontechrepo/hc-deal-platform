@@ -1,4 +1,5 @@
 .card {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -8,6 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .headerLeft {
@@ -28,24 +31,9 @@
   gap: 8px;
 }
 
-.iconBtn {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 4px 10px;
-}
-
-.iconBtn:hover {
-  color: var(--heading);
-  border-color: var(--navy-light);
-}
-
 .details {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 8px 20px;
 }
 
@@ -61,7 +49,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gray-400);
+  color: var(--muted);
   min-width: 78px;
 }
 
@@ -87,6 +75,6 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gray-400);
+  color: var(--muted);
   margin-bottom: 8px;
 }

@@ -29,7 +29,7 @@
 
 .user {
   background: var(--chat-navy);
-  color: #fff;
+  color: var(--chat-user-text);
   border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble);
   white-space: pre-wrap;
 }

@@ -1,22 +1,11 @@
-import { useOutletContext } from 'react-router-dom'
+import { Card, CardTitle } from '@leontechrepo/leon-ui'
+import { useDealContext } from '../dealContext'
 import { computeAllInRate, computeTotalLeverage } from '../../../utils/creditFormulas'
-import type { Deal } from '../../../types'
+import { fmtM, fmtPct, fmtX } from '../../../domain/format'
 import styles from './FormulasTab.module.css'
 
-function fmtPct(v: number | null): string {
-  return v === null ? '—' : `${v.toFixed(2)}%`
-}
-
-function fmtX(v: number | null): string {
-  return v === null ? '—' : `${v.toFixed(2)}x`
-}
-
-function fmtM(v: number | null): string {
-  return v === null ? '—' : `$${v.toFixed(1)}M`
-}
-
 export function FormulasTab() {
-  const { deal } = useOutletContext<{ deal: Deal }>()
+  const { deal } = useDealContext()
 
   const computedAllInRate = computeAllInRate(deal.sofr_rate, deal.spread_bps)
   const computedTotalLeverage = computeTotalLeverage(deal.deal_size_m, deal.ltm_ebitda_m)
@@ -25,9 +14,9 @@ export function FormulasTab() {
   const totalLeverageDrift = deal.total_leverage !== null && computedTotalLeverage !== null && Math.abs(deal.total_leverage - computedTotalLeverage) > 0.01
 
   return (
-    <div className={styles.tab}>
-      <div className={styles.card}>
-        <h2 className={styles.title}>All-In Rate</h2>
+    <div className="detail-cards">
+      <Card>
+        <CardTitle>All-In Rate</CardTitle>
         <p className={styles.formula}>SOFR Rate + Spread (bps) ÷ 100</p>
         <div className={styles.inputs}>
           <span>SOFR Rate: {fmtPct(deal.sofr_rate)}</span>
@@ -46,14 +35,14 @@ export function FormulasTab() {
         {allInRateDrift && (
           <p className={styles.drift}>Stored value differs from the formula — may have been manually overridden or imported from Excel.</p>
         )}
-      </div>
+      </Card>
 
-      <div className={styles.card}>
-        <h2 className={styles.title}>Total Leverage</h2>
+      <Card>
+        <CardTitle>Total Leverage</CardTitle>
         <p className={styles.formula}>Deal Size ($M) ÷ LTM EBITDA ($M)</p>
         <div className={styles.inputs}>
-          <span>Deal Size: {fmtM(deal.deal_size_m)}</span>
-          <span>LTM EBITDA: {fmtM(deal.ltm_ebitda_m)}</span>
+          <span>Deal Size: {fmtM(deal.deal_size_m, 1)}</span>
+          <span>LTM EBITDA: {fmtM(deal.ltm_ebitda_m, 1)}</span>
         </div>
         <div className={styles.results}>
           <div className={styles.result}>
@@ -68,7 +57,7 @@ export function FormulasTab() {
         {totalLeverageDrift && (
           <p className={styles.drift}>Stored value differs from the formula — may have been manually overridden or imported from Excel.</p>
         )}
-      </div>
+      </Card>
 
       <p className={styles.note}>
         DSCR, FCCR, and Interest Coverage are entered directly on the Underwriting tab — this platform

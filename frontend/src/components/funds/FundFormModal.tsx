@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, FormRow, SelectField, TextField } from '../ui/Form/Form'
+import { toNullableNumber } from '../../domain/format'
 import type { Fund, FundInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type FundFormState = Partial<FundInput> & { focus_sectors_text?: string }
 
@@ -34,24 +35,21 @@ interface Props {
   onSubmit: (body: Partial<FundInput>) => Promise<unknown>
 }
 
-function toNullableNumber(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = Number(v)
-  return Number.isNaN(n) ? null : n
+export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Fund' : 'New Fund'}>
+      <FundForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
 }
 
-export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<FundFormState>(EMPTY)
+function FundForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<FundFormState>(() =>
+    initial ? { ...EMPTY, ...initial, focus_sectors_text: (initial.focus_sectors ?? []).join(', ') } : EMPTY,
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? { ...EMPTY, ...initial, focus_sectors_text: (initial.focus_sectors ?? []).join(', ') } : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof FundFormState>(key: K, value: FundFormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -82,133 +80,84 @@ export function FundFormModal({ open, onClose, initial, onSubmit }: Props) {
     }
   }
 
+  const num = (key: keyof FundFormState) => ({
+    type: 'number' as const,
+    step: 'any',
+    value: (form[key] as number | null | undefined) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      set(key, toNullableNumber(e.target.value) as never),
+  })
+  const txt = (key: keyof FundFormState) => ({
+    value: (form[key] as string | null | undefined) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(key, e.target.value as never),
+  })
+
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Fund' : 'New Fund'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Name *</label>
-            <input className={formStyles.input} value={form.name ?? ''} onChange={e => set('name', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Vintage</label>
-            <input className={formStyles.input} value={form.vintage ?? ''} onChange={e => set('vintage', e.target.value)} />
-          </div>
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <FormRow>
+        <TextField label="Name *" {...txt('name')} />
+        <TextField label="Vintage" {...txt('vintage')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Status</label>
-            <select
-              className={formStyles.select}
-              value={form.status ?? ''}
-              onChange={e => set('status', (e.target.value || null) as FundFormState['status'])}
-            >
-              <option value="">—</option>
-              <option value="Investing">Investing</option>
-              <option value="Fundraising">Fundraising</option>
-            </select>
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Strategy</label>
-            <input className={formStyles.input} value={form.strategy ?? ''} onChange={e => set('strategy', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <SelectField
+          label="Status"
+          value={form.status ?? ''}
+          onChange={e => set('status', (e.target.value || null) as FundFormState['status'])}
+        >
+          <option value="">—</option>
+          <option value="Investing">Investing</option>
+          <option value="Fundraising">Fundraising</option>
+        </SelectField>
+        <TextField label="Strategy" {...txt('strategy')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Total Commitment ($M)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.total_commitment_m ?? ''} onChange={e => set('total_commitment_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Called Capital ($M)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.called_capital_m ?? ''} onChange={e => set('called_capital_m', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Total Commitment ($M)" {...num('total_commitment_m')} />
+        <TextField label="Called Capital ($M)" {...num('called_capital_m')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Deployed Capital ($M)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.deployed_capital_m ?? ''} onChange={e => set('deployed_capital_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Available Capital ($M)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.available_capital_m ?? ''} onChange={e => set('available_capital_m', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Deployed Capital ($M)" {...num('deployed_capital_m')} />
+        <TextField label="Available Capital ($M)" {...num('available_capital_m')} />
+      </FormRow>
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Focus Sectors (comma-separated)</label>
-          <input className={formStyles.input} value={form.focus_sectors_text ?? ''} onChange={e => set('focus_sectors_text', e.target.value)} placeholder="Healthcare, Industrials" />
-        </div>
+      <TextField
+        label="Focus Sectors (comma-separated)"
+        {...txt('focus_sectors_text')}
+        placeholder="Healthcare, Industrials"
+      />
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Target Return</label>
-            <input className={formStyles.input} value={form.target_return ?? ''} onChange={e => set('target_return', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Target Leverage (x)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.target_leverage ?? ''} onChange={e => set('target_leverage', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Target Return" {...txt('target_return')} />
+        <TextField label="Target Leverage (x)" {...num('target_leverage')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Max Single Exposure (%)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.max_single_exposure_pct ?? ''} onChange={e => set('max_single_exposure_pct', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Target Hold</label>
-            <input className={formStyles.input} value={form.target_hold ?? ''} onChange={e => set('target_hold', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Max Single Exposure (%)" {...num('max_single_exposure_pct')} />
+        <TextField label="Target Hold" {...txt('target_hold')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>GP Commitment ($M)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.gp_commitment_m ?? ''} onChange={e => set('gp_commitment_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Mgmt Fee (%)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.mgmt_fee_pct ?? ''} onChange={e => set('mgmt_fee_pct', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="GP Commitment ($M)" {...num('gp_commitment_m')} />
+        <TextField label="Mgmt Fee (%)" {...num('mgmt_fee_pct')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Carried Interest (%)</label>
-            <input className={formStyles.input} type="number"
-              step="any" value={form.carried_interest_pct ?? ''} onChange={e => set('carried_interest_pct', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Investment Period</label>
-            <input className={formStyles.input} value={form.investment_period ?? ''} onChange={e => set('investment_period', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Carried Interest (%)" {...num('carried_interest_pct')} />
+        <TextField label="Investment Period" {...txt('investment_period')} />
+      </FormRow>
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Fund Life</label>
-          <input className={formStyles.input} value={form.fund_life ?? ''} onChange={e => set('fund_life', e.target.value)} />
-        </div>
+      <TextField label="Fund Life" {...txt('fund_life')} />
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Fund'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Fund'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

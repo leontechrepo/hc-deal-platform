@@ -1,13 +1,13 @@
-import { useOutletContext } from 'react-router-dom'
+import { useDealContext } from '../dealContext'
 import { useState } from 'react'
+import { StickyNote, Trash2 } from 'lucide-react'
+import { Button, Card } from '@leontechrepo/leon-ui'
 import { useCreateDealNote, useDealNotes, useDeleteDealNote, useUpdateDealNote } from '../../../hooks/useDealDetail'
 import { useCurrentActor } from '../../../hooks/useCurrentActor'
-import { Button } from '../../../components/ui/Button/Button'
-import { EmptyState } from '../../../components/ui/EmptyState/EmptyState'
+import { DataSection } from '../../../components/dealDetail/DataSection'
 import { InlineEditText } from '../../../components/ui/InlineEditText/InlineEditText'
+import { TextareaInput } from '../../../components/ui/Form/Form'
 import { useToast } from '../../../components/Toast/Toast'
-import formStyles from '../../../components/shared/Form.module.css'
-import type { Deal } from '../../../types'
 import styles from './NotesTab.module.css'
 
 function fmtDate(iso: string): string {
@@ -17,7 +17,7 @@ function fmtDate(iso: string): string {
 }
 
 export function NotesTab() {
-  const { deal } = useOutletContext<{ deal: Deal }>()
+  const { deal } = useDealContext()
   const { data: notes = [], isLoading, isError } = useDealNotes(deal.id)
   const createNote = useCreateDealNote()
   const updateNote = useUpdateDealNote(deal.id)
@@ -47,33 +47,45 @@ export function NotesTab() {
     }
   }
 
-  if (isLoading) return <div className={styles.state}>Loading notes…</div>
-  if (isError) return <div className={styles.state}>Failed to load notes.</div>
-
   return (
-    <div className={styles.tab}>
-      <div className={styles.addNote}>
-        <textarea
-          className={formStyles.textarea}
+    <div className="detail-cards">
+      <Card className={styles.addNote}>
+        <TextareaInput
           placeholder="Add a note…"
+          aria-label="New note"
           value={draft}
           onChange={e => setDraft(e.target.value)}
         />
         <Button variant="secondary" size="sm" onClick={addNote} disabled={!draft.trim() || createNote.isPending}>
           Add Note
         </Button>
-      </div>
+      </Card>
 
-      {notes.length === 0 ? (
-        <EmptyState title="No notes yet" description="Add a note to keep working context on this deal." />
-      ) : (
+      <DataSection
+        title="Notes"
+        noun="notes"
+        isLoading={isLoading}
+        isError={isError}
+        isEmpty={notes.length === 0}
+        emptyIcon={StickyNote}
+        emptyTitle="No notes yet"
+        emptyDescription="Add a note to keep working context on this deal."
+      >
         <div className={styles.list}>
           {notes.map(note => (
             <div key={note.id} className={styles.note}>
               <div className={styles.noteHeader}>
                 <span className={styles.noteAuthor}>{note.author ?? 'user'}</span>
                 <span className={styles.noteDate}>{fmtDate(note.created_at)}</span>
-                <button className={styles.deleteBtn} onClick={() => removeNote(note.id)} title="Delete note">×</button>
+                <button
+                  type="button"
+                  className={styles.deleteBtn}
+                  onClick={() => removeNote(note.id)}
+                  title="Delete note"
+                  aria-label="Delete note"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
               <InlineEditText
                 value={note.body}
@@ -83,7 +95,7 @@ export function NotesTab() {
             </div>
           ))}
         </div>
-      )}
+      </DataSection>
     </div>
   )
 }

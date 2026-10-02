@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, FormRow, SelectField, TextField } from '../ui/Form/Form'
+import { toNullableNumber } from '../../domain/format'
 import { COVENANT_TEST_FREQUENCIES, COVENANT_TYPES } from '../../types'
 import type { Covenant, CovenantInput, CovenantPatchInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type FormState = Partial<CovenantInput>
 
@@ -21,25 +22,20 @@ interface Props {
   onSubmit: (body: Partial<CovenantInput> | CovenantPatchInput) => Promise<unknown>
 }
 
-function toNullableNumber(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = Number(v)
-  return Number.isNaN(n) ? null : n
+export function CovenantFormModal({ open, onClose, initial, onSubmit }: Props) {
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Covenant' : 'Add Covenant'}>
+      <CovenantForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
 }
 
-export function CovenantFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<FormState>(EMPTY)
+function CovenantForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<FormState>(() => (initial ? { ...EMPTY, ...initial } : EMPTY))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = !!initial
   const isFinancial = form.covenant_type === 'Financial'
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -72,65 +68,49 @@ export function CovenantFormModal({ open, onClose, initial, onSubmit }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Covenant' : 'Add Covenant'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Covenant Type *</label>
-            <select
-              className={formStyles.select}
-              value={form.covenant_type ?? ''}
-              onChange={e => setCovenantType(e.target.value as FormState['covenant_type'])}
-            >
-              {COVENANT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Test Frequency</label>
-            <select
-              className={formStyles.select}
-              value={form.test_frequency ?? ''}
-              onChange={e => set('test_frequency', (e.target.value || null) as FormState['test_frequency'])}
-            >
-              <option value="">—</option>
-              {COVENANT_TEST_FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <FormRow>
+        <SelectField
+          label="Covenant Type *"
+          value={form.covenant_type ?? ''}
+          onChange={e => setCovenantType(e.target.value as FormState['covenant_type'])}
+        >
+          {COVENANT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </SelectField>
+        <SelectField
+          label="Test Frequency"
+          value={form.test_frequency ?? ''}
+          onChange={e => set('test_frequency', (e.target.value || null) as FormState['test_frequency'])}
+        >
+          <option value="">—</option>
+          {COVENANT_TEST_FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
+        </SelectField>
+      </FormRow>
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Covenant Name *</label>
-          <input
-            className={formStyles.input}
-            value={form.covenant_name ?? ''}
-            onChange={e => set('covenant_name', e.target.value)}
-            placeholder="e.g. Max Total Leverage"
-          />
-        </div>
+      <TextField
+        label="Covenant Name *"
+        value={form.covenant_name ?? ''}
+        onChange={e => set('covenant_name', e.target.value)}
+        placeholder="e.g. Max Total Leverage"
+      />
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>
-            Threshold Value {!isFinancial && <span className={formStyles.lockedNote}>(Financial covenants only)</span>}
-          </label>
-          <input
-            className={formStyles.input}
-            type="number"
-            step="any"
-            disabled={!isFinancial}
-            value={form.threshold_value ?? ''}
-            onChange={e => set('threshold_value', toNullableNumber(e.target.value))}
-          />
-        </div>
+      <TextField
+        label={<>Threshold Value {!isFinancial && '(Financial covenants only)'}</>}
+        type="number"
+        step="any"
+        disabled={!isFinancial}
+        value={form.threshold_value ?? ''}
+        onChange={e => set('threshold_value', toNullableNumber(e.target.value))}
+      />
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Covenant'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Covenant'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

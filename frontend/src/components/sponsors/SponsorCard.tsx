@@ -1,6 +1,5 @@
-import { Card } from '../ui/Card/Card'
-import { Badge } from '../ui/Badge/Badge'
-import { KPIGrid } from '../ui/KPIGrid/KPIGrid'
+import { Button, Card, KeyValue, KeyValueGrid } from '@leontechrepo/leon-ui'
+import { TonedBadge } from '../ui/TonedBadge'
 import { InlineEditText } from '../ui/InlineEditText/InlineEditText'
 import { PipelineDealsMiniTable } from '../shared/PipelineDealsMiniTable'
 import type { Sponsor, SponsorInput } from '../../types'
@@ -26,15 +25,19 @@ export function SponsorCard({ sponsor, onEdit, onDelete, onUpdateField }: Props)
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.name}>{sponsor.name}</span>
-          {sponsor.sponsor_type && <Badge tone="navy">{sponsor.sponsor_type}</Badge>}
+          {sponsor.sponsor_type && <TonedBadge tone="navy">{sponsor.sponsor_type}</TonedBadge>}
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.iconBtn} onClick={onEdit} title="Edit sponsor">Edit</button>
-          <button className={styles.iconBtn} onClick={onDelete} title="Delete sponsor">Delete</button>
+          <Button variant="ghost" size="sm" onClick={onEdit} title="Edit sponsor">Edit</Button>
+          <Button variant="ghost" size="sm" onClick={onDelete} title="Delete sponsor">Delete</Button>
         </div>
       </div>
 
-      <KPIGrid items={items} flat />
+      <KeyValueGrid>
+        {items.map(item => (
+          <KeyValue key={item.label} label={item.label} value={item.value} />
+        ))}
+      </KeyValueGrid>
 
       <div className={styles.details}>
         <div className={styles.detailRow}>

@@ -5,36 +5,10 @@
   gap: 12px;
 }
 
-.search {
-  flex: 1;
-  max-width: 320px;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--text);
-  background: var(--panel-raised);
-  border: 1px solid var(--input-gold-border);
-  border-radius: var(--radius-button);
-  box-shadow: 0 0 0 1px var(--input-gold-ring);
-  padding: 8px 12px;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.search:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
-}
-
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
   gap: 20px;
-}
-
-.state {
-  padding: 48px 40px;
-  font-size: 13px;
-  color: var(--gray-400);
 }
 
 @media (max-width: 900px) {

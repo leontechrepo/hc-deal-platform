@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
-import { PIPELINE_STAGES, formatPipelineStage } from '../shared/PipelineStageBadge'
-import { STATUSES, TERMINAL_STATUSES } from '../shared/StatusBadge'
+import { Form, FormActions, FormError, FormRow, FormSection, SelectField, TextareaField, TextField } from '../ui/Form/Form'
+import { toNullableNumber } from '../../domain/format'
+import { PIPELINE_STAGES, STATUSES, TERMINAL_STATUSES, classifyMove, formatPipelineStage } from '../../domain/stages'
 import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../../components/Toast/Toast'
 import type { CreateDealInput, Deal } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 const EMPTY: CreateDealInput = {
   company_name: '',
@@ -59,12 +59,6 @@ interface Props {
   onSubmit: (body: Partial<CreateDealInput> & { reasoning?: string }) => Promise<unknown>
 }
 
-function toNullableNumber(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = Number(v)
-  return Number.isNaN(n) ? null : n
-}
-
 // Explicit pick rather than spreading Deal into CreateDealInput — Deal has
 // far more fields than this form renders, and a couple (pipeline_stage,
 // status) are typed nullable on Deal but non-nullable-optional here, so a
@@ -108,7 +102,15 @@ function dealToFormInput(deal: Deal): CreateDealInput {
 }
 
 export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<CreateDealInput>(EMPTY)
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Deal' : 'New Deal'}>
+      <DealForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
+}
+
+function DealForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<CreateDealInput>(() => (initial ? dealToFormInput(initial) : EMPTY))
   const [reasoning, setReasoning] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -120,14 +122,10 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
   // reasoning requirement — create_deal has no such check, and a brand new
   // deal defaulting to "Active" never lands on a terminal value anyway.
   const statusChangingToTerminal = isEdit && TERMINAL_STATUSES.has(form.status ?? '') && form.status !== initial?.status
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? dealToFormInput(initial) : EMPTY)
-      setReasoning('')
-      setError(null)
-    }
-  }, [open, initial])
+  // A forward jump over two or more funnel stages needs a recorded reason.
+  const stageMove = isEdit && form.pipeline_stage ? classifyMove(initial?.pipeline_stage, form.pipeline_stage) : null
+  const skippedStages = stageMove?.kind === 'skip' ? stageMove.skipped : []
+  const needsReasoning = statusChangingToTerminal || skippedStages.length > 0
 
   function set<K extends keyof CreateDealInput>(key: K, value: CreateDealInput[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -137,14 +135,31 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
     return locked && UNDERWRITING_FIELDS.has(field)
   }
 
+  const txt = (key: keyof CreateDealInput, extra: { lockable?: boolean } = {}) => ({
+    value: (form[key] as string | null | undefined) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(key, e.target.value as never),
+    disabled: extra.lockable ? isLocked(key) : undefined,
+  })
+  const num = (key: keyof CreateDealInput, lockable = false) => ({
+    type: 'number' as const,
+    step: 'any',
+    value: (form[key] as number | null | undefined) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(key, toNullableNumber(e.target.value) as never),
+    disabled: lockable ? isLocked(key) : undefined,
+  })
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.company_name.trim()) {
       setError('Company name is required.')
       return
     }
-    if (statusChangingToTerminal && !reasoning.trim()) {
-      setError(`Reasoning is required when moving status to ${form.status}.`)
+    if (needsReasoning && !reasoning.trim()) {
+      setError(
+        statusChangingToTerminal
+          ? `Reasoning is required when moving status to ${form.status}.`
+          : `Reasoning is required when skipping ${skippedStages.length} stage${skippedStages.length === 1 ? '' : 's'}.`,
+      )
       return
     }
     setError(null)
@@ -161,212 +176,117 @@ export function DealFormModal({ open, onClose, initial, onSubmit }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Deal' : 'New Deal'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Company Name *</label>
-          <input
-            className={formStyles.input}
-            value={form.company_name}
-            onChange={e => set('company_name', e.target.value)}
-            autoFocus
-          />
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <TextField label="Company Name *" autoFocus {...txt('company_name')} />
 
-        <div className={formStyles.sectionLabel}>Company &amp; Contact</div>
+      <FormSection>Company &amp; Contact</FormSection>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Location</label>
-            <input className={formStyles.input} value={form.location ?? ''} onChange={e => set('location', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>State</label>
-            <input className={formStyles.input} value={form.state ?? ''} onChange={e => set('state', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Location" {...txt('location')} />
+        <TextField label="State" {...txt('state')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Sector (Primary)</label>
-            <input className={formStyles.input} value={form.sector_primary ?? ''} onChange={e => set('sector_primary', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Subsector</label>
-            <input className={formStyles.input} value={form.subsector ?? ''} onChange={e => set('subsector', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Sector (Primary)" {...txt('sector_primary')} />
+        <TextField label="Subsector" {...txt('subsector')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Sector (Full)</label>
-            <input className={formStyles.input} value={form.sector_full ?? ''} onChange={e => set('sector_full', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Source</label>
-            <input className={formStyles.input} value={form.source ?? ''} onChange={e => set('source', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Sector (Full)" {...txt('sector_full')} />
+        <TextField label="Source" {...txt('source')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Name</label>
-            <input className={formStyles.input} value={form.contact_name ?? ''} onChange={e => set('contact_name', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Role</label>
-            <input className={formStyles.input} value={form.contact_role ?? ''} onChange={e => set('contact_role', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Contact Name" {...txt('contact_name')} />
+        <TextField label="Contact Role" {...txt('contact_role')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Employees</label>
-            <input className={formStyles.input} type="number" step="any" value={form.employees ?? ''} onChange={e => set('employees', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Locations</label>
-            <input className={formStyles.input} type="number" step="any" value={form.locations_count ?? ''} onChange={e => set('locations_count', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Year Founded</label>
-            <input className={formStyles.input} type="number" step="any" value={form.year_founded ?? ''} onChange={e => set('year_founded', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Employees" {...num('employees')} />
+        <TextField label="Locations" {...num('locations_count')} />
+        <TextField label="Year Founded" {...num('year_founded')} />
+      </FormRow>
 
-        <div className={formStyles.sectionLabel}>
-          Deal Structure
-          {locked && <span className={formStyles.lockedNote}> — underwriting fields locked (deal at/past LOI Signed)</span>}
-        </div>
+      <FormSection note={locked ? '— underwriting fields locked (deal at/past LOI Signed)' : undefined}>
+        Deal Structure
+      </FormSection>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Pipeline Stage</label>
-            <select className={formStyles.select} value={form.pipeline_stage} onChange={e => set('pipeline_stage', e.target.value)}>
-              {PIPELINE_STAGES.map(s => <option key={s} value={s}>{formatPipelineStage(s)}</option>)}
-            </select>
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Status</label>
-            <select className={formStyles.select} value={form.status} onChange={e => set('status', e.target.value)}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
+      <FormRow>
+        <SelectField label="Pipeline Stage" value={form.pipeline_stage} onChange={e => set('pipeline_stage', e.target.value)}>
+          {PIPELINE_STAGES.map(s => <option key={s} value={s}>{formatPipelineStage(s)}</option>)}
+        </SelectField>
+        <SelectField label="Status" value={form.status} onChange={e => set('status', e.target.value)}>
+          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </SelectField>
+      </FormRow>
 
-        {statusChangingToTerminal && (
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Reasoning *</label>
-            <textarea
-              className={formStyles.input}
-              value={reasoning}
-              onChange={e => setReasoning(e.target.value)}
-              rows={2}
-              placeholder={`Why is this deal moving to ${form.status}?`}
-            />
-          </div>
-        )}
+      {needsReasoning && (
+        <TextareaField
+          label="Reasoning *"
+          value={reasoning}
+          onChange={e => setReasoning(e.target.value)}
+          rows={2}
+          hint={
+            skippedStages.length > 0
+              ? `Skips ${skippedStages.map(s => formatPipelineStage(s)).join(', ')}. The reason is recorded against the deal.`
+              : undefined
+          }
+          placeholder={
+            statusChangingToTerminal
+              ? `Why is this deal moving to ${form.status}?`
+              : 'Why is this deal skipping ahead?'
+          }
+        />
+      )}
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Security</label>
-            <input className={formStyles.input} disabled={isLocked('security')} value={form.security ?? ''} onChange={e => set('security', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Use of Proceeds</label>
-            <input className={formStyles.input} value={form.uop ?? ''} onChange={e => set('uop', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Security" {...txt('security', { lockable: true })} />
+        <TextField label="Use of Proceeds" {...txt('uop')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Deal Size ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('deal_size_m')} type="number" step="any" value={form.deal_size_m ?? ''} onChange={e => set('deal_size_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Hold Amount ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('hold_amount_m')} type="number" step="any" value={form.hold_amount_m ?? ''} onChange={e => set('hold_amount_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Tenor (Months)</label>
-            <input className={formStyles.input} disabled={isLocked('tenor_months')} type="number" step="any" value={form.tenor_months ?? ''} onChange={e => set('tenor_months', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Deal Size ($M)" {...num('deal_size_m', true)} />
+        <TextField label="Hold Amount ($M)" {...num('hold_amount_m', true)} />
+        <TextField label="Tenor (Months)" {...num('tenor_months', true)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>OID (%)</label>
-            <input className={formStyles.input} disabled={isLocked('oid_pct')} type="number" step="any" value={form.oid_pct ?? ''} onChange={e => set('oid_pct', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Spread (bps)</label>
-            <input className={formStyles.input} disabled={isLocked('spread_bps')} type="number" step="any" value={form.spread_bps ?? ''} onChange={e => set('spread_bps', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="OID (%)" {...num('oid_pct', true)} />
+        <TextField label="Spread (bps)" {...num('spread_bps', true)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>SOFR Rate (%)</label>
-            <input className={formStyles.input} disabled={isLocked('sofr_rate')} type="number" step="any" value={form.sofr_rate ?? ''} onChange={e => set('sofr_rate', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>SOFR Floor (%)</label>
-            <input className={formStyles.input} disabled={isLocked('sofr_floor_pct')} type="number" step="any" value={form.sofr_floor_pct ?? ''} onChange={e => set('sofr_floor_pct', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="SOFR Rate (%)" {...num('sofr_rate', true)} />
+        <TextField label="SOFR Floor (%)" {...num('sofr_floor_pct', true)} />
+      </FormRow>
 
-        <div className={formStyles.sectionLabel}>Financials &amp; Covenants (Optional)</div>
+      <FormSection>Financials &amp; Covenants (Optional)</FormSection>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>LTM Revenue ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('ltm_revenue_m')} type="number" step="any" value={form.ltm_revenue_m ?? ''} onChange={e => set('ltm_revenue_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>LTM EBITDA ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('ltm_ebitda_m')} type="number" step="any" value={form.ltm_ebitda_m ?? ''} onChange={e => set('ltm_ebitda_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>EBITDA Margin (%)</label>
-            <input className={formStyles.input} disabled={isLocked('ebitda_margin')} type="number" step="any" value={form.ebitda_margin ?? ''} onChange={e => set('ebitda_margin', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="LTM Revenue ($M)" {...num('ltm_revenue_m', true)} />
+        <TextField label="LTM EBITDA ($M)" {...num('ltm_ebitda_m', true)} />
+        <TextField label="EBITDA Margin (%)" {...num('ebitda_margin', true)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Capex ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('capex_m')} type="number" step="any" value={form.capex_m ?? ''} onChange={e => set('capex_m', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Revenue Growth (%)</label>
-            <input className={formStyles.input} disabled={isLocked('revenue_growth_pct')} type="number" step="any" value={form.revenue_growth_pct ?? ''} onChange={e => set('revenue_growth_pct', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Capex ($M)" {...num('capex_m', true)} />
+        <TextField label="Revenue Growth (%)" {...num('revenue_growth_pct', true)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Max Leverage Covenant</label>
-            <input className={formStyles.input} disabled={isLocked('max_leverage_covenant')} type="number" step="any" value={form.max_leverage_covenant ?? ''} onChange={e => set('max_leverage_covenant', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Min FCCR Covenant</label>
-            <input className={formStyles.input} disabled={isLocked('min_fccr_covenant')} type="number" step="any" value={form.min_fccr_covenant ?? ''} onChange={e => set('min_fccr_covenant', toNullableNumber(e.target.value))} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Capex Limit Covenant ($M)</label>
-            <input className={formStyles.input} disabled={isLocked('capex_limit_covenant_m')} type="number" step="any" value={form.capex_limit_covenant_m ?? ''} onChange={e => set('capex_limit_covenant_m', toNullableNumber(e.target.value))} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Max Leverage Covenant" {...num('max_leverage_covenant', true)} />
+        <TextField label="Min FCCR Covenant" {...num('min_fccr_covenant', true)} />
+        <TextField label="Capex Limit Covenant ($M)" {...num('capex_limit_covenant_m', true)} />
+      </FormRow>
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Deal'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Deal'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

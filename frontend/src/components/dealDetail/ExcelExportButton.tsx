@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from '../ui/Button/Button'
+import { Button } from '@leontechrepo/leon-ui'
 import { exportDealUnderwriting } from '../../api/dealDetail'
 import { useToast } from '../Toast/Toast'
 

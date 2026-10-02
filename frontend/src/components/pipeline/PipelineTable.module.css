@@ -1,17 +1,14 @@
-/* One floating panel per pipeline stage. */
-.section {
-  background: var(--panel-solid);
-  border: 1px solid var(--card-border-gold);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  backdrop-filter: blur(10px);
-  padding: 14px 18px 4px;
-  margin-bottom: 20px;
-  overflow-x: auto;
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.section:last-child {
-  margin-bottom: 0;
+/* leon-ui's .table-card supplies surface + radius; padding is ours. */
+.section {
+  padding: 14px 18px 4px;
+  border: 1px solid var(--card-border-gold);
+  min-width: 0;
 }
 
 .stageHeader {
@@ -20,17 +17,23 @@
   gap: 8px;
   padding: 0 0 8px;
   margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--heading);
   border-bottom: 1px solid var(--glass-border);
 }
 
-.dealCount {
-  color: var(--gray-400);
-  font-weight: 400;
+.stageTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--heading);
+}
+
+.spacer { flex: 1; }
+
+.total {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--heading);
 }
 
 .companyName {
@@ -38,47 +41,21 @@
   font-size: 13px;
   display: block;
   color: inherit;
-  text-decoration: none;
 }
 
-.companyName:hover {
-  color: var(--heading);
-  text-decoration: underline;
-}
+.companyName:hover { color: var(--heading); text-decoration: underline; }
 
-.companyMeta {
-  font-size: 11px;
-  color: var(--gray-400);
-  margin-top: 2px;
-}
-
+.companyMeta,
 .subsector {
   font-size: 11px;
-  color: var(--gray-400);
+  color: var(--muted);
   margin-top: 2px;
 }
 
-.size {
-  font-weight: 500;
-  white-space: nowrap;
-}
+.size { font-weight: 500; white-space: nowrap; }
+.dim { color: var(--muted); }
 
-.dim {
-  color: var(--gray-400);
-}
-
-.empty {
-  text-align: center;
-  color: var(--gray-400);
-  font-style: italic;
-  padding: 24px;
-}
-
-.rowActions {
-  display: flex;
-  gap: 4px;
-  justify-content: flex-end;
-}
+.rowActions { display: flex; gap: 4px; justify-content: flex-end; }
 
 .iconBtn {
   display: inline-flex;
@@ -90,12 +67,9 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--gray-400);
+  color: var(--muted);
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
-.iconBtn:hover {
-  color: var(--heading);
-  background: var(--panel-raised);
-}
+.iconBtn:hover { color: var(--heading); background: var(--panel-raised); }

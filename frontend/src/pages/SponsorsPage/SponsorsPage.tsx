@@ -2,18 +2,18 @@ import { useMemo, useState } from 'react'
 import { useCreateSponsor, useDeleteSponsor, useSponsors, useUpdateSponsor } from '../../hooks/useSponsors'
 import { SponsorCard } from '../../components/sponsors/SponsorCard'
 import { SponsorFormModal } from '../../components/sponsors/SponsorFormModal'
-import { Button } from '../../components/ui/Button/Button'
-import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
-import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageShell } from '../../components/ui/PageShell/PageShell'
+import { Plus, Users } from 'lucide-react'
+import { Button, EmptyState } from '@leontechrepo/leon-ui'
+import { KpiItems } from '../../components/ui/Kpi'
+import { SearchBox } from '../../components/ui/SearchBox'
+import { PageError, PageLoading } from '../../components/ui/PageState'
+import { PageActions } from '../../components/shell/PageActions'
 import { useToast } from '../../components/Toast/Toast'
 import type { Sponsor, SponsorInput } from '../../types'
 import styles from './SponsorsPage.module.css'
 
-const SHELL = { title: 'Sponsors', sub: 'Sponsor relationships and deal history' }
-
 export function SponsorsPage() {
-  const { data: sponsors = [], isLoading, isError } = useSponsors()
+  const { data: sponsors = [], isLoading, isError, refetch } = useSponsors()
   const createSponsor = useCreateSponsor()
   const updateSponsor = useUpdateSponsor()
   const deleteSponsor = useDeleteSponsor()
@@ -68,28 +68,29 @@ export function SponsorsPage() {
     }
   }
 
-  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading sponsors…</div></PageShell>
-  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load sponsors.</div></PageShell>
+  if (isLoading) return <PageLoading label="Loading sponsors…" />
+  if (isError) return <PageError title="Couldn't load sponsors" onRetry={() => void refetch()} />
+
+  const newSponsor = (
+    <Button size="sm" onClick={openCreate}>
+      <Plus size={14} strokeWidth={2.05} />
+      New Sponsor
+    </Button>
+  )
 
   return (
-    <PageShell {...SHELL} actions={<Button variant="primary" onClick={openCreate}>New Sponsor</Button>}>
-      <KPIGrid items={kpiItems} />
+    <>
+      <PageActions>{newSponsor}</PageActions>
+      <KpiItems items={kpiItems} />
 
       <div className={styles.toolbar}>
-        <input
-          className={styles.search}
-          placeholder="Search sponsors…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <SearchBox value={search} onChange={setSearch} placeholder="Search sponsors…" />
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          title="No sponsors yet"
-          description="Add your first sponsor relationship."
-          action={<Button variant="primary" onClick={openCreate}>New Sponsor</Button>}
-        />
+        <EmptyState icon={Users} title={sponsors.length === 0 ? 'No sponsors yet' : 'No sponsors match'} action={sponsors.length === 0 ? newSponsor : undefined}>
+          {sponsors.length === 0 ? 'Add your first sponsor relationship.' : 'Try a different search.'}
+        </EmptyState>
       ) : (
         <div className={styles.grid}>
           {filtered.map(sponsor => (
@@ -112,6 +113,6 @@ export function SponsorsPage() {
         initial={editing}
         onSubmit={handleSubmit}
       />
-    </PageShell>
+    </>
   )
 }

@@ -1,19 +1,8 @@
 import { DataTable, type Column } from '../ui/DataTable/DataTable'
 import { PipelineStageBadge } from './PipelineStageBadge'
 import { StatusBadge } from './StatusBadge'
+import { fmtM as fmtMoney, fmtPct, fmtX } from '../../domain/format'
 import type { FundDealSummary, SponsorDealSummary } from '../../types'
-
-function fmtM(value: number | null): string {
-  return value === null ? '—' : `$${value.toFixed(1)}M`
-}
-
-function fmtX(value: number | null): string {
-  return value === null ? '—' : `${value.toFixed(2)}x`
-}
-
-function fmtPct(value: number | null): string {
-  return value === null ? '—' : `${value.toFixed(2)}%`
-}
 
 type MiniDeal = SponsorDealSummary | FundDealSummary
 
@@ -31,9 +20,9 @@ export function PipelineDealsMiniTable({ deals, showHoldAmount = false }: Props)
       header: 'Status',
       render: d => <StatusBadge status={d.status} />,
     },
-    { key: 'deal_size_m', header: 'Deal Size', render: d => fmtM(d.deal_size_m), mono: true },
+    { key: 'deal_size_m', header: 'Deal Size', render: d => fmtMoney(d.deal_size_m, 1), mono: true },
     ...(showHoldAmount
-      ? [{ key: 'hold_amount_m', header: 'Hold Amount', render: (d: MiniDeal) => fmtM('hold_amount_m' in d ? d.hold_amount_m : null), mono: true } as Column<MiniDeal>]
+      ? [{ key: 'hold_amount_m', header: 'Hold Amount', render: (d: MiniDeal) => fmtMoney('hold_amount_m' in d ? d.hold_amount_m : null, 1), mono: true } as Column<MiniDeal>]
       : []),
     { key: 'total_leverage', header: 'Leverage', render: d => fmtX(d.total_leverage), mono: true },
     { key: 'all_in_rate', header: 'All-in Rate', render: d => fmtPct(d.all_in_rate), mono: true },

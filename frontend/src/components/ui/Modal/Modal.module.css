@@ -19,10 +19,11 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-bubble);
   box-shadow: var(--shadow-float);
-  max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  min-width: 360px;
+  width: fit-content;
+  min-width: min(360px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
   padding: 28px;
 }
 

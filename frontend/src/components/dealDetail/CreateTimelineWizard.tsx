@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Button } from '@leontechrepo/leon-ui'
 import { useApplyTimelineTemplate, useTimelineTemplates } from '../../hooks/useDealTimeline'
 import { useCurrentActor } from '../../hooks/useCurrentActor'
 import { useToast } from '../Toast/Toast'
-import formStyles from '../shared/Form.module.css'
+import { Form, FormActions, TextField } from '../ui/Form/Form'
 import styles from './CreateTimelineWizard.module.css'
 
 interface Props {
@@ -34,7 +34,7 @@ export function CreateTimelineWizard({ dealId, open, onClose }: Props) {
 
   return (
     <Modal open={open} onClose={onClose} title="Create Closing Timeline">
-      <div className={formStyles.form}>
+      <Form onSubmit={e => { e.preventDefault(); void handleSubmit() }}>
         <div className={styles.templates}>
           {templates.map(t => (
             <label key={t.key} className={styles.templateOption}>
@@ -52,22 +52,14 @@ export function CreateTimelineWizard({ dealId, open, onClose }: Props) {
             </label>
           ))}
         </div>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Start Date</label>
-          <input
-            type="date"
-            className={formStyles.input}
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className={formStyles.actions}>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!templateName || applyTemplate.isPending}>
+        <TextField label="Start Date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        <FormActions>
+          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={!templateName || applyTemplate.isPending}>
             Create Timeline
           </Button>
-        </div>
-      </div>
+        </FormActions>
+      </Form>
     </Modal>
   )
 }

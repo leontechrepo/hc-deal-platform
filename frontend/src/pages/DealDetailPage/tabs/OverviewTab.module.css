@@ -1,68 +1,18 @@
-.tab {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.section {
-  background: var(--panel-solid);
-  border: 1px solid var(--card-border-gold);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  backdrop-filter: blur(10px);
-  padding: 20px 24px;
-}
-
-.sectionTitle {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 14px;
-}
-
-.field {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 16px;
-  align-items: start;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.field:last-child {
-  border-bottom: none;
-}
-
-.fieldLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  padding-top: 3px;
-}
-
-.fieldValue {
-  font-size: 13px;
-  color: var(--text);
-}
-
-.readOnly {
-  color: var(--muted);
-}
-
 .companyLink {
-  color: var(--gold);
-  text-decoration: none;
+  color: var(--heading);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
 }
 
 .companyLink:hover {
-  text-decoration: underline;
+  color: var(--gold);
 }
 
-@media (max-width: 700px) {
-  .field {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
+.inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }

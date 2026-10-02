@@ -1,8 +1,10 @@
 .backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
-  text-decoration: none;
   width: fit-content;
 }
 
@@ -10,13 +12,28 @@
   color: var(--heading);
 }
 
+.actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
 .tabContent {
   padding-top: 4px;
+  min-width: 0;
 }
 
-.state {
-  padding: 48px 40px;
-  font-size: 13px;
-  color: var(--gray-400);
+@media (max-width: 700px) {
+  .actions,
+  .actionButtons {
+    width: 100%;
+  }
 }
-

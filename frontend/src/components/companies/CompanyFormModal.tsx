@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, FormRow, TextField } from '../ui/Form/Form'
 import type { Company, CompanyInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type CompanyFormState = Partial<CompanyInput>
 
@@ -22,17 +22,18 @@ interface Props {
 }
 
 export function CompanyFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<CompanyFormState>(EMPTY)
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Company' : 'New Company'}>
+      <CompanyForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
+}
+
+function CompanyForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<CompanyFormState>(() => (initial ? { ...EMPTY, ...initial } : EMPTY))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof CompanyFormState>(key: K, value: CompanyFormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -57,48 +58,31 @@ export function CompanyFormModal({ open, onClose, initial, onSubmit }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Company' : 'New Company'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Company Name *</label>
-          <input
-            className={formStyles.input}
-            value={form.company_name ?? ''}
-            onChange={e => set('company_name', e.target.value)}
-          />
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <TextField
+        label="Company Name *"
+        value={form.company_name ?? ''}
+        onChange={e => set('company_name', e.target.value)}
+      />
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Sector</label>
-            <input className={formStyles.input} value={form.sector ?? ''} onChange={e => set('sector', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Subsector</label>
-            <input className={formStyles.input} value={form.subsector ?? ''} onChange={e => set('subsector', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Sector" value={form.sector ?? ''} onChange={e => set('sector', e.target.value)} />
+        <TextField label="Subsector" value={form.subsector ?? ''} onChange={e => set('subsector', e.target.value)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>HQ Location</label>
-            <input className={formStyles.input} value={form.hq_location ?? ''} onChange={e => set('hq_location', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>State</label>
-            <input className={formStyles.input} value={form.state ?? ''} onChange={e => set('state', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="HQ Location" value={form.hq_location ?? ''} onChange={e => set('hq_location', e.target.value)} />
+        <TextField label="State" value={form.state ?? ''} onChange={e => set('state', e.target.value)} />
+      </FormRow>
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Company'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Company'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

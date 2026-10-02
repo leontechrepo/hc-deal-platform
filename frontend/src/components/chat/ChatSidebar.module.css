@@ -126,3 +126,12 @@
   opacity: 1 !important;
   color: var(--red);
 }
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 100%;
+    max-height: 168px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+}

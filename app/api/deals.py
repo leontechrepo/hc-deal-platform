@@ -1,4 +1,5 @@
 import re
+import logging
 import uuid
 from datetime import date, datetime, timezone
 from io import BytesIO
@@ -27,6 +28,8 @@ from app.domain.pipeline_stage import (
     is_underwriting_locked,
 )
 from app.storage import documents as storage
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 
@@ -342,38 +345,36 @@ async def delete_deal(
         raise HTTPException(status_code=404, detail="Deal not found")
     company_name = deal.company_name
 
-    # Blob storage isn't covered by the DB's ON DELETE CASCADE — collect keys
-    # before the row disappears out from under us.
+    # Blob storage isn't covered by any DB cascade — collect keys (and the backend each
+    # row was written to) before the rows disappear.
     doc_rows = await db.execute(
-        select(DealDocument.storage_key).where(
+        select(DealDocument.storage_key, DealDocument.storage_backend).where(
             DealDocument.deal_id == deal_id, DealDocument.storage_key.is_not(None)
         )
     )
-    storage_keys = [k for (k,) in doc_rows.all()]
+    blobs = [(k, b) for k, b in doc_rows.all()]
+
+    # deal_documents.deal_id is ON DELETE SET NULL (so email attachments can sit
+    # unfiled). Without this explicit delete, a deleted deal's documents would turn
+    # into "unfiled" ones and could collide with the unfiled sha256 unique index.
+    await db.execute(delete(DealDocument).where(DealDocument.deal_id == deal_id))
 
     # Single statement — Postgres's own ON DELETE CASCADE/SET NULL cascades to
-    # deal_update_log, deal_activity, deal_notes, deal_documents,
-    # deal_timeline_workstreams (+tasks), portfolio_positions (+monitoring
-    # tests), and pending_suggestions; nulls out email_scan_log.matched_deal_id
-    # and chat_sessions.deal_id.
+    # deal_update_log, deal_activity, deal_notes, deal_timeline_workstreams (+tasks),
+    # portfolio_positions (+monitoring tests), and pending_suggestions; nulls out
+    # email_scan_log.matched_deal_id and chat_sessions.deal_id.
     await db.execute(delete(Deal).where(Deal.id == deal_id))
 
-    # Commit the deletion before touching storage: if the object delete
-    # succeeded but the transaction then failed or rolled back, the deal and
-    # document rows would remain while their only stored files are already
-    # gone. Committing first means a failed storage delete only leaves a
-    # harmless orphaned object, never a dangling reference to a deleted one
-    # (same reasoning as delete_document's storage cleanup).
+    # Commit the deletion before touching storage: a failed storage delete then only
+    # leaves a harmless orphaned object, never a dangling reference to a deleted one.
     await db.commit()
 
-    # Best-effort blob cleanup — a storage failure here must never roll back
-    # the deal deletion; an orphaned blob is an acceptable failure mode.
-    if storage_keys and settings.storage_configured:
-        for key in storage_keys:
-            try:
-                storage.delete_object(key)
-            except Exception:
-                pass
+    # Best-effort blob cleanup — a storage failure must never roll back the deletion.
+    for key, backend in blobs:
+        try:
+            await storage.delete_object(key, backend=backend)
+        except Exception:  # noqa: BLE001
+            logger.warning("Could not delete object %s for deleted deal %s", key, deal_id, exc_info=True)
 
     return {"ok": True, "deal_id": str(deal_id), "company_name": company_name}
 

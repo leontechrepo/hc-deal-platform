@@ -4,7 +4,6 @@ import { useToast } from '../Toast/Toast'
 import { parseLocalDate, dateToX } from '../../utils/ganttScale'
 import { MilestoneMarker } from './MilestoneMarker'
 import type { PatchTaskInput } from '../../api/dealTimeline'
-import formStyles from '../shared/Form.module.css'
 import type { DealTimelineTask } from '../../types'
 import styles from './TaskRow.module.css'
 
@@ -64,7 +63,7 @@ export function TaskRow({ dealId, task, rangeStart, pxPerDay, trackWidth }: Prop
         </div>
         <input
           type="date"
-          className={formStyles.input}
+          className="input"
           value={task.start_date ?? ''}
           onChange={e => {
             const value = e.target.value || null
@@ -77,7 +76,7 @@ export function TaskRow({ dealId, task, rangeStart, pxPerDay, trackWidth }: Prop
         />
         <input
           type="date"
-          className={formStyles.input}
+          className="input"
           value={task.end_date ?? ''}
           onChange={e => {
             const value = e.target.value || null
@@ -89,7 +88,7 @@ export function TaskRow({ dealId, task, rangeStart, pxPerDay, trackWidth }: Prop
           }}
         />
         <select
-          className={formStyles.select}
+          className="input"
           value={task.status}
           onChange={e => saveField({ status: e.target.value })}
         >

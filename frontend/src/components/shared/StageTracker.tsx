@@ -1,4 +1,4 @@
-import { PIPELINE_STAGES, formatPipelineStage } from './PipelineStageBadge'
+import { PIPELINE_STAGES, formatPipelineStage } from '../../domain/stages'
 import styles from './StageTracker.module.css'
 
 interface Props {
@@ -9,7 +9,7 @@ export function StageTracker({ currentStage }: Props) {
   const currentIndex = currentStage ? PIPELINE_STAGES.indexOf(currentStage as (typeof PIPELINE_STAGES)[number]) : -1
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} role="list" aria-label="Pipeline stage progress">
       <div className={styles.track}>
         {PIPELINE_STAGES.map((stage, i) => {
           const state = i < currentIndex ? 'done' : i === currentIndex ? 'active' : 'upcoming'

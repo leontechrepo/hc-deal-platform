@@ -1,17 +1,12 @@
-/* Fills the remaining height of the page panel so columns cap and scroll internally
-   (they used to be sized off `calc(100vh - …)`, which no longer holds — the panel,
-   not the viewport, is the scroll container now).
-   `flex: 1` is `flex: 1 1 0%`, so the board has a zero basis and *shrinks* too. Its
-   siblings above (KPI strip, review queue, toolbar) can't shrink, so once they exceed
-   the panel the free space goes negative and the board would collapse to its padding
-   — taking the whole pipeline with it. `min-height` is that floor: below it the panel
-   scrolls instead, and the columns still scroll internally via `.cards`. */
+/* Horizontal funnel. The board scrolls sideways inside the page rather than
+   widening it; columns scroll vertically past a cap so one busy stage doesn't
+   stretch the whole board. */
 .board {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
   padding-bottom: 12px;
-  flex: 1;
-  min-height: 320px;
+  min-height: 240px;
   align-items: stretch;
+  max-width: 100%;
 }

@@ -1,9 +1,12 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+} from 'react-router-dom'
 import { Show, AuthenticateWithRedirectCallback, useAuth } from '@clerk/react'
-import { NavProvider } from './NavContext'
-import { NavBar } from './components/NavBar/NavBar'
-import shell from './components/AppShell/AppShell.module.css'
+import { AppShell } from './components/shell/AppShell'
 import { PipelinePage } from './pages/PipelinePage/PipelinePage'
 import { LogsPage } from './pages/LogsPage/LogsPage'
 import { AnalyticsPage } from './pages/AnalyticsPage/AnalyticsPage'
@@ -15,16 +18,7 @@ import { InboxPage } from './pages/InboxPage/InboxPage'
 import { ExecutiveSummaryPage } from './pages/ExecutiveSummaryPage/ExecutiveSummaryPage'
 import { ChatPage } from './pages/ChatPage/ChatPage'
 import { LoginPage } from './pages/LoginPage/LoginPage'
-import { DealDetailPage } from './pages/DealDetailPage/DealDetailPage'
-import { OverviewTab } from './pages/DealDetailPage/tabs/OverviewTab'
-import { UnderwritingTab } from './pages/DealDetailPage/tabs/UnderwritingTab'
-import { TimelineTab } from './pages/DealDetailPage/tabs/TimelineTab'
-import { FormulasTab } from './pages/DealDetailPage/tabs/FormulasTab'
-import { ActivityTab } from './pages/DealDetailPage/tabs/ActivityTab'
-import { NotesTab } from './pages/DealDetailPage/tabs/NotesTab'
-import { DocumentsTab } from './pages/DealDetailPage/tabs/DocumentsTab'
-import { TeamTab } from './pages/DealDetailPage/tabs/TeamTab'
-import { CapitalStructureTab } from './pages/DealDetailPage/tabs/CapitalStructureTab'
+import { DealDetailPage, LegacyDealTabRedirect } from './pages/DealDetailPage/DealDetailPage'
 import { registerTokenGetter } from './api/client'
 
 function AuthBridge() {
@@ -36,41 +30,6 @@ function AuthBridge() {
   return null
 }
 
-function Layout() {
-  return (
-    <div className={shell.appShell}>
-      <NavBar />
-      <main className={shell.mainArea}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/pipeline" replace />} />
-          <Route path="/pipeline" element={<PipelinePage />} />
-          <Route path="/executive-summary" element={<ExecutiveSummaryPage />} />
-          <Route path="/logs" element={<LogsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/sponsors" element={<SponsorsPage />} />
-          <Route path="/companies" element={<CompaniesPage />} />
-          <Route path="/funds" element={<FundsPage />} />
-          <Route path="/portfolio" element={<PortfolioPage />} />
-          <Route path="/inbox" element={<InboxPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/deals/:dealId" element={<DealDetailPage />}>
-            <Route index element={<Navigate to="overview" replace />} />
-            <Route path="overview" element={<OverviewTab />} />
-            <Route path="underwriting" element={<UnderwritingTab />} />
-            <Route path="timeline" element={<TimelineTab />} />
-            <Route path="formulas" element={<FormulasTab />} />
-            <Route path="activity" element={<ActivityTab />} />
-            <Route path="notes" element={<NotesTab />} />
-            <Route path="documents" element={<DocumentsTab />} />
-            <Route path="team" element={<TeamTab />} />
-            <Route path="capital-structure" element={<CapitalStructureTab />} />
-          </Route>
-        </Routes>
-      </main>
-    </div>
-  )
-}
-
 function AuthGate() {
   return (
     <>
@@ -79,21 +38,97 @@ function AuthGate() {
         <LoginPage />
       </Show>
       <Show when="signed-in">
-        <NavProvider>
-          <Layout />
-        </NavProvider>
+        <Outlet />
       </Show>
     </>
   )
 }
 
+const router = createBrowserRouter([
+  {
+    path: '/sso-callback',
+    element: <AuthenticateWithRedirectCallback />,
+  },
+  {
+    path: '/',
+    element: <AuthGate />,
+    children: [
+      {
+        element: <AppShell />,
+        children: [
+          { index: true, element: <Navigate to="/pipeline" replace /> },
+          {
+            path: 'pipeline',
+            element: <PipelinePage />,
+            handle: { title: 'Pipeline', sub: 'Corporate Credit — Deal Pipeline · Confidential' },
+          },
+          {
+            path: 'executive-summary',
+            element: <ExecutiveSummaryPage />,
+            handle: { title: 'Executive Summary', sub: 'Portfolio overview' },
+          },
+          {
+            path: 'inbox',
+            element: <InboxPage />,
+            handle: {
+              title: 'Inbox',
+              sub: 'Proposed updates awaiting your review',
+            },
+          },
+          {
+            path: 'sponsors',
+            element: <SponsorsPage />,
+            handle: { title: 'Sponsors' },
+          },
+          {
+            path: 'companies',
+            element: <CompaniesPage />,
+            handle: { title: 'Companies' },
+          },
+          {
+            path: 'funds',
+            element: <FundsPage />,
+            handle: { title: 'Funds' },
+          },
+          {
+            path: 'portfolio',
+            element: <PortfolioPage />,
+            handle: { title: 'Portfolio' },
+          },
+          {
+            path: 'chat',
+            element: <ChatPage />,
+            handle: {
+              title: 'Credit Co-Pilot',
+              sub: 'Ask questions about the credit book',
+              pinned: true,
+            },
+          },
+          {
+            path: 'logs',
+            element: <LogsPage />,
+            handle: { title: 'Logs', sub: 'Mailbox scans, deal updates, and outcomes' },
+          },
+          {
+            path: 'analytics',
+            element: <AnalyticsPage />,
+            handle: { title: 'Analytics' },
+          },
+          {
+            path: 'deals/:dealId',
+            element: <DealDetailPage />,
+            handle: { title: 'Deal' },
+          },
+          {
+            path: 'deals/:dealId/:legacyTab',
+            element: <LegacyDealTabRedirect />,
+          },
+        ],
+      },
+    ],
+  },
+])
+
 export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
-        <Route path="*" element={<AuthGate />} />
-      </Routes>
-    </BrowserRouter>
-  )
+  return <RouterProvider router={router} />
 }

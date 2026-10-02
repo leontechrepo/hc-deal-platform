@@ -21,6 +21,7 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = 'No data.' 
   }
 
   return (
+    <div className={styles.scroll}>
     <table className={styles.table}>
       <thead>
         <tr>
@@ -43,5 +44,6 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = 'No data.' 
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

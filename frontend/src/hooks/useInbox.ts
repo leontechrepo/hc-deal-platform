@@ -1,19 +1,47 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { approveInboxItem, assignInboxItem, listInbox, rejectInboxItem } from '../api/inbox'
+import {
+  acceptInboxGroup,
+  dismissInboxGroup,
+  fileUnfiledDocument,
+  listInbox,
+  listUnfiledDocuments,
+  readInboxEmail,
+  type AcceptGroupBody,
+} from '../api/inbox'
 
-// Cache key kept as 'review-queue' since NavBar's scan handler already
-// invalidates that key to refresh the pending-suggestions count.
 export function useInbox() {
-  return useQuery({ queryKey: ['review-queue'], queryFn: listInbox })
+  return useQuery({
+    queryKey: ['review-queue'],
+    queryFn: listInbox,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  })
 }
 
-export function useApproveInboxItem() {
+/**
+ * Sidebar badge — pending *emails*, the same unit as the Queue panel and the
+ * "Pending emails" KPI. (Suggested updates are counted separately; one email
+ * can carry several.)
+ */
+export function usePendingCount(): number {
+  const { data } = useInbox()
+  return data ? data.length : 0
+}
+
+export function usePendingSuggestionCount(): number {
+  const { data } = useInbox()
+  return data ? data.reduce((n, g) => n + g.suggestions.length, 0) : 0
+}
+
+export function useAcceptInboxGroup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, value, reviewer, dealId }: { id: number; value?: string; reviewer?: string; dealId?: string }) =>
-      approveInboxItem(id, value, reviewer, dealId),
+    mutationFn: ({ groupId, body }: { groupId: string; body: AcceptGroupBody }) =>
+      acceptInboxGroup(groupId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['review-queue'] })
+      // Accepting files the email's attachments to the deal.
+      qc.invalidateQueries({ queryKey: ['unfiled-documents'] })
       qc.invalidateQueries({ queryKey: ['deals'] })
       qc.invalidateQueries({ queryKey: ['kpis'] })
       qc.invalidateQueries({ queryKey: ['portfolio'] })
@@ -21,22 +49,40 @@ export function useApproveInboxItem() {
   })
 }
 
-export function useAssignInboxItem() {
+export function useDismissInboxGroup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, dealId, reviewer }: { id: number; dealId: string; reviewer?: string }) =>
-      assignInboxItem(id, dealId, reviewer),
+    mutationFn: ({ groupId }: { groupId: string }) => dismissInboxGroup(groupId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['review-queue'] }),
+  })
+}
+
+export function useUnfiledDocuments() {
+  return useQuery({
+    queryKey: ['unfiled-documents'],
+    queryFn: listUnfiledDocuments,
+    staleTime: 0,
+  })
+}
+
+export function useFileUnfiledDocument() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ docId, dealId }: { docId: number; dealId: string }) =>
+      fileUnfiledDocument(docId, dealId),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['unfiled-documents'] })
       qc.invalidateQueries({ queryKey: ['review-queue'] })
       qc.invalidateQueries({ queryKey: ['deals'] })
     },
   })
 }
 
-export function useRejectInboxItem() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, reviewer }: { id: number; reviewer?: string }) => rejectInboxItem(id, reviewer),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['review-queue'] }),
+export function useEmailBody(groupId: string) {
+  return useQuery({
+    queryKey: ['inbox-email-body', groupId],
+    queryFn: () => readInboxEmail(groupId),
+    staleTime: 5 * 60_000,
+    retry: false,
   })
 }

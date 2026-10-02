@@ -1,22 +1,22 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useDealContext } from '../dealContext'
 import {
   useCreateTeamMember, useDealTeamMembers, useDeleteTeamMember, useUpdateTeamMember,
 } from '../../../hooks/useDealTeam'
 import { useCreateContact, useDealContacts, useUpdateContact } from '../../../hooks/useContacts'
 import { TeamMemberFormModal } from '../../../components/dealteam/TeamMemberFormModal'
 import { ContactFormModal } from '../../../components/dealteam/ContactFormModal'
-import { Button } from '../../../components/ui/Button/Button'
-import { EmptyState } from '../../../components/ui/EmptyState/EmptyState'
+import { Button } from '@leontechrepo/leon-ui'
+import { DataSection } from '../../../components/dealDetail/DataSection'
+import { RowActions } from '../../../components/ui/RowActions'
 import { DataTable, type Column } from '../../../components/ui/DataTable/DataTable'
 import { useToast } from '../../../components/Toast/Toast'
 import type {
-  Contact, ContactInput, ContactPatchInput, Deal, DealTeamMember, DealTeamMemberInput,
+  Contact, ContactInput, ContactPatchInput, DealTeamMember, DealTeamMemberInput,
 } from '../../../types'
-import styles from './TeamTab.module.css'
 
 export function TeamTab() {
-  const { deal } = useOutletContext<{ deal: Deal }>()
+  const { deal } = useDealContext()
   const { showToast } = useToast()
 
   const { data: teamMembers = [], isLoading: teamLoading, isError: teamError } = useDealTeamMembers(deal.id)
@@ -89,10 +89,10 @@ export function TeamTab() {
       key: 'actions',
       header: '',
       render: m => (
-        <div className={styles.rowActions}>
+        <RowActions>
           <Button variant="ghost" size="sm" onClick={() => openEditTeamMember(m)}>Edit</Button>
           <Button variant="ghost" size="sm" onClick={() => removeTeamMember(m)}>Remove</Button>
-        </div>
+        </RowActions>
       ),
     },
   ]
@@ -111,38 +111,32 @@ export function TeamTab() {
   ]
 
   return (
-    <div className={styles.tab}>
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Deal Team</h2>
-          <Button variant="secondary" size="sm" onClick={openCreateTeamMember}>Add Team Member</Button>
-        </div>
-        {teamLoading ? (
-          <div className={styles.state}>Loading team…</div>
-        ) : teamError ? (
-          <div className={styles.state}>Failed to load team.</div>
-        ) : teamMembers.length === 0 ? (
-          <EmptyState title="No team members yet" description="Assign the internal deal team." />
-        ) : (
-          <DataTable columns={teamColumns} rows={teamMembers} rowKey={m => m.team_id} />
-        )}
-      </section>
+    <div className="detail-cards">
+      <DataSection
+        title="Deal Team"
+        noun="team"
+        actions={<Button variant="secondary" size="sm" onClick={openCreateTeamMember}>Add Team Member</Button>}
+        isLoading={teamLoading}
+        isError={teamError}
+        isEmpty={teamMembers.length === 0}
+        emptyTitle="No team members yet"
+        emptyDescription="Assign the internal deal team."
+      >
+        <DataTable columns={teamColumns} rows={teamMembers} rowKey={m => m.team_id} />
+      </DataSection>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Contacts</h2>
-          <Button variant="secondary" size="sm" onClick={openCreateContact}>Add Contact</Button>
-        </div>
-        {contactsLoading ? (
-          <div className={styles.state}>Loading contacts…</div>
-        ) : contactsError ? (
-          <div className={styles.state}>Failed to load contacts.</div>
-        ) : contacts.length === 0 ? (
-          <EmptyState title="No contacts yet" description="Add borrower-side or sponsor-side contacts for this deal." />
-        ) : (
-          <DataTable columns={contactColumns} rows={contacts} rowKey={c => c.contact_id} />
-        )}
-      </section>
+      <DataSection
+        title="Contacts"
+        noun="contacts"
+        actions={<Button variant="secondary" size="sm" onClick={openCreateContact}>Add Contact</Button>}
+        isLoading={contactsLoading}
+        isError={contactsError}
+        isEmpty={contacts.length === 0}
+        emptyTitle="No contacts yet"
+        emptyDescription="Add borrower-side or sponsor-side contacts for this deal."
+      >
+        <DataTable columns={contactColumns} rows={contacts} rowKey={c => c.contact_id} />
+      </DataSection>
 
       <TeamMemberFormModal
         open={teamModalOpen}

@@ -1,17 +1,20 @@
-import styles from './EmptyState.module.css'
+import { EmptyState as LeonEmptyState } from '@leontechrepo/leon-ui'
+import type { ComponentType, ReactNode } from 'react'
 
 interface Props {
-  title: string
+  title?: string
   description?: string
-  action?: React.ReactNode
+  children?: ReactNode
+  icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+  action?: ReactNode
+  className?: string
 }
 
-export function EmptyState({ title, description, action }: Props) {
+/** HC used `description`; leon-ui uses `children` for body copy. */
+export function EmptyState({ title, description, children, ...rest }: Props) {
   return (
-    <div className={styles.empty}>
-      <div className={styles.title}>{title}</div>
-      {description && <div className={styles.description}>{description}</div>}
-      {action && <div className={styles.action}>{action}</div>}
-    </div>
+    <LeonEmptyState title={title} {...rest}>
+      {children ?? description}
+    </LeonEmptyState>
   )
 }

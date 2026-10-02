@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useId, useState } from 'react'
+import { Button, Field, FieldLabel } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, FormRow, TextField } from '../ui/Form/Form'
+import { toNullableNumber } from '../../domain/format'
 import type { CapitalStructureTranche, CapitalStructureTrancheInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type FormState = Omit<Partial<CapitalStructureTrancheInput>, 'amount'> & { amountDollars: string }
 
@@ -17,26 +18,24 @@ interface Props {
   onSubmit: (body: Partial<CapitalStructureTrancheInput>) => Promise<unknown>
 }
 
-function toNullableNumber(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = Number(v)
-  return Number.isNaN(n) ? null : n
+export function TrancheFormModal({ open, onClose, initial, onSubmit }: Props) {
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Tranche' : 'Add Tranche'}>
+      <TrancheForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
 }
 
-export function TrancheFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<FormState>(EMPTY)
+function TrancheForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<FormState>(() =>
+    initial
+      ? { ...EMPTY, ...initial, amountDollars: initial.amount !== null ? String(initial.amount / 100) : '' }
+      : EMPTY,
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const lcgId = useId()
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial
-        ? { ...EMPTY, ...initial, amountDollars: initial.amount !== null ? String(initial.amount / 100) : '' }
-        : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -59,64 +58,51 @@ export function TrancheFormModal({ open, onClose, initial, onSubmit }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Tranche' : 'Add Tranche'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Tranche Type</label>
-            <input
-              className={formStyles.input}
-              value={form.tranche_type ?? ''}
-              onChange={e => set('tranche_type', e.target.value)}
-              placeholder="e.g. First Lien Term Loan"
-            />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Holder</label>
-            <input className={formStyles.input} value={form.holder ?? ''} onChange={e => set('holder', e.target.value)} />
-          </div>
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <FormRow>
+        <TextField
+          label="Tranche Type"
+          value={form.tranche_type ?? ''}
+          onChange={e => set('tranche_type', e.target.value)}
+          placeholder="e.g. First Lien Term Loan"
+        />
+        <TextField label="Holder" value={form.holder ?? ''} onChange={e => set('holder', e.target.value)} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Amount ($)</label>
-            <input
-              className={formStyles.input}
-              type="number"
-              step="any"
-              value={form.amountDollars}
-              onChange={e => set('amountDollars', e.target.value)}
-            />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Seniority Rank</label>
-            <input
-              className={formStyles.input}
-              type="number"
-              value={form.seniority_rank ?? ''}
-              onChange={e => set('seniority_rank', toNullableNumber(e.target.value))}
-            />
-          </div>
-        </div>
+      <FormRow>
+        <TextField
+          label="Amount ($)"
+          type="number"
+          step="any"
+          value={form.amountDollars}
+          onChange={e => set('amountDollars', e.target.value)}
+        />
+        <TextField
+          label="Seniority Rank"
+          type="number"
+          value={form.seniority_rank ?? ''}
+          onChange={e => set('seniority_rank', toNullableNumber(e.target.value))}
+        />
+      </FormRow>
 
-        <label className={formStyles.checkboxRow}>
-          <input
-            type="checkbox"
-            checked={form.is_lcg_position ?? false}
-            onChange={e => set('is_lcg_position', e.target.checked)}
-          />
-          <span className={formStyles.label}>LCG Position</span>
-        </label>
+      <Field orientation="horizontal">
+        <input
+          id={lcgId}
+          type="checkbox"
+          checked={form.is_lcg_position ?? false}
+          onChange={e => set('is_lcg_position', e.target.checked)}
+        />
+        <FieldLabel htmlFor={lcgId}>LCG Position</FieldLabel>
+      </Field>
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Tranche'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Tranche'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

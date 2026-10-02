@@ -7,7 +7,7 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--white);
+  color: var(--chat-user-text);
   background: var(--navy);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   pointer-events: none;

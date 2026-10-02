@@ -1,177 +1,96 @@
+/* HC deltas on top of @leontechrepo/leon-ui/styles.css.
+   The package owns brand colours, surfaces, shadows and the dark palette
+   (`html.dark`), so none of those are redeclared here. Only tokens the package
+   lacks live below, each with a dark counterpart. */
+
 :root {
-  /* Brand */
-  --navy: #0a1f44;
-  --navy2: #0d2b5e;
-  --navy-light: #0d2b5e;
-  --gold: #c9a84c;
-  --gold-light: #F5ECD7;
-  --white: #ffffff;
-  --off-white: #f0f2f6;
-  --lt: #f0f2f6;
-  --surface: #f0f2f6;
-  --border: #dde1e9;
-  --text: #1a2340;
-  --muted: #6b7a9b;
-  --heading: #0a1f44;
-  --on-gold: #0a1f44;
-
-  --gray-100: #F2F1EE;
-  --gray-200: #dde1e9;
-  --gray-400: #6b7a9b;
-  --gray-700: #4A4845;
-
-  /* Semantic (Reip DS core set: green/red/amber/blue) */
-  --green: #2ecc8f;
+  /* Soft status surfaces: tinted background + readable ink for alerts and diffs. */
   --green-bg: #e8faf3;
   --green-fg: #1a7a56;
-  --red: #e05c5c;
   --red-bg: #fdeaea;
   --red-fg: #9a2020;
-  --amber: #f0a030;
   --amber-bg: #fff4e0;
   --amber-fg: #7a5010;
-  --blue: #6478dc;
-  --blue-bg: #E8F0FB;
-  --blue-fg: #154A7A;
+  --blue-bg: #e8f0fb;
+  --blue-fg: #154a7a;
 
-  /* Typography families */
-  --font: 'Jost', 'Segoe UI', sans-serif;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-mono: 'DM Mono', 'Fira Mono', monospace;
+  /* Badge tones, consumed by domain/badgeTones.ts. */
+  --tone-navy-bg: rgba(10, 31, 68, 0.07);
+  --tone-navy-text: var(--navy);
+  --tone-navy-border: rgba(10, 31, 68, 0.22);
+  --tone-gold-bg: rgba(201, 168, 76, 0.12);
+  --tone-gold-text: #7a5c10;
+  --tone-gold-border: rgba(201, 168, 76, 0.35);
+  --tone-green-bg: rgba(46, 204, 143, 0.12);
+  --tone-green-text: var(--green-fg);
+  --tone-green-border: rgba(46, 204, 143, 0.35);
+  --tone-red-bg: rgba(224, 92, 92, 0.12);
+  --tone-red-text: var(--red-fg);
+  --tone-red-border: rgba(224, 92, 92, 0.35);
+  --tone-amber-bg: rgba(240, 160, 48, 0.14);
+  --tone-amber-text: #8a5c10;
+  --tone-amber-border: rgba(240, 160, 48, 0.38);
+  --tone-blue-bg: rgba(100, 120, 220, 0.12);
+  --tone-blue-text: var(--blue-fg);
+  --tone-blue-border: rgba(100, 120, 220, 0.38);
+  --tone-muted-bg: var(--lt);
+  --tone-muted-text: var(--muted);
+  --tone-muted-border: var(--border);
 
-  /* Type scale */
-  --text-display: 28px;
-  --text-hero: 64px;
-  --text-specimen: 30px;
-  --text-kpi: 22px;
-  --text-topbar-title: 16px;
-  --text-body: 13px;
-  --text-small: 11px;
-  --text-label: 9px;
-
-  /* Spacing scale — steps 4/6/8/10/12/14/16/18/20/24 (base unit 2px) */
-  --space-1: 2px;
-  --space-2: 4px;
-  --space-3: 6px;
-  --space-4: 8px;
-  --space-5: 10px;
-  --space-6: 12px;
-  --space-7: 14px;
-  --space-8: 16px;
-  --space-9: 18px;
-  --space-10: 20px;
-  --space-11: 24px;
-
-  /* Radius scale — named by purpose per component */
+  /* Radius scale, named by purpose. */
   --radius-badge: 4px;
   --radius-button: 7px;
   --radius-card: 10px;
   --radius-pill: 12px;
   --radius-bubble: 14px;
-  --radius-panel: 18px;
-  --radius-sidebar: 20px;
   --radius-round: 50%;
 
-  /* Surfaces / elevation */
-  --workspace: #f6f8fb;
-  --workspace-soft: #eef3f8;
-  --panel: rgba(255,255,255,.86);
-  --panel-solid: #ffffff;
-  --panel-raised: rgba(255,255,255,.94);
-  --card: var(--panel-solid);
-  --glass-border: rgba(131,145,169,.26);
-  --glass-border-strong: rgba(201,168,76,.42);
-
-  /* Spotlight background accent — consumed by the workspace gradient in base.css */
-  --spotlight-gold: rgba(201,168,76,.16);
-  --spotlight-warm: rgba(252,247,236,.55);
-  --spotlight-center: 50% 45%;
-
-  /* Shadows */
-  --shadow-soft: 0 10px 26px rgba(10,31,68,.07);
-  --shadow-float: 0 18px 44px rgba(10,31,68,.11);
-  --shadow-hover: 0 22px 50px rgba(10,31,68,.14);
-  --shadow-micro: 0 1px 4px rgba(10,31,68,.06);
-
-  /* Card / input gold accents */
-  --card-border-gold: rgba(201,168,76,.14);
-  --input-gold-border: rgba(201,168,76,.55);
-  --input-gold-ring: rgba(201,168,76,.16);
-  --input-gold-ring-focus: rgba(201,168,76,.3);
-
-  /* Chat */
-  --chat-navy: #0a1f44;
-  --chat-navy-hover: #0d2b5e;
-  --chat-heading: #0a1f44;
-  --chat-gold: #c9a84c;
-  --chat-surface: rgba(252,247,236,.88);
-  --chat-surface-soft: rgba(248,242,228,.72);
-  --chat-surface-accent: rgba(201,168,76,.10);
-  --chat-focus-ring: rgba(10,31,68,.08);
-
-  /* Charts (Recharts).
-     Recharts takes colours as props, not classes, so chart marks get no dark-mode
-     override for free — they must be routed through tokens that flip. Grid stays
-     recessive; axis labels wear text ink, never a series colour. Series steps are
-     chosen per mode for >= 3:1 against the card surface, not flipped automatically. */
+  /* Charts (Recharts takes colours as props, so they must flip via tokens). */
   --chart-grid: var(--border);
   --chart-axis: var(--muted);
   --chart-1: var(--navy);
   --chart-2: var(--gold);
   --chart-3: var(--blue);
-  --chart-4: var(--navy-light);
+  --chart-4: var(--navy2);
 
-  /* Layout */
-  --nav-width-expanded: 220px;
-  --nav-width-collapsed: 80px;
+  /* Alias kept for the shared Form.module.css still used by the Documents tab. */
+  --gray-400: var(--muted);
 }
 
 html.dark {
-  --heading: #ffffff;
-  /* --white intentionally unchanged — it's consumed throughout the app as a literal
-     white foreground/surface paired directly with colors that stay constant in dark
-     mode (--navy, --red, etc; e.g. Badge's navy tone, Button's danger variant, page-level
-     KanbanCard/Form/Toast). Darkening it here breaks all of those pairings. */
-  --lt: #0f141d;
-  --surface: #161e2c;
-  --border: #2a3548;
-  --text: #e4e9f2;
-  --muted: #8b99b8;
+  --green-bg: rgba(61, 217, 154, 0.14);
+  --green-fg: var(--green);
+  --red-bg: rgba(240, 112, 112, 0.14);
+  --red-fg: var(--red);
+  --amber-bg: rgba(255, 184, 77, 0.14);
+  --amber-fg: var(--amber);
+  --blue-bg: rgba(139, 158, 240, 0.14);
+  --blue-fg: var(--blue);
 
-  --green: #3dd99a;
-  --red: #f07070;
-  --amber: #ffb84d;
-  --blue: #8b9ef0;
+  --tone-navy-bg: rgba(255, 255, 255, 0.09);
+  --tone-navy-text: rgba(220, 228, 242, 0.92);
+  --tone-navy-border: rgba(255, 255, 255, 0.18);
+  --tone-gold-bg: rgba(201, 168, 76, 0.16);
+  --tone-gold-text: var(--gold);
+  --tone-gold-border: rgba(201, 168, 76, 0.42);
+  --tone-green-bg: rgba(61, 217, 154, 0.14);
+  --tone-green-text: var(--green);
+  --tone-green-border: rgba(61, 217, 154, 0.38);
+  --tone-red-bg: rgba(240, 112, 112, 0.14);
+  --tone-red-text: var(--red);
+  --tone-red-border: rgba(240, 112, 112, 0.38);
+  --tone-amber-bg: rgba(240, 160, 48, 0.16);
+  --tone-amber-text: var(--amber);
+  --tone-amber-border: rgba(240, 160, 48, 0.42);
+  --tone-blue-bg: rgba(139, 158, 240, 0.14);
+  --tone-blue-text: var(--blue);
+  --tone-blue-border: rgba(139, 158, 240, 0.4);
+  --tone-muted-bg: rgba(255, 255, 255, 0.06);
+  --tone-muted-text: var(--muted);
+  --tone-muted-border: var(--border);
 
-  --workspace: #0c1018;
-  --workspace-soft: #121a26;
-  --panel: rgba(22,30,44,.88);
-  --panel-solid: #161e2c;
-  --panel-raised: rgba(28,38,54,.94);
-  --card: var(--panel-solid);
-  --glass-border: rgba(120,140,175,.28);
-  --glass-border-strong: rgba(201,168,76,.45);
-
-  --spotlight-gold: rgba(201,168,76,.12);
-  --spotlight-warm: rgba(201,168,76,.08);
-
-  --shadow-soft: 0 10px 28px rgba(0,0,0,.35);
-  --shadow-float: 0 18px 48px rgba(0,0,0,.45);
-  --shadow-hover: 0 22px 52px rgba(0,0,0,.5);
-  --shadow-micro: 0 1px 4px rgba(0,0,0,.3);
-
-  --card-border-gold: rgba(201,168,76,.12);
-  --input-gold-border: var(--glass-border);
-  --input-gold-ring: transparent;
-  --input-gold-ring-focus: rgba(201,168,76,.22);
-
-  /* --gold, --navy, --navy2, --on-gold intentionally unchanged — gold accent is identical in both modes */
-
-  /* Chart series lifted out of the navy family for the dark card (--panel-solid
-     #161e2c), where --navy measures 1.03:1 against it and --navy-light 1.21:1 —
-     effectively invisible. These steps validate at >= 3:1. --chart-2 (gold) and
-     --chart-3 (--blue) need no override: gold is identical in both modes and
-     --blue already flips above. */
+  /* The navy series is invisible on the dark card (1.03:1); lift it so every
+     series clears 3:1. Gold and blue already work in both modes. */
   --chart-1: #8ba3d4;
   --chart-4: #6d86bb;
 }

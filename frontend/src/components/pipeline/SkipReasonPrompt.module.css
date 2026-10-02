@@ -1,0 +1,27 @@
+.prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+  border: 1px solid var(--glass-border-strong);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--heading);
+}
+
+.body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -5,22 +5,19 @@
 .header {
   display: flex;
   align-items: center;
-  gap: var(--space-6, 10px);
+  gap: 10px;
   width: 100%;
-  padding: var(--space-5, 8px) var(--space-8, 16px);
-  background: rgba(239, 243, 249, .5);
+  padding: 8px 16px;
+  background: var(--surface);
+  color: var(--text);
   border: none;
   cursor: pointer;
   font: inherit;
   text-align: left;
 }
 
-:global(html.dark) .header {
-  background: rgba(20, 28, 40, .5);
-}
-
 .header:hover {
-  background: rgba(201, 168, 76, .1);
+  background: var(--chat-surface-accent);
 }
 
 .chevron {

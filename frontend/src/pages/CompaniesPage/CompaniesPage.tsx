@@ -2,18 +2,18 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCompanies, useCreateCompany, useUpdateCompany } from '../../hooks/useCompanies'
 import { CompanyFormModal } from '../../components/companies/CompanyFormModal'
-import { Button } from '../../components/ui/Button/Button'
-import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
-import { PageShell } from '../../components/ui/PageShell/PageShell'
+import { Building, Plus } from 'lucide-react'
+import { Button, EmptyState } from '@leontechrepo/leon-ui'
+import { SearchBox } from '../../components/ui/SearchBox'
+import { PageError, PageLoading } from '../../components/ui/PageState'
+import { PageActions } from '../../components/shell/PageActions'
 import { DataTable, type Column } from '../../components/ui/DataTable/DataTable'
 import { useToast } from '../../components/Toast/Toast'
 import type { Company, CompanyInput } from '../../types'
 import styles from './CompaniesPage.module.css'
 
-const SHELL = { title: 'Companies', sub: 'Borrower company records' }
-
 export function CompaniesPage() {
-  const { data: companies = [], isLoading, isError } = useCompanies()
+  const { data: companies = [], isLoading, isError, refetch } = useCompanies()
   const createCompany = useCreateCompany()
   const updateCompany = useUpdateCompany()
   const { showToast } = useToast()
@@ -78,26 +78,29 @@ export function CompaniesPage() {
     },
   ]
 
-  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading companies…</div></PageShell>
-  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load companies.</div></PageShell>
+  if (isLoading) return <PageLoading label="Loading companies…" />
+  if (isError) return <PageError title="Couldn't load companies" onRetry={() => void refetch()} />
+
+  const newCompany = (
+    <Button size="sm" onClick={openCreate}>
+      <Plus size={14} strokeWidth={2.05} />
+      New Company
+    </Button>
+  )
 
   return (
-    <PageShell {...SHELL} actions={<Button variant="primary" onClick={openCreate}>New Company</Button>}>
+    <>
+      <PageActions>{newCompany}</PageActions>
       <div className={styles.toolbar}>
-        <input
-          className={styles.search}
-          placeholder="Search companies…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <SearchBox value={search} onChange={setSearch} placeholder="Search companies…" />
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          title="No companies yet"
-          description="Add a company record, or create a deal to have one added automatically."
-          action={<Button variant="primary" onClick={openCreate}>New Company</Button>}
-        />
+        <EmptyState icon={Building} title={companies.length === 0 ? 'No companies yet' : 'No companies match'} action={companies.length === 0 ? newCompany : undefined}>
+          {companies.length === 0
+            ? 'Add a company record, or create a deal to have one added automatically.'
+            : 'Try a different search.'}
+        </EmptyState>
       ) : (
         <DataTable columns={columns} rows={filtered} rowKey={c => c.company_id} />
       )}
@@ -111,6 +114,6 @@ export function CompaniesPage() {
         initial={editing}
         onSubmit={handleSubmit}
       />
-    </PageShell>
+    </>
   )
 }

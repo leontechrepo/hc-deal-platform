@@ -1,0 +1,27 @@
+.wrap { width: 100%; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text); }
+.table th {
+  text-align: left; padding: 8px 10px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--muted); border-bottom: 1px solid var(--border);
+}
+.table td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.row:focus-visible, .row[data-highlight='true'] { outline: 2px solid var(--gold); outline-offset: -2px; background: var(--surface); }
+.name { font-weight: 600; overflow-wrap: anywhere; }
+.sub { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.statusCell { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.flag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .table tr {
+    margin-bottom: 12px; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--surface);
+  }
+  .table td { border: 0; padding: 4px 0; display: flex; gap: 10px; justify-content: space-between; }
+  .table td::before {
+    content: attr(data-label); flex: none; font-size: 11px; text-transform: uppercase; color: var(--muted);
+  }
+  .table td[data-label='']::before { content: none; }
+}

@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Button, Field, FieldLabel } from '@leontechrepo/leon-ui'
+import { Form, FormActions, FormError, FormRow, TextField } from '../ui/Form/Form'
 import { useCreateTask } from '../../hooks/useDealTimeline'
 import { useToast } from '../Toast/Toast'
-import formStyles from '../shared/Form.module.css'
-import styles from './AddTaskForm.module.css'
 
 interface Props {
   dealId: string
@@ -55,41 +54,32 @@ export function AddTaskForm({ dealId, workstreamId, open, onClose }: Props) {
 
   return (
     <Modal open={open} onClose={onClose} title="Add Task">
-      <div className={formStyles.form}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Task Name</label>
-          <input className={formStyles.input} value={name} onChange={e => setName(e.target.value)} autoFocus />
-        </div>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Owner</label>
-          <input className={formStyles.input} value={owner} onChange={e => setOwner(e.target.value)} />
-        </div>
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Start Date</label>
-            <input type="date" className={formStyles.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
-          </div>
+      <Form onSubmit={e => { e.preventDefault(); void handleSubmit() }}>
+        <TextField label="Task Name" value={name} onChange={e => setName(e.target.value)} autoFocus />
+        <TextField label="Owner" value={owner} onChange={e => setOwner(e.target.value)} />
+        <FormRow>
+          <TextField label="Start Date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
           {!isMilestone && (
-            <div className={formStyles.field}>
-              <label className={formStyles.label}>End Date</label>
-              <input type="date" className={formStyles.input} value={endDate} onChange={e => setEndDate(e.target.value)} />
-            </div>
+            <TextField label="End Date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
           )}
-        </div>
-        {hasReversedDates && (
-          <div className={formStyles.error}>End date can't be before the start date.</div>
-        )}
-        <label className={styles.checkboxRow}>
-          <input type="checkbox" checked={isMilestone} onChange={e => setIsMilestone(e.target.checked)} />
-          <span className={formStyles.label}>Milestone</span>
-        </label>
-        <div className={formStyles.actions}>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!name.trim() || hasReversedDates || createTask.isPending}>
+        </FormRow>
+        {hasReversedDates && <FormError>End date can't be before the start date.</FormError>}
+        <Field orientation="horizontal">
+          <input
+            id="task-milestone"
+            type="checkbox"
+            checked={isMilestone}
+            onChange={e => setIsMilestone(e.target.checked)}
+          />
+          <FieldLabel htmlFor="task-milestone">Milestone</FieldLabel>
+        </Field>
+        <FormActions>
+          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={!name.trim() || hasReversedDates || createTask.isPending}>
             Add Task
           </Button>
-        </div>
-      </div>
+        </FormActions>
+      </Form>
     </Modal>
   )
 }

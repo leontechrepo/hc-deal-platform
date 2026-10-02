@@ -1,35 +1,30 @@
 .toggle {
-  display: flex;
+  display: inline-flex;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-button);
+  border-radius: 7px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-  background: rgba(255,255,255,.55);
+  background: var(--panel-solid);
   border: none;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
-:global(html.dark) .option {
-  background: rgba(255,255,255,.06);
-}
+.option + .option { border-left: 1px solid var(--glass-border); }
+.option:hover { color: var(--heading); }
 
-.option + .option {
-  border-left: 1px solid var(--glass-border);
-}
-
-.option:hover {
+.active {
   color: var(--heading);
-}
-
-.option.active {
-  color: var(--heading);
-  background: rgba(201, 168, 76, 0.15);
+  background: var(--chat-surface-accent);
   font-weight: 600;
 }

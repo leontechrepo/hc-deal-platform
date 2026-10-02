@@ -1,99 +1,19 @@
-.section {
-  background: var(--panel-solid);
-  border: 1px solid var(--card-border-gold);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  backdrop-filter: blur(10px);
-  padding: 18px;
-  overflow-x: auto;
-}
+.strong { font-weight: 500; }
+.dim { color: var(--muted); }
 
-.sectionTitle {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--heading);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: 12px;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-.table th {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #68758f;
-  padding: 6px 10px;
-  text-align: left;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(239,243,249,.88);
+.ts {
+  color: var(--muted);
+  font-size: 11px;
   white-space: nowrap;
 }
 
-:global(html.dark) .table th {
+.clip {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--muted);
-  background: rgba(20,28,40,.85);
-}
-
-.table td {
-  padding: 8px 10px;
-  vertical-align: top;
-  border-bottom: 1px solid rgba(221,225,233,.68);
-  color: var(--text);
-  line-height: 1.4;
-}
-
-:global(html.dark) .table td {
-  border-bottom-color: rgba(42,53,72,.85);
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.table tbody tr {
-  transition: background 0.14s, box-shadow 0.14s;
-}
-
-.table tbody tr:hover {
-  box-shadow: inset 3px 0 0 rgba(201,168,76,.5);
-}
-
-.table tbody tr:hover td {
-  background: rgba(201,168,76,.07);
-}
-
-.source {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.source.manual_edit {
-  background: var(--blue-bg);
-  color: var(--blue-fg);
-}
-
-.source.email_scan {
-  background: var(--navy);
-  color: var(--white);
-}
-
-.source.excel_import {
-  background: var(--green-bg);
-  color: var(--green-fg);
 }
 
 .valueChange {
@@ -103,9 +23,8 @@
   flex-wrap: wrap;
 }
 
-.oldVal {
-  color: var(--red-fg);
-  background: var(--red-bg);
+.oldVal,
+.newVal {
   padding: 1px 5px;
   border-radius: 3px;
   font-size: 11px;
@@ -113,29 +32,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.oldVal {
+  color: var(--red-fg);
+  background: var(--red-bg);
 }
 
 .newVal {
   color: var(--green-fg);
   background: var(--green-bg);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 11px;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .arrow {
-  color: var(--gray-400);
+  color: var(--muted);
   font-size: 11px;
-}
-
-.ts {
-  color: var(--gray-400);
-  font-size: 11px;
-  white-space: nowrap;
 }
 
 .summary {
@@ -145,16 +56,26 @@
   max-width: 400px;
 }
 
-.empty {
-  text-align: center;
-  color: var(--gray-400);
-  font-style: italic;
-  padding: 24px;
+.scanCopy {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 640px;
 }
 
-.loading {
-  color: var(--gray-400);
-  font-style: italic;
-  padding: 24px;
-  text-align: center;
+.scanDisabled {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--amber-fg);
+}
+
+.scanNotice {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
 }

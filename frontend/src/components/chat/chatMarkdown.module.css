@@ -114,29 +114,20 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #68758f;
+  color: var(--muted);
   text-align: left;
   white-space: nowrap;
   padding: 6px 10px;
-  background: rgba(239, 243, 249, 0.88);
+  background: var(--surface);
   border-bottom: 1px solid var(--glass-border);
-}
-
-:global(html.dark) .tableWrap th {
-  color: var(--muted);
-  background: rgba(20, 28, 40, 0.85);
 }
 
 .tableWrap td {
   padding: 6px 10px;
   white-space: nowrap;
   color: var(--text);
-  border-bottom: 1px solid rgba(221, 225, 233, 0.68);
+  border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
-}
-
-:global(html.dark) .tableWrap td {
-  border-bottom-color: rgba(42, 53, 72, 0.85);
 }
 
 .tableWrap tbody tr:last-child td { border-bottom: none; }

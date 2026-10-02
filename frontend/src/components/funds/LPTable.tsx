@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DataTable, type Column } from '../ui/DataTable/DataTable'
-import { Button } from '../ui/Button/Button'
+import { Button } from '@leontechrepo/leon-ui'
 import { LPFormModal } from './LPFormModal'
 import { useCreateLP, useDeleteLP, useUpdateLP } from '../../hooks/useFunds'
 import { useToast } from '../Toast/Toast'

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useId, useState } from 'react'
+import { Button, Field, FieldLabel } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, TextField } from '../ui/Form/Form'
 import type { ParticipantLender, ParticipantLenderInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type FormState = Omit<Partial<ParticipantLenderInput>, 'participation_amount'> & { amountDollars: string }
 
@@ -16,19 +16,23 @@ interface Props {
 }
 
 export function ParticipantLenderFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<FormState>(EMPTY)
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Participant Lender' : 'Add Participant Lender'}>
+      <LenderForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
+}
+
+function LenderForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<FormState>(() =>
+    initial
+      ? { ...EMPTY, ...initial, amountDollars: initial.participation_amount !== null ? String(initial.participation_amount / 100) : '' }
+      : EMPTY,
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const agentId = useId()
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial
-        ? { ...EMPTY, ...initial, amountDollars: initial.participation_amount !== null ? String(initial.participation_amount / 100) : '' }
-        : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -55,42 +59,39 @@ export function ParticipantLenderFormModal({ open, onClose, initial, onSubmit }:
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Participant Lender' : 'Add Participant Lender'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Lender Name *</label>
-          <input
-            className={formStyles.input}
-            value={form.lender_name ?? ''}
-            onChange={e => set('lender_name', e.target.value)}
-          />
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <TextField
+        label="Lender Name *"
+        value={form.lender_name ?? ''}
+        onChange={e => set('lender_name', e.target.value)}
+      />
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Participation Amount ($)</label>
-          <input
-            className={formStyles.input}
-            type="number"
-            step="any"
-            value={form.amountDollars}
-            onChange={e => set('amountDollars', e.target.value)}
-          />
-        </div>
+      <TextField
+        label="Participation Amount ($)"
+        type="number"
+        step="any"
+        value={form.amountDollars}
+        onChange={e => set('amountDollars', e.target.value)}
+      />
 
-        <label className={formStyles.checkboxRow}>
-          <input type="checkbox" checked={form.is_agent ?? false} onChange={e => set('is_agent', e.target.checked)} />
-          <span className={formStyles.label}>Agent</span>
-        </label>
+      <Field orientation="horizontal">
+        <input
+          id={agentId}
+          type="checkbox"
+          checked={form.is_agent ?? false}
+          onChange={e => set('is_agent', e.target.checked)}
+        />
+        <FieldLabel htmlFor={agentId}>Agent</FieldLabel>
+      </Field>
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Lender'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Lender'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

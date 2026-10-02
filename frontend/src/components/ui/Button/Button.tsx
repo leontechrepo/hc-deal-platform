@@ -1,19 +1,32 @@
-import styles from './Button.module.css'
+import {
+  Button as LeonButton,
+  type ButtonProps as LeonButtonProps,
+} from '@leontechrepo/leon-ui'
+import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'gold' | 'danger'
-type Size = 'sm' | 'md'
+type HcVariant = 'primary' | 'secondary' | 'ghost' | 'gold' | 'danger'
+type HcSize = 'sm' | 'md'
 
-interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant
-  size?: Size
+interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'> {
+  variant?: HcVariant
+  size?: HcSize
 }
 
+const VARIANT: Record<HcVariant, NonNullable<LeonButtonProps['variant']>> = {
+  primary: 'default',
+  secondary: 'secondary',
+  ghost: 'ghost',
+  gold: 'default',
+  danger: 'destructive',
+}
+
+/** Compatibility shim: HC call sites keep primary/gold/danger; leon-ui underneath. */
 export function Button({ variant = 'primary', size = 'md', className, ...rest }: Props) {
   return (
-    <button
-      className={[styles.btn, styles[variant], size === 'sm' ? styles.sm : '', className]
-        .filter(Boolean)
-        .join(' ')}
+    <LeonButton
+      variant={VARIANT[variant]}
+      size={size === 'sm' ? 'sm' : 'default'}
+      className={className}
       {...rest}
     />
   )

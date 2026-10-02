@@ -2,20 +2,94 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 6px 14px;
+  margin-bottom: 16px;
+  min-width: 0;
 }
 
-.toolbarActions {
+/* leon-ui .tabs carries its own bottom margin/border; inside the toolbar card
+   it should sit flush and scroll sideways on narrow screens. */
+.tabs {
+  margin: 0;
+  border-bottom: none;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.filters {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
-.loading {
-  color: var(--gray-400);
-  font-style: italic;
-  padding: 40px;
-  text-align: center;
+.search {
+  position: relative;
+  width: 240px;
+  max-width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search input.searchInput {
+  height: 34px;
+  padding-left: 32px;
+  font-size: 12px;
+}
+
+.sector {
+  width: 180px;
+  max-width: 100%;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonBoard {
+  display: flex;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.skeletonColumn {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .search,
+  .sector {
+    width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+  }
 }

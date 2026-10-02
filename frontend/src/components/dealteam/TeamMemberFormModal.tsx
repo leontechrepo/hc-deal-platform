@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, SelectField, TextField } from '../ui/Form/Form'
 import { DEAL_TEAM_ROLES } from '../../types'
 import type { DealTeamMember, DealTeamMemberInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type FormState = Partial<DealTeamMemberInput>
 
@@ -17,17 +17,18 @@ interface Props {
 }
 
 export function TeamMemberFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<FormState>(EMPTY)
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Team Member' : 'Add Team Member'}>
+      <TeamMemberForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
+}
+
+function TeamMemberForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<FormState>(() => (initial ? { ...EMPTY, ...initial } : EMPTY))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -52,38 +53,30 @@ export function TeamMemberFormModal({ open, onClose, initial, onSubmit }: Props)
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Team Member' : 'Add Team Member'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Name *</label>
-          <input
-            className={formStyles.input}
-            value={form.team_member ?? ''}
-            onChange={e => set('team_member', e.target.value)}
-          />
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <TextField
+        label="Name *"
+        value={form.team_member ?? ''}
+        onChange={e => set('team_member', e.target.value)}
+      />
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Role on Deal</label>
-          <select
-            className={formStyles.select}
-            value={form.role_on_deal ?? ''}
-            onChange={e => set('role_on_deal', (e.target.value || null) as FormState['role_on_deal'])}
-          >
-            <option value="">—</option>
-            {DEAL_TEAM_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
+      <SelectField
+        label="Role on Deal"
+        value={form.role_on_deal ?? ''}
+        onChange={e => set('role_on_deal', (e.target.value || null) as FormState['role_on_deal'])}
+      >
+        <option value="">—</option>
+        {DEAL_TEAM_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+      </SelectField>
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Team Member'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Team Member'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }

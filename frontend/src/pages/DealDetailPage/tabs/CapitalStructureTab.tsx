@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useDealContext } from '../dealContext'
 import {
   useCreateParticipantLender, useCreateTranche, useDeleteParticipantLender, useDeleteTranche,
   useParticipantLenders, useTranches, useUpdateParticipantLender, useUpdateTranche,
@@ -8,15 +8,15 @@ import { useCovenants, useCreateCovenant, useUpdateCovenant } from '../../../hoo
 import { TrancheFormModal } from '../../../components/capitalstructure/TrancheFormModal'
 import { ParticipantLenderFormModal } from '../../../components/capitalstructure/ParticipantLenderFormModal'
 import { CovenantFormModal } from '../../../components/capitalstructure/CovenantFormModal'
-import { Button } from '../../../components/ui/Button/Button'
-import { EmptyState } from '../../../components/ui/EmptyState/EmptyState'
+import { Button } from '@leontechrepo/leon-ui'
+import { DataSection } from '../../../components/dealDetail/DataSection'
+import { RowActions } from '../../../components/ui/RowActions'
 import { DataTable, type Column } from '../../../components/ui/DataTable/DataTable'
 import { useToast } from '../../../components/Toast/Toast'
 import type {
   CapitalStructureTranche, CapitalStructureTrancheInput, Covenant, CovenantInput, CovenantPatchInput,
-  Deal, ParticipantLender, ParticipantLenderInput,
+  ParticipantLender, ParticipantLenderInput,
 } from '../../../types'
-import styles from './CapitalStructureTab.module.css'
 
 function fmtCents(cents: number | null): string {
   if (cents === null) return '—'
@@ -24,7 +24,7 @@ function fmtCents(cents: number | null): string {
 }
 
 export function CapitalStructureTab() {
-  const { deal } = useOutletContext<{ deal: Deal }>()
+  const { deal } = useDealContext()
   const { showToast } = useToast()
 
   const { data: tranches = [], isLoading: tranchesLoading, isError: tranchesError } = useTranches(deal.id)
@@ -129,10 +129,10 @@ export function CapitalStructureTab() {
       key: 'actions',
       header: '',
       render: t => (
-        <div className={styles.rowActions}>
+        <RowActions>
           <Button variant="ghost" size="sm" onClick={() => openEditTranche(t)}>Edit</Button>
           <Button variant="ghost" size="sm" onClick={() => removeTranche(t)}>Remove</Button>
-        </div>
+        </RowActions>
       ),
     },
   ]
@@ -145,10 +145,10 @@ export function CapitalStructureTab() {
       key: 'actions',
       header: '',
       render: l => (
-        <div className={styles.rowActions}>
+        <RowActions>
           <Button variant="ghost" size="sm" onClick={() => openEditLender(l)}>Edit</Button>
           <Button variant="ghost" size="sm" onClick={() => removeLender(l)}>Remove</Button>
-        </div>
+        </RowActions>
       ),
     },
   ]
@@ -166,54 +166,45 @@ export function CapitalStructureTab() {
   ]
 
   return (
-    <div className={styles.tab}>
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Tranches</h2>
-          <Button variant="secondary" size="sm" onClick={openCreateTranche}>Add Tranche</Button>
-        </div>
-        {tranchesLoading ? (
-          <div className={styles.state}>Loading tranches…</div>
-        ) : tranchesError ? (
-          <div className={styles.state}>Failed to load tranches.</div>
-        ) : tranches.length === 0 ? (
-          <EmptyState title="No tranches yet" description="Break down the capital structure by tranche." />
-        ) : (
-          <DataTable columns={trancheColumns} rows={tranches} rowKey={t => t.tranche_id} />
-        )}
-      </section>
+    <div className="detail-cards">
+      <DataSection
+        title="Tranches"
+        noun="tranches"
+        actions={<Button variant="secondary" size="sm" onClick={openCreateTranche}>Add Tranche</Button>}
+        isLoading={tranchesLoading}
+        isError={tranchesError}
+        isEmpty={tranches.length === 0}
+        emptyTitle="No tranches yet"
+        emptyDescription="Break down the capital structure by tranche."
+      >
+        <DataTable columns={trancheColumns} rows={tranches} rowKey={t => t.tranche_id} />
+      </DataSection>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Participant Lenders</h2>
-          <Button variant="secondary" size="sm" onClick={openCreateLender}>Add Lender</Button>
-        </div>
-        {lendersLoading ? (
-          <div className={styles.state}>Loading lenders…</div>
-        ) : lendersError ? (
-          <div className={styles.state}>Failed to load lenders.</div>
-        ) : lenders.length === 0 ? (
-          <EmptyState title="No participant lenders yet" description="Add syndicate participants for this deal." />
-        ) : (
-          <DataTable columns={lenderColumns} rows={lenders} rowKey={l => l.participant_id} />
-        )}
-      </section>
+      <DataSection
+        title="Participant Lenders"
+        noun="lenders"
+        actions={<Button variant="secondary" size="sm" onClick={openCreateLender}>Add Lender</Button>}
+        isLoading={lendersLoading}
+        isError={lendersError}
+        isEmpty={lenders.length === 0}
+        emptyTitle="No participant lenders yet"
+        emptyDescription="Add syndicate participants for this deal."
+      >
+        <DataTable columns={lenderColumns} rows={lenders} rowKey={l => l.participant_id} />
+      </DataSection>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Covenants</h2>
-          <Button variant="secondary" size="sm" onClick={openCreateCovenant}>Add Covenant</Button>
-        </div>
-        {covenantsLoading ? (
-          <div className={styles.state}>Loading covenants…</div>
-        ) : covenantsError ? (
-          <div className={styles.state}>Failed to load covenants.</div>
-        ) : covenants.length === 0 ? (
-          <EmptyState title="No covenants yet" description="Define financial, negative, or affirmative covenants." />
-        ) : (
-          <DataTable columns={covenantColumns} rows={covenants} rowKey={c => c.covenant_id} />
-        )}
-      </section>
+      <DataSection
+        title="Covenants"
+        noun="covenants"
+        actions={<Button variant="secondary" size="sm" onClick={openCreateCovenant}>Add Covenant</Button>}
+        isLoading={covenantsLoading}
+        isError={covenantsError}
+        isEmpty={covenants.length === 0}
+        emptyTitle="No covenants yet"
+        emptyDescription="Define financial, negative, or affirmative covenants."
+      >
+        <DataTable columns={covenantColumns} rows={covenants} rowKey={c => c.covenant_id} />
+      </DataSection>
 
       <TrancheFormModal
         open={trancheModalOpen}

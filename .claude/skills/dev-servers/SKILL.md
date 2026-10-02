@@ -49,8 +49,18 @@ time-consuming gotchas specific to this machine/repo:
 
 Logs land at `/tmp/hc-deal-platform-backend.log` and
 `/tmp/hc-deal-platform-frontend.log` — `tail -f` those instead of the
-foreground terminal since both processes are started detached (`nohup` +
-`disown`).
+foreground terminal since both processes are started detached (double-fork +
+`setsid`, not plain `nohup`). That matters in Cursor agent shells: those
+terminals tear down their process group on exit, which kills a normal
+`nohup … & disown` child. After `start`, `./scripts/dev-servers.sh status`
+should still show UP even after the launcher shell is gone.
+
+If `:5432` is occupied by another project's Postgres that rejects HC's
+`postgres/postgres` credentials, `start` automatically uses a dedicated
+`hc-deal-eyeball-pg` container on `:5435` and points the backend at it —
+unless `.env` (or the shell) already has a **remote** `DATABASE_URL` (e.g.
+Railway TCP proxy). In that case local Postgres is skipped and the backend
+uses the remote DB.
 
 ## Assumptions
 

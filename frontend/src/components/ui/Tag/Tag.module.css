@@ -8,16 +8,16 @@
 }
 
 .default {
-  background: rgba(10,31,68,.07);
+  background: var(--surface);
   color: var(--heading);
 }
 
 .gold {
-  background: rgba(201,168,76,.15);
-  color: #7a5c10;
+  background: var(--chat-surface-accent);
+  color: var(--heading);
 }
 
 .red {
-  background: rgba(224,92,92,.1);
-  color: #9a2020;
+  background: var(--red-bg);
+  color: var(--red-fg);
 }

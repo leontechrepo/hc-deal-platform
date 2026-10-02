@@ -10,7 +10,13 @@
     <script>
       (function () {
         try {
-          if (localStorage.getItem('theme') === 'dark') {
+          var KEY = 'reip-color-scheme'
+          var OLD = 'theme'
+          var old = localStorage.getItem(OLD)
+          if (old && !localStorage.getItem(KEY)) {
+            localStorage.setItem(KEY, old)
+          }
+          if (localStorage.getItem(KEY) === 'dark') {
             document.documentElement.classList.add('dark')
           }
         } catch (e) {}

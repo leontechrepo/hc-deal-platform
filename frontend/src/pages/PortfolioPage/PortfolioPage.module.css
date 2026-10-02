@@ -1,16 +1,9 @@
 .sponsorName {
   font-size: 11px;
-  color: var(--gray-400);
+  color: var(--muted);
 }
 
 .dueSoon {
-  color: var(--red-fg);
+  color: var(--red);
   font-weight: 600;
 }
-
-.state {
-  padding: 48px 40px;
-  font-size: 13px;
-  color: var(--gray-400);
-}
-

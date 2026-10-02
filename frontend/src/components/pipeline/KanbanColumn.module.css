@@ -1,31 +1,27 @@
 .column {
-  flex: 0 0 260px;
-  width: 260px;
-  background: rgba(255,255,255,.45);
+  /* Narrow enough that ~6 of the 11 stages are visible at once on a laptop. */
+  flex: 0 0 196px;
+  width: 196px;
+  background: var(--panel);
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: 100%;
   transition: border-color 0.15s, background 0.15s;
 }
 
-:global(html.dark) .column {
-  background: rgba(20,28,40,.45);
-}
-
-.column.over {
+.over {
   border-color: var(--gold);
-  background: rgba(201, 168, 76, 0.08);
+  background: var(--chat-surface-accent);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: 8px;
   padding: 0 2px;
 }
 
@@ -39,19 +35,27 @@
 
 .count {
   font-size: 11px;
-  color: var(--gray-400);
+  color: var(--muted);
   font-family: var(--font-mono);
 }
 
+.total {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--heading);
+  padding: 2px 2px 0;
+}
+
 .cards {
+  margin-top: 8px;
   overflow-y: auto;
+  max-height: 70vh;
   flex: 1;
 }
 
 .empty {
   text-align: center;
-  color: var(--gray-400);
-  font-style: italic;
+  color: var(--muted);
   font-size: 12px;
   padding: 16px 0;
 }

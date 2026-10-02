@@ -135,3 +135,48 @@ def derive_pipeline_stage(
     )
     status = _derive_status(bucket, stage)
     return pipeline_stage, status
+
+
+def validate_stage_transition(
+    current: str | None,
+    target: str,
+    allow_skip: bool = False,
+) -> str | None:
+    """Return an error message, or None if the transition is allowed.
+
+    Forward-only-by-one by default. Backward moves are always allowed.
+    `allow_skip=True` permits any forward jump (human override with reasoning).
+    """
+    if target not in STAGE_INDEX:
+        return f"Invalid pipeline_stage: {target!r}"
+
+    cur = stage_index(current)
+    tgt = STAGE_INDEX[target]
+
+    if cur < 0:
+        return None
+    if tgt <= cur:
+        return None
+    if allow_skip:
+        return None
+    if tgt == cur + 1:
+        return None
+    return (
+        f"Cannot skip pipeline stages from {current!r} to {target!r}; "
+        "advance one stage at a time or pass allow_skip with reasoning"
+    )
+
+
+STAGE_DEFINITIONS: dict[str, str] = {
+    "sourcing": "Initial awareness of an opportunity",
+    "intake_triage": "Logged and being triaged for fit",
+    "nda_execution": "NDA in process or outstanding",
+    "screening": "Early screening / materials review",
+    "pre_loi_diligence": "Diligence before an LOI",
+    "loi_negotiation": "Negotiating LOI / IOI terms",
+    "loi_signed": "LOI or IOI executed",
+    "post_loi_diligence": "Full diligence after LOI",
+    "ic_approval": "Investment committee process",
+    "documentation": "Credit docs / closing docs",
+    "portfolio_monitoring": "Closed and in portfolio monitoring",
+}

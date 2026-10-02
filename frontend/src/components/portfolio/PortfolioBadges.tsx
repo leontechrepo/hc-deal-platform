@@ -1,23 +1,12 @@
-import { Badge, type BadgeTone } from '../ui/Badge/Badge'
-
-const PAYMENT_STATUS_TONE: Record<string, BadgeTone> = {
-  Current: 'green',
-  PIK: 'amber',
-  'Past Due': 'amber',
-  Default: 'red',
-}
-
-const RISK_TONE: Record<string, BadgeTone> = {
-  Pass: 'green',
-  Watch: 'amber',
-}
+import { paymentStatusTone, riskTone } from '../../domain/badgeTones'
+import { TonedBadge } from '../ui/TonedBadge'
 
 export function PaymentStatusBadge({ status }: { status: string | null }) {
   if (!status) return null
-  return <Badge tone={PAYMENT_STATUS_TONE[status] ?? 'gray'}>{status}</Badge>
+  return <TonedBadge tone={paymentStatusTone(status)}>{status}</TonedBadge>
 }
 
 export function RiskBadge({ risk }: { risk: string | null }) {
   if (!risk) return null
-  return <Badge tone={RISK_TONE[risk] ?? 'gray'}>{risk}</Badge>
+  return <TonedBadge tone={riskTone(risk)}>{risk}</TonedBadge>
 }

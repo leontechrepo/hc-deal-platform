@@ -113,22 +113,16 @@ export interface KPIs {
   deployed_m: number
 }
 
-export interface PendingSuggestion {
-  id: number
-  deal_id: string | null
-  company_name: string
-  stage: string | null
-  pipeline_stage: string | null
-  suggested_field: string
-  suggested_value: string | null
-  claude_summary: string | null
-  email_subject: string | null
-  email_snippet: string | null
-  current_value: string | null
-  confidence: number | null
-  estimated_size_m: number | null
-  estimated_sector: string | null
-  created_at: string
+export interface Features {
+  attachment_ingestion_enabled: boolean
+  document_extraction_enabled: boolean
+  storage_backend: string
+  storage_configured: boolean
+  graph_folders: string[]
+  document_extraction_flag?: boolean
+  document_extraction_requires_ingestion?: boolean
+  extraction_model?: string | null
+  email_scanning_configured?: boolean
 }
 
 export interface SponsorDealSummary {
@@ -271,14 +265,20 @@ export interface DealNote {
 
 export interface DealDocument {
   id: number
-  deal_id: string
+  deal_id: string | null
   name: string
   category: string | null
   doc_type: string | null
+  content_type?: string | null
   size_bytes: number | null
   status: string
+  processing_status: string | null
+  extracted_data?: Record<string, unknown> | null
+  extraction_confidence?: number | null
+  human_review_required: boolean
   uploaded_by: string | null
   created_at: string
+  updated_at?: string
 }
 
 // Must stay in sync with DOCUMENT_CATEGORIES in app/db/models/documents.py

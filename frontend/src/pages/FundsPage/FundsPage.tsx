@@ -2,18 +2,18 @@ import { useMemo, useState } from 'react'
 import { useCreateFund, useDeleteFund, useFunds, useUpdateFund } from '../../hooks/useFunds'
 import { FundCard } from '../../components/funds/FundCard'
 import { FundFormModal } from '../../components/funds/FundFormModal'
-import { Button } from '../../components/ui/Button/Button'
-import { EmptyState } from '../../components/ui/EmptyState/EmptyState'
-import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageShell } from '../../components/ui/PageShell/PageShell'
+import { Plus, Landmark } from 'lucide-react'
+import { Button, EmptyState } from '@leontechrepo/leon-ui'
+import { KpiItems } from '../../components/ui/Kpi'
+import { SearchBox } from '../../components/ui/SearchBox'
+import { PageError, PageLoading } from '../../components/ui/PageState'
+import { PageActions } from '../../components/shell/PageActions'
 import { useToast } from '../../components/Toast/Toast'
 import type { Fund, FundInput } from '../../types'
 import styles from './FundsPage.module.css'
 
-const SHELL = { title: 'Funds', sub: 'Fund vehicles and limited partners' }
-
 export function FundsPage() {
-  const { data: funds = [], isLoading, isError } = useFunds()
+  const { data: funds = [], isLoading, isError, refetch } = useFunds()
   const createFund = useCreateFund()
   const updateFund = useUpdateFund()
   const deleteFund = useDeleteFund()
@@ -74,28 +74,29 @@ export function FundsPage() {
     }
   }
 
-  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading funds…</div></PageShell>
-  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load funds.</div></PageShell>
+  if (isLoading) return <PageLoading label="Loading funds…" />
+  if (isError) return <PageError title="Couldn't load funds" onRetry={() => void refetch()} />
+
+  const newFund = (
+    <Button size="sm" onClick={openCreate}>
+      <Plus size={14} strokeWidth={2.05} />
+      New Fund
+    </Button>
+  )
 
   return (
-    <PageShell {...SHELL} actions={<Button variant="primary" onClick={openCreate}>New Fund</Button>}>
-      <KPIGrid items={kpiItems} />
+    <>
+      <PageActions>{newFund}</PageActions>
+      <KpiItems items={kpiItems} />
 
       <div className={styles.toolbar}>
-        <input
-          className={styles.search}
-          placeholder="Search funds…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <SearchBox value={search} onChange={setSearch} placeholder="Search funds…" />
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          title="No funds yet"
-          description="Add your first fund."
-          action={<Button variant="primary" onClick={openCreate}>New Fund</Button>}
-        />
+        <EmptyState icon={Landmark} title={funds.length === 0 ? 'No funds yet' : 'No funds match'} action={funds.length === 0 ? newFund : undefined}>
+          {funds.length === 0 ? 'Add your first fund.' : 'Try a different search.'}
+        </EmptyState>
       ) : (
         <div className={styles.grid}>
           {filtered.map(fund => (
@@ -115,6 +116,6 @@ export function FundsPage() {
         initial={editing}
         onSubmit={handleSubmit}
       />
-    </PageShell>
+    </>
   )
 }

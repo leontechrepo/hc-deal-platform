@@ -64,11 +64,11 @@
   top: 8px;
   height: 16px;
   border-radius: 4px;
-  background: var(--gray-400);
+  background: var(--muted);
 }
 
 .gray {
-  background: var(--gray-400);
+  background: var(--muted);
 }
 
 .blue {

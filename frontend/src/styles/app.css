@@ -1,0 +1,431 @@
+/* Local deltas on top of @leontechrepo/leon-ui/styles.css + tokens.css */
+
+/* Our deltas only. leon.css is vendored and never edited, so everything local
+   lives here and loads after it. Colours come from tokens — no raw hex. */
+
+/* `.page-content` normally scrolls as a unit (`overflow-y: auto` in leon-ui).
+   `.is-pinned` (Inbox, Credit Co-Pilot) and `:has` page roots opt out:
+   fixed-height flex column so the page owns internal scroll regions.
+   `:has` covers HMR that leaves a stale route `handle`. */
+.page-content.is-pinned,
+.page-content:has(> .chat-page),
+.page-content:has(> .inbox-page) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.page-content.is-pinned > *,
+.page-content:has(> .chat-page) > *,
+.page-content:has(> .inbox-page) > * {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Co-Pilot: edge-to-edge inside the content glass — no outer pad around the panel. */
+.page-content:has(> .chat-page) {
+  padding: 0;
+}
+
+.state-line {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 18px 2px;
+}
+
+
+.inbox-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.inbox-page .kpi-grid { flex-shrink: 0; }
+.inbox-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.inbox-queue {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 6px;
+  overflow: hidden;
+}
+.inbox-queue-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 8px;
+  flex-shrink: 0;
+}
+
+/* Deliberately not reusing `.filter-search`/`.filter-select`/`.input`
+   (below, elsewhere in this file) — those assume a full-width toolbar row
+   and set their own `min-width`/`flex-basis` that fought this ~240-300px
+   queue column when combined by class name, producing exactly the loose,
+   misaligned spacing this replaced. Every rule here is self-contained: same
+   visual language (gold border tokens) as `.input`, but sized and laid out
+   for this narrow rail specifically. */
+.inbox-queue-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 10px;
+  flex-shrink: 0;
+}
+.inbox-queue-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid var(--input-gold-border);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px var(--input-gold-ring);
+  color: var(--muted);
+}
+.inbox-queue-search:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
+}
+.inbox-queue-search input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 12px;
+  font-family: var(--font);
+  color: var(--text);
+}
+html.dark .inbox-queue-search { background: rgba(255, 255, 255, 0.05); }
+.inbox-queue-toolbar-row { display: flex; gap: 6px; }
+.inbox-queue-toolbar-row--end { align-items: center; justify-content: space-between; }
+.inbox-queue-select {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--input-gold-border);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px var(--input-gold-ring);
+  font-size: 11px;
+  font-family: var(--font);
+  color: var(--text);
+  padding: 5px 6px;
+  cursor: pointer;
+}
+.inbox-queue-select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--input-gold-ring-focus);
+}
+html.dark .inbox-queue-select { background: rgba(255, 255, 255, 0.05); }
+.inbox-queue-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.inbox-queue-toggle input { cursor: pointer; }
+.inbox-queue-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.inbox-queue-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background .14s, border-color .14s;
+}
+.inbox-queue-row:hover { background: rgba(201,168,76,.06); }
+.inbox-queue-row.is-active {
+  background: rgba(201,168,76,.12);
+  border-color: rgba(201,168,76,.38);
+}
+.inbox-queue-row:focus-visible { outline: 2px solid rgba(201,168,76,.82); outline-offset: 2px; }
+.inbox-queue-subject {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--heading);
+  line-height: 1.3;
+}
+.inbox-queue-clip { flex-shrink: 0; color: var(--muted); }
+.inbox-queue-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.inbox-queue-kinds {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.inbox-queue-kinds .badge {
+  font-size: 8px;
+  padding: 1px 6px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Fills the grid row's real height (stretched to match `.inbox-queue` by
+   the grid's default `align-items: stretch`) and scrolls internally — a
+   long email grows this pane only, never the page. */
+.inbox-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+.inbox-email-head {
+  padding: 16px 18px 18px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+.inbox-email-head > .table-title { display: block; margin-bottom: 8px; }
+.inbox-email-subject {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--heading);
+  line-height: 1.2;
+  margin: 0;
+}
+.inbox-email-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.inbox-email-snippet {
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: none;
+  overflow: visible;
+}
+.inbox-attachment-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.suggestion-card {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: visible;
+}
+.suggestion-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+.suggestion-summary { font-size: 12px; line-height: 1.55; color: var(--text); margin: 0; }
+/* The evidence quote is the largest thing on the card on purpose: the
+   reviewer's actual job is "does this quote support this change". */
+.suggestion-evidence {
+  border-left: 3px solid var(--gold);
+  background: rgba(201,168,76,.06);
+  padding: 10px 12px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text);
+  border-radius: 0 8px 8px 0;
+}
+/* Sticky toolbar — kind/confidence + Reject/Approve in one row so nothing
+   overlaps. */
+.suggestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 16px;
+  background: var(--panel-solid);
+  border-bottom: 1px solid var(--card-border-gold);
+  border-radius: 14px 14px 0 0;
+}
+.suggestion-actions-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.suggestion-actions-note { flex: 1 1 100%; }
+.suggestion-actions-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Long commentary / multiline values: Current | Suggested side-by-side
+   instead of cramming four columns into auto-fit field-grid. */
+.suggestion-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.suggestion-compare-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 14px;
+  align-items: center;
+}
+.suggestion-compare-meta .deal-search-select { min-width: 0; }
+.suggestion-compare-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .suggestion-compare-cols { grid-template-columns: 1fr; }
+}
+
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+
+/* DealSearchSelect: the input sits in flow, the results panel is portaled to
+   <body> (position: fixed, top/left/width set inline from the input's own
+   rect) so it isn't clipped by .page-content's overflow: hidden — same reason
+   Modal is portaled. */
+.deal-search-select { position: relative; }
+.deal-search-panel {
+  position: fixed;
+  z-index: 1100;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(10,31,68,.16);
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.deal-search-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+.deal-search-option.is-highlighted,
+.deal-search-option:hover { background: rgba(201,168,76,.12); }
+.deal-search-empty {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+html.dark .deal-search-panel { background: var(--navy); border-color: rgba(255,255,255,.12); }
+
+/* ---------------------------------------------------------------------------
+   Field rendering. `.field-label` and `.field-value` come from leon-ui;
+   everything here is the editing affordance it has no opinion about.
+   --------------------------------------------------------------------------- */
+
+/* The editable value is a real button, so its default chrome is reset rather
+
+/* --- form / empty helpers used by Inbox (not all in package dist) --- */
+.table-title { font-size: 11px; font-weight: 700; color: var(--heading); text-transform: uppercase; letter-spacing: .7px; }
+.table-spacer { flex: 1; }
+.field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.field-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.field-value { font-size: 13px; color: var(--text); }
+.field-value.num { font-family: var(--font-mono); font-size: 12px; }
+.field-value--block {
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  line-height: 1.5;
+  padding: 10px 12px;
+  background: rgba(10, 31, 68, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 400;
+}
+.suggestion-value-input {
+  resize: vertical;
+  min-height: 120px;
+  max-height: 280px;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 10px 12px;
+}
+.field-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.input {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text);
+  font-family: var(--font);
+  box-sizing: border-box;
+}
+.input:focus { outline: none; border-color: var(--gold); }
+html.dark .input { background: rgba(255,255,255,.06); }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 24px; text-align: center; color: var(--muted); }
+.empty-state-title { font-size: 15px; font-weight: 700; color: var(--heading); }
+.empty-state-body { font-size: 13px; max-width: 360px; line-height: 1.5; margin: 0; }
+.card {
+  background: var(--panel-solid, var(--white));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card, 10px);
+  padding: 16px;
+}
+/* Suggestion card owns its own top sticky bar — don't double-pad. */
+.card.suggestion-card { padding: 0; }
+.card.inbox-email-head { padding: 16px 18px 18px; }
+html.dark .table-title, html.dark .empty-state-title { color: #fff; }

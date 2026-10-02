@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { InlineEditText } from '../ui/InlineEditText/InlineEditText'
-import { Button } from '../ui/Button/Button'
+import { Button } from '@leontechrepo/leon-ui'
 import { useCreateWorkstream, useDeleteWorkstream, usePatchWorkstream } from '../../hooks/useDealTimeline'
 import { useToast } from '../Toast/Toast'
 import { computeGanttRange, monthBoundaries, dateToX } from '../../utils/ganttScale'
 import { TaskRow } from './TaskRow'
 import { AddTaskForm } from './AddTaskForm'
-import formStyles from '../shared/Form.module.css'
 import type { DealTimelineWorkstream } from '../../types'
 import styles from './GanttChart.module.css'
 
@@ -100,7 +99,7 @@ export function GanttChart({ dealId, workstreams }: Props) {
       <div className={styles.row}>
         <div className={styles.addWorkstream} style={{ width: DETAILS_WIDTH }}>
           <input
-            className={formStyles.input}
+            className="input"
             placeholder="New workstream name…"
             value={newWorkstreamName}
             onChange={e => setNewWorkstreamName(e.target.value)}

@@ -1,19 +1,22 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AlertTriangle, Briefcase } from 'lucide-react'
+import { EmptyState } from '@leontechrepo/leon-ui'
 import { useDeals } from '../../hooks/useDeals'
 import { usePortfolio } from '../../hooks/usePortfolio'
 import { useInbox } from '../../hooks/useInbox'
 import { DataTable, type Column } from '../../components/ui/DataTable/DataTable'
-import { KPIGrid } from '../../components/ui/KPIGrid/KPIGrid'
-import { PageShell } from '../../components/ui/PageShell/PageShell'
-import { PIPELINE_STAGES, formatPipelineStage } from '../../components/shared/PipelineStageBadge'
+import { KpiItems } from '../../components/ui/Kpi'
+import { LoadingBlock } from '../../components/ui/Skeleton/Skeleton'
+import { PIPELINE_STAGES, formatPipelineStage } from '../../domain/stages'
+import { fmtM as fmtMoneyM } from '../../domain/format'
 import { PipelineStageGroup } from '../../components/shared/PipelineStageGroup'
 import { TableCard } from '../../components/shared/TableCard'
 import type { Deal } from '../../types'
 import styles from './ExecutiveSummaryPage.module.css'
 
 function fmtM(value: number | null): string {
-  return value === null ? '—' : `$${value}M`
+  return fmtMoneyM(value, 1)
 }
 
 function fmtSumM(sum: number): string {
@@ -105,8 +108,6 @@ function groupByStage(deals: Deal[]): StageGroup[] {
   }))
 }
 
-const SHELL = { title: 'Executive Summary', sub: 'Corporate Credit — Portfolio brief' }
-
 export function ExecutiveSummaryPage() {
   const { data: deals = [], isLoading: dealsLoading, isError: dealsError } = useDeals()
   const { data: positions = [], isLoading: portfolioLoading, isError: portfolioError } = usePortfolio()
@@ -126,7 +127,7 @@ export function ExecutiveSummaryPage() {
   }
 
   const kpiItems = useMemo(() => [
-    { label: 'Active Deals', value: activeDeals.length },
+    { label: 'Active Deals', value: activeDeals.length, tone: 'navy' as const },
     { label: 'Total Pipeline', value: fmtSumM(activeDeals.reduce((sum, d) => sum + (d.deal_size_m ?? 0), 0)) },
     { label: 'Total Hold', value: fmtSumM(activeDeals.reduce((sum, d) => sum + (d.hold_amount_m ?? 0), 0)) },
     { label: 'Portfolio', value: fmtSumM(positions.reduce((sum, p) => sum + (p.current_balance_m ?? 0), 0)) },
@@ -136,16 +137,22 @@ export function ExecutiveSummaryPage() {
   const isLoading = dealsLoading || portfolioLoading || inboxLoading
   const isError = dealsError || portfolioError || inboxError
 
-  if (isLoading) return <PageShell {...SHELL}><div className={styles.state}>Loading executive summary…</div></PageShell>
-  if (isError) return <PageShell {...SHELL}><div className={styles.state}>Failed to load executive summary.</div></PageShell>
+  if (isLoading) return <LoadingBlock label="Loading executive summary…" lines={5} />
+  if (isError) {
+    return (
+      <EmptyState icon={AlertTriangle} title="Couldn't load the executive summary">
+        One of the underlying data sources failed to load. Try refreshing the page.
+      </EmptyState>
+    )
+  }
 
   return (
-    <PageShell {...SHELL}>
-      <KPIGrid items={kpiItems} />
+    <>
+      <KpiItems items={kpiItems} />
 
       <TableCard title="Active Pipeline — By Stage">
         {stageGroups.length === 0 ? (
-          <div className={styles.state}>No active deals.</div>
+          <EmptyState icon={Briefcase} title="No active deals">Active deals appear here grouped by pipeline stage.</EmptyState>
         ) : (
           stageGroups.map(group => {
             const open = isStageOpen(group.stage)
@@ -169,6 +176,6 @@ export function ExecutiveSummaryPage() {
           })
         )}
       </TableCard>
-    </PageShell>
+    </>
   )
 }

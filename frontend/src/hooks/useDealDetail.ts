@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createDealNote, deleteDealNote, listDealActivity, listDealNotes, updateDealNote,
 } from '../api/dealDetail'
-import { deleteDealDocument, listDealDocuments, uploadDealDocument } from '../api/dealDocuments'
+import {
+  deleteDealDocument,
+  listDealDocuments,
+  patchDealDocument,
+  uploadDealDocument,
+} from '../api/dealDocuments'
 
 export function useDealActivity(dealId: string | null) {
   return useQuery({
@@ -66,6 +71,23 @@ export function useDeleteDealDocument(dealId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (documentId: number) => deleteDealDocument(documentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['deals', dealId, 'documents'] })
+      qc.invalidateQueries({ queryKey: ['deals', dealId, 'extractions'] })
+    },
+  })
+}
+
+export function usePatchDealDocument(dealId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      documentId,
+      body,
+    }: {
+      documentId: number
+      body: { human_review_required?: boolean; processing_status?: string }
+    }) => patchDealDocument(documentId, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['deals', dealId, 'documents'] }),
   })
 }

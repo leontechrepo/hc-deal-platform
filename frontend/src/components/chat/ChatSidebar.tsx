@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
 import type { ChatSessionSummary } from '../../types'
-import { AiStarIcon } from '../shared/AiStarIcon'
+import { AiStarIcon } from '@leontechrepo/leon-ui'
 import styles from './ChatSidebar.module.css'
 
 interface Props {

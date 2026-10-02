@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Button } from '@leontechrepo/leon-ui'
 import { Modal } from '../ui/Modal/Modal'
-import { Button } from '../ui/Button/Button'
+import { Form, FormActions, FormError, FormRow, SelectField, TextareaField, TextField } from '../ui/Form/Form'
+import { toNullableNumber } from '../../domain/format'
 import type { Sponsor, SponsorInput } from '../../types'
-import formStyles from '../shared/Form.module.css'
 
 type SponsorFormState = Partial<SponsorInput>
 
@@ -30,24 +31,19 @@ interface Props {
   onSubmit: (body: Partial<SponsorInput>) => Promise<unknown>
 }
 
-function toNullableNumber(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = Number(v)
-  return Number.isNaN(n) ? null : n
+export function SponsorFormModal({ open, onClose, initial, onSubmit }: Props) {
+  return (
+    <Modal open={open} onClose={onClose} title={initial ? 'Edit Sponsor' : 'New Sponsor'}>
+      <SponsorForm onClose={onClose} initial={initial} onSubmit={onSubmit} />
+    </Modal>
+  )
 }
 
-export function SponsorFormModal({ open, onClose, initial, onSubmit }: Props) {
-  const [form, setForm] = useState<SponsorFormState>(EMPTY)
+function SponsorForm({ onClose, initial, onSubmit }: Omit<Props, 'open'>) {
+  const [form, setForm] = useState<SponsorFormState>(() => (initial ? { ...EMPTY, ...initial } : EMPTY))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = !!initial
-
-  useEffect(() => {
-    if (open) {
-      setForm(initial ? { ...EMPTY, ...initial } : EMPTY)
-      setError(null)
-    }
-  }, [open, initial])
 
   function set<K extends keyof SponsorFormState>(key: K, value: SponsorFormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -71,113 +67,78 @@ export function SponsorFormModal({ open, onClose, initial, onSubmit }: Props) {
     }
   }
 
+  const txt = (key: keyof SponsorFormState) => ({
+    value: (form[key] as string | null | undefined) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(key, e.target.value as never),
+  })
+
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Sponsor' : 'New Sponsor'}>
-      <form className={formStyles.form} onSubmit={handleSubmit}>
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Name *</label>
-          <input className={formStyles.input} value={form.name ?? ''} onChange={e => set('name', e.target.value)} />
-        </div>
+    <Form onSubmit={handleSubmit}>
+      <TextField label="Name *" {...txt('name')} />
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Sponsor Type</label>
-            <select
-              className={formStyles.select}
-              value={form.sponsor_type ?? ''}
-              onChange={e => set('sponsor_type', (e.target.value || null) as SponsorFormState['sponsor_type'])}
-            >
-              <option value="">—</option>
-              <option value="PE Sponsor">PE Sponsor</option>
-              <option value="Strategic">Strategic</option>
-            </select>
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>AUM ($M)</label>
-            <input
-              className={formStyles.input}
-              type="number"
-              step="any"
-              value={form.aum_m ?? ''}
-              onChange={e => set('aum_m', toNullableNumber(e.target.value))}
-            />
-          </div>
-        </div>
+      <FormRow>
+        <SelectField
+          label="Sponsor Type"
+          value={form.sponsor_type ?? ''}
+          onChange={e => set('sponsor_type', (e.target.value || null) as SponsorFormState['sponsor_type'])}
+        >
+          <option value="">—</option>
+          <option value="PE Sponsor">PE Sponsor</option>
+          <option value="Strategic">Strategic</option>
+        </SelectField>
+        <TextField
+          label="AUM ($M)"
+          type="number"
+          step="any"
+          value={form.aum_m ?? ''}
+          onChange={e => set('aum_m', toNullableNumber(e.target.value))}
+        />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Focus</label>
-            <input className={formStyles.input} value={form.focus ?? ''} onChange={e => set('focus', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>HQ Location</label>
-            <input className={formStyles.input} value={form.hq_location ?? ''} onChange={e => set('hq_location', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Focus" {...txt('focus')} />
+        <TextField label="HQ Location" {...txt('hq_location')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Fund Vintage</label>
-            <input className={formStyles.input} value={form.fund_vintage ?? ''} onChange={e => set('fund_vintage', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Email Domain</label>
-            <input className={formStyles.input} value={form.email_domain ?? ''} onChange={e => set('email_domain', e.target.value)} placeholder="acme.com" />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Fund Vintage" {...txt('fund_vintage')} />
+        <TextField label="Email Domain" {...txt('email_domain')} placeholder="acme.com" />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Name</label>
-            <input className={formStyles.input} value={form.contact_name ?? ''} onChange={e => set('contact_name', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Role</label>
-            <input className={formStyles.input} value={form.contact_role ?? ''} onChange={e => set('contact_role', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Contact Name" {...txt('contact_name')} />
+        <TextField label="Contact Role" {...txt('contact_role')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Email</label>
-            <input className={formStyles.input} type="email" value={form.contact_email ?? ''} onChange={e => set('contact_email', e.target.value)} />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Contact Phone</label>
-            <input className={formStyles.input} value={form.contact_phone ?? ''} onChange={e => set('contact_phone', e.target.value)} />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Contact Email" type="email" {...txt('contact_email')} />
+        <TextField label="Contact Phone" {...txt('contact_phone')} />
+      </FormRow>
 
-        <div className={formStyles.row}>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Coverage Cadence</label>
-            <input className={formStyles.input} value={form.coverage_cadence ?? ''} onChange={e => set('coverage_cadence', e.target.value)} placeholder="Monthly" />
-          </div>
-          <div className={formStyles.field}>
-            <label className={formStyles.label}>Last Contact Date</label>
-            <input
-              className={formStyles.input}
-              type="date"
-              value={form.last_contact_date ?? ''}
-              onChange={e => set('last_contact_date', e.target.value || null)}
-            />
-          </div>
-        </div>
+      <FormRow>
+        <TextField label="Coverage Cadence" {...txt('coverage_cadence')} placeholder="Monthly" />
+        <TextField
+          label="Last Contact Date"
+          type="date"
+          value={form.last_contact_date ?? ''}
+          onChange={e => set('last_contact_date', e.target.value || null)}
+        />
+      </FormRow>
 
-        <div className={formStyles.field}>
-          <label className={formStyles.label}>Relationship Note</label>
-          <textarea className={formStyles.textarea} value={form.relationship_note ?? ''} onChange={e => set('relationship_note', e.target.value)} />
-        </div>
+      <TextareaField
+        label="Relationship Note"
+        value={form.relationship_note ?? ''}
+        onChange={e => set('relationship_note', e.target.value)}
+      />
 
-        {error && <div className={formStyles.error}>{error}</div>}
+      {error && <FormError>{error}</FormError>}
 
-        <div className={formStyles.actions}>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Sponsor'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Sponsor'}
+        </Button>
+      </FormActions>
+    </Form>
   )
 }
