@@ -1,32 +1,27 @@
+# --- Stage 1: build the frontend ------------------------------------------------
+# @leontechrepo/leon-ui is published to GitHub Packages; frontend/.npmrc reads
+# LEON_UI_TOKEN. Railway exposes service variables to the build as ARGs. The
+# token only exists in this stage, which is discarded: the shipped image below
+# copies just the built assets, so the token is not in its layers.
+FROM node:22-slim AS frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json frontend/.npmrc ./
+ARG LEON_UI_TOKEN
+RUN npm install
+COPY frontend/ ./
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+RUN npm run build
+
+# --- Stage 2: the API, serving the built frontend -------------------------------
 FROM python:3.13-slim
-
-# Install Node.js 22
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
-# Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Build frontend
-# .npmrc points @leontechrepo at GitHub Packages and reads LEON_UI_TOKEN. The
-# token comes in as a BuildKit secret (a Railway service variable), so it is
-# never written into an image layer.
-COPY frontend/package*.json frontend/.npmrc ./frontend/
-RUN --mount=type=secret,id=LEON_UI_TOKEN \
-    cd frontend && LEON_UI_TOKEN="$(cat /run/secrets/LEON_UI_TOKEN)" npm install
-
-COPY frontend/ ./frontend/
-ARG VITE_CLERK_PUBLISHABLE_KEY
-ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
-RUN cd frontend && npm run build
-
-# Copy rest of app
 COPY . .
+COPY --from=frontend /app/frontend/dist ./frontend/dist
 
 EXPOSE 8080
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
