@@ -13,8 +13,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Build frontend
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
+# .npmrc points @leontechrepo at GitHub Packages and reads LEON_UI_TOKEN. The
+# token comes in as a BuildKit secret (a Railway service variable), so it is
+# never written into an image layer.
+COPY frontend/package*.json frontend/.npmrc ./frontend/
+RUN --mount=type=secret,id=LEON_UI_TOKEN \
+    cd frontend && LEON_UI_TOKEN="$(cat /run/secrets/LEON_UI_TOKEN)" npm install
 
 COPY frontend/ ./frontend/
 ARG VITE_CLERK_PUBLISHABLE_KEY
